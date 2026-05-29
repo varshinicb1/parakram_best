@@ -37,6 +37,13 @@ data class DriverInfo(
     val capabilities: List<String> = emptyList()
 )
 
+// --- Driver List Wrapper ---
+@JsonClass(generateAdapter = true)
+data class DriversResponse(
+    val drivers: List<DriverInfo> = emptyList(),
+    val total: Int = 0
+)
+
 // --- Board Registry ---
 @JsonClass(generateAdapter = true)
 data class BoardInfo(
@@ -45,6 +52,12 @@ data class BoardInfo(
     val soc: String = "",
     @Json(name = "flash_mb") val flashMb: Int = 0,
     @Json(name = "psram_mb") val psramMb: Int = 0
+)
+
+// --- Board List Wrapper ---
+@JsonClass(generateAdapter = true)
+data class BoardsResponse(
+    val boards: List<BoardInfo> = emptyList()
 )
 
 // --- LLM Intent ---
@@ -156,14 +169,14 @@ interface ParakramApi {
 
     // Drivers (no auth required)
     @GET("api/drivers")
-    suspend fun listDrivers(): Response<List<DriverInfo>>
+    suspend fun listDrivers(): Response<DriversResponse>
 
     @GET("api/drivers/{name}")
     suspend fun getDriver(@Path("name") name: String): Response<DriverInfo>
 
     // Boards (no auth required)
     @GET("api/boards")
-    suspend fun listBoards(): Response<List<BoardInfo>>
+    suspend fun listBoards(): Response<BoardsResponse>
 
     // Auth
     @POST("api/auth/register")
