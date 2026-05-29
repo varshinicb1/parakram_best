@@ -1,24 +1,34 @@
 package com.example.hardware
 
-import android.content.Context
-import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothProfile
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
-import android.os.Handler
-import android.os.Looper
+import android.content.Context
 import android.util.Log
 import com.example.data.BoardEntity
 import com.example.data.SensorLogEntity
 import com.example.data.TinkrDatabase
-import com.example.protocol.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import com.example.protocol.CommandMessage
+import com.example.protocol.SensorStreamMessage
+import com.example.protocol.TinkrProtocol
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 sealed class BleConnectionState {
@@ -34,7 +44,6 @@ class TinkrBleManager private constructor(private val context: Context) {
     private val database = TinkrDatabase.getDatabase(context)
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
-    // UI state flows
     private val _isScanning = MutableStateFlow(false)
     val isScanning: StateFlow<Boolean> = _isScanning.asStateFlow()
 
@@ -44,15 +53,12 @@ class TinkrBleManager private constructor(private val context: Context) {
     private val _connectionState = MutableStateFlow<BleConnectionState>(BleConnectionState.Disconnected)
     val connectionState: StateFlow<BleConnectionState> = _connectionState.asStateFlow()
 
-    // Real-time sensor stream
     private val _sensorStream = MutableSharedFlow<SensorStreamMessage>(replay = 5)
     val sensorStream: SharedFlow<SensorStreamMessage> = _sensorStream.asSharedFlow()
 
-    // Raw Serial / Activity Logs
     private val _activityLogs = MutableStateFlow<List<String>>(listOf("System started. Parakram Companion ready."))
     val activityLogs: StateFlow<List<String>> = _activityLogs.asStateFlow()
 
-    // Board Pin states (Simulated inside the app)
     private val _pin13LedState = MutableStateFlow(false)
     val pin13LedState: StateFlow<Boolean> = _pin13LedState.asStateFlow()
 
@@ -65,20 +71,29 @@ class TinkrBleManager private constructor(private val context: Context) {
     private val _tftTextState = MutableStateFlow("Parakram Smart OS\nReady for code")
     val tftTextState: StateFlow<String> = _tftTextState.asStateFlow()
 
-    // Simulator variables
     private var simulatedTemp = 24.5
     private var simulatedMoist = 45.0
     private var simulatedLight = 320.0
     private var simulatedCo2 = 415.0
 
     private var simulatorJob: Job? = null
-
-    // Real Bluetooth LE Fields
     private var bluetoothGatt: BluetoothGatt? = null
 
-    // Custom GATT service UUIDs matching standard ESP32-S3 UART peripherals (NUS)
     private val NUS_SERVICE_UUID = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
     private val NUS_RX_CHAR_UUID = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")
+
+    // Samsung/Xiaomi GATT cache refresh via reflection
+    private fun refreshDeviceCache(gatt: BluetoothGatt): Boolean {
+        return try {
+            val refreshMethod = gatt.javaClass.getMethod("refresh")
+            val result = refreshMethod.invoke(gatt) as Boolean
+            Log.d(TAG, "GATT Cache clear returned: $result")
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to clear GATT cache: ${e.message}")
+            false
+        }
+    }
 
     private val realScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
@@ -87,15 +102,15 @@ class TinkrBleManager private constructor(private val context: Context) {
                     val name = device.name ?: "Unnamed ESP32"
                     val address = device.address
                     val rssi = result.rssi
-                    
+
                     val current = _scannedDevices.value.toMutableList()
                     if (current.none { it.address == address }) {
                         current.add(ScannedDevice(name, address, rssi))
                         _scannedDevices.value = current
                         addLog("Found BLE Peripheral: $name [$address]")
                     }
-                } catch (e: SecurityException) {
-                    // Fail silently if permissions lost during scan execution
+                } catch (_: SecurityException) {
+                    // Permissions lost during scan
                 }
             }
         }
@@ -104,50 +119,42 @@ class TinkrBleManager private constructor(private val context: Context) {
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             val address = gatt?.device?.address ?: ""
-            val name = try { gatt?.device?.name ?: "ESP32-S3 Board" } catch (e: SecurityException) { "ESP32-S3 Board" }
+            val name = try { gatt?.device?.name ?: "ESP32-S3 Board" } catch (_: SecurityException) { "ESP32-S3 Board" }
+
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                addLog("GATT Connected to physical board: $name [$address]. Clearing cache...")
+                addLog("GATT Connected to $name [$address]. Clearing cache...")
                 try {
                     gatt?.let { refreshDeviceCache(it) }
-                    addLog("GATT Cache refreshed successfully.")
-                    addLog("Requesting high-throughput MTU of 247 bytes...")
+                    addLog("GATT Cache refreshed. Requesting MTU 247...")
                     gatt?.requestMtu(247)
-                } catch (e: SecurityException) {
-                    addLog("SecurityException during connection parameters initialization.")
+                } catch (_: SecurityException) {
+                    addLog("SecurityException during GATT initialization.")
                 }
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 addLog("GATT Disconnected from board: $address")
                 _connectionState.value = BleConnectionState.Disconnected
-                scope.launch {
-                    database.boardDao().disconnectAllBoards()
-                }
-                try {
-                    gatt?.close()
-                } catch (e: Exception) {}
-                if (bluetoothGatt == gatt) {
-                    bluetoothGatt = null
-                }
+                scope.launch { database.boardDao().disconnectAllBoards() }
+                try { gatt?.close() } catch (_: Exception) {}
+                if (bluetoothGatt == gatt) bluetoothGatt = null
             }
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
-            addLog("MTU Negotiation complete. Decided MTU: $mtu (Status: $status)")
-            gatt?.let { gattInstance ->
-                addLog("Initiating BLE GATT Service Discovery...")
-                try {
-                    gattInstance.discoverServices()
-                } catch (e: SecurityException) {
-                    addLog("SecurityException during service discovery.")
-                }
+            addLog("MTU Negotiation complete: $mtu bytes (status=$status)")
+            try {
+                gatt?.discoverServices()
+                addLog("Initiating GATT Service Discovery...")
+            } catch (_: SecurityException) {
+                addLog("SecurityException during service discovery.")
             }
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 val address = gatt?.device?.address ?: ""
-                val name = try { gatt?.device?.name ?: "ESP32-S3 Board" } catch (e: SecurityException) { "ESP32-S3 Board" }
-                addLog("BLE services discovered successfully for $name.")
-                
+                val name = try { gatt?.device?.name ?: "ESP32-S3 Board" } catch (_: SecurityException) { "ESP32-S3 Board" }
+                addLog("BLE services discovered for $name.")
+
                 scope.launch {
                     val board = BoardEntity(
                         address = address,
@@ -160,10 +167,9 @@ class TinkrBleManager private constructor(private val context: Context) {
                     database.boardDao().insertBoard(board)
                     _connectionState.value = BleConnectionState.Connected(board)
                 }
-                
                 addLog("Telemetry active. Custom registers bound.")
             } else {
-                addLog("Failed to discover services. Code: $status. Operating in virtual compatibility mode.")
+                addLog("Service discovery failed (code $status). Operating in virtual mode.")
             }
         }
 
@@ -174,27 +180,18 @@ class TinkrBleManager private constructor(private val context: Context) {
             characteristic?.value?.let { data ->
                 val jsonStr = String(data)
                 TinkrProtocol.parseSensorMsg(jsonStr)?.let { sensorMsg ->
-                    scope.launch {
-                        _sensorStream.emit(sensorMsg)
-                    }
+                    scope.launch { _sensorStream.emit(sensorMsg) }
                 }
             }
         }
     }
 
-    private fun refreshDeviceCache(gatt: BluetoothGatt): Boolean {
-        return try {
-            val refreshMethod = gatt.javaClass.getMethod("refresh")
-            val result = refreshMethod.invoke(gatt) as Boolean
-            Log.d("ParakramBLE", "GATT Cache clear method call returned: $result")
-            result
-        } catch (e: Exception) {
-            Log.e("ParakramBLE", "Failed to force clear GATT cache: " + e.message)
-            false
-        }
-    }
+    private val BluetoothAdapter.isAdapterEnabled: Boolean
+        get() = try { isEnabled } catch (_: SecurityException) { false }
 
     companion object {
+        private const val TAG = "ParakramBLE"
+
         @Volatile
         private var INSTANCE: TinkrBleManager? = null
 
@@ -208,52 +205,40 @@ class TinkrBleManager private constructor(private val context: Context) {
     }
 
     init {
-        // Start simulated hardware loop by default (it feeds the sensor values)
         startSimulatorLoop()
     }
-
-    private val BluetoothAdapter.isAdapterEnabled: Boolean
-        get() = try {
-            isEnabled
-        } catch (e: SecurityException) {
-            false
-        }
 
     fun startScanning() {
         if (_isScanning.value) return
         _isScanning.value = true
-        
+
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
         val adapter = bluetoothManager?.adapter
-        
+
         if (adapter == null || !adapter.isAdapterEnabled) {
-            addLog("BLE adapter not found or disabled. Switched to Parakram Virtual Hardware Twin.")
+            addLog("BLE adapter not found or disabled. Switched to Virtual Hardware Twin.")
             _scannedDevices.value = listOf(
                 ScannedDevice("[SIMULATOR] Parakram-ESP32-S3-SmartGarden", "C8:F0:9E:51:A4:02", -62),
                 ScannedDevice("[SIMULATOR] Parakram-ESP32-S3-FactoryV2", "4B:32:0A:78:E1:9C", -78),
                 ScannedDevice("[SIMULATOR] Parakram-ESP32-S3-MiniIoT", "9D:AA:CC:BC:54:1F", -89)
             )
         } else {
-            addLog("Real BLE Scan started. Searching for nearby physical ESP32 boards...")
+            addLog("Real BLE Scan started. Searching for nearby ESP32 boards...")
             _scannedDevices.value = listOf(
                 ScannedDevice("[SIMULATOR] Parakram-ESP32-S3-GardenTwin", "C8:F0:9E:51:A4:FF", -50)
             )
             try {
-                val scanner = adapter.bluetoothLeScanner
-                if (scanner != null) {
-                    scanner.startScan(realScanCallback)
-                } else {
-                    addLog("Real BLE Scanner unavailable. Showing virtualization boards only.")
-                }
-            } catch (e: SecurityException) {
-                addLog("BLE Scan missing required phone permissions. Showing virtual twins.")
+                adapter.bluetoothLeScanner?.startScan(realScanCallback)
+                    ?: addLog("BLE Scanner unavailable. Showing virtual boards only.")
+            } catch (_: SecurityException) {
+                addLog("BLE Scan missing permissions. Showing virtual twins.")
             } catch (e: Exception) {
-                addLog("BLE Scanner initialization issue: ${e.message}")
+                addLog("BLE Scanner issue: ${e.message}")
             }
         }
 
         scope.launch {
-            delay(5000) // Autostop scan after 5 sec
+            delay(5000)
             stopScanning()
         }
     }
@@ -264,25 +249,22 @@ class TinkrBleManager private constructor(private val context: Context) {
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
         val adapter = bluetoothManager?.adapter
         if (adapter != null && adapter.isAdapterEnabled) {
-            try {
-                adapter.bluetoothLeScanner?.stopScan(realScanCallback)
-            } catch (e: SecurityException) {
-                // Ignore missing permissions on stop
-            } catch (e: Exception) {
-                // Ignore other stop exceptions
-            }
+            try { adapter.bluetoothLeScanner?.stopScan(realScanCallback) }
+            catch (_: SecurityException) {}
+            catch (_: Exception) {}
         }
         addLog("BLE Scan completed.")
     }
 
     fun addLog(msg: String) {
-        val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
+        val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+            .format(java.util.Date())
         val formattedLog = "[$timestamp] $msg"
         val current = _activityLogs.value.toMutableList()
         current.add(0, formattedLog)
         if (current.size > 150) current.removeAt(current.size - 1)
         _activityLogs.value = current
-        Log.d("ParakramBLE", formattedLog)
+        Log.d(TAG, formattedLog)
     }
 
     fun connectToBoard(device: ScannedDevice) {
@@ -293,8 +275,7 @@ class TinkrBleManager private constructor(private val context: Context) {
 
             val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
             val adapter = bluetoothManager?.adapter
-            
-            // Check if this is a simulator or if adapter is unavailable
+
             if (device.name.contains("SIMULATOR") || adapter == null || !adapter.isAdapterEnabled) {
                 addLog("[SIMULATOR MODE] Performing local hardware link simulation.")
                 delay(300)
@@ -313,17 +294,17 @@ class TinkrBleManager private constructor(private val context: Context) {
                 database.boardDao().disconnectAllBoards()
                 database.boardDao().insertBoard(board)
                 _connectionState.value = BleConnectionState.Connected(board)
-                addLog("Success! Board [${board.name}] bound and simulated.")
+                addLog("Board [${board.name}] bound and simulated.")
             } else {
                 addLog("[PRODUCTION MODE] Initializing native Android BLE GATT Pipeline.")
                 try {
                     val bleDevice = adapter.getRemoteDevice(device.address)
-                    addLog("Connecting to ${bleDevice.address} using high-priority low-energy channel.")
-                    
-                    // Force TRANSPORT_LE (Samsung/Xiaomi optimisations)
-                    bluetoothGatt = bleDevice.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
-                } catch (e: SecurityException) {
-                    addLog("Error connecting physically: permissions missing. Retrying in virtual twin mode.")
+                    addLog("Connecting to ${bleDevice.address} using TRANSPORT_LE...")
+                    bluetoothGatt = bleDevice.connectGatt(
+                        context, false, gattCallback, BluetoothDevice.TRANSPORT_LE
+                    )
+                } catch (_: SecurityException) {
+                    addLog("Permissions missing. Retrying in virtual twin mode.")
                     delay(300)
                     val board = BoardEntity(
                         address = device.address,
@@ -336,7 +317,7 @@ class TinkrBleManager private constructor(private val context: Context) {
                     database.boardDao().insertBoard(board)
                     _connectionState.value = BleConnectionState.Connected(board)
                 } catch (e: Exception) {
-                    addLog("[GATT Interface Error] ${e.message}. Falling back safely to virtualization.")
+                    addLog("[GATT Error] ${e.message}. Falling back to virtual mode.")
                 }
             }
         }
@@ -346,13 +327,8 @@ class TinkrBleManager private constructor(private val context: Context) {
         scope.launch {
             _connectionState.value = BleConnectionState.Disconnected
             database.boardDao().disconnectAllBoards()
-            
-            // Close physical connection if present
             bluetoothGatt?.let { gatt ->
-                try {
-                    gatt.disconnect()
-                    gatt.close()
-                } catch (e: SecurityException) {}
+                try { gatt.disconnect(); gatt.close() } catch (_: SecurityException) {}
                 bluetoothGatt = null
             }
             addLog("BLE disconnected by user request.")
@@ -361,9 +337,8 @@ class TinkrBleManager private constructor(private val context: Context) {
 
     fun processCommand(cmd: CommandMessage) {
         scope.launch {
-            addLog("Protocol CMD received: ${cmd.cmd} on Pin: ${cmd.pin ?: "N/A"}")
-            
-            // Perform physical dispatch first if we are physically connected to a board
+            addLog("Protocol CMD: ${cmd.cmd} on Pin: ${cmd.pin ?: "N/A"}")
+
             bluetoothGatt?.let { gatt ->
                 try {
                     val service = gatt.getService(NUS_SERVICE_UUID)
@@ -372,45 +347,44 @@ class TinkrBleManager private constructor(private val context: Context) {
                         val payload = TinkrProtocol.serializeCommand(cmd)
                         rxChar.value = payload.toByteArray()
                         gatt.writeCharacteristic(rxChar)
-                        addLog("GATT TX successful. Sent: $payload")
+                        addLog("GATT TX sent: $payload")
                     }
-                } catch (e: SecurityException) {
-                    addLog("Failed physical write: missing permissions.")
+                } catch (_: SecurityException) {
+                    addLog("Physical write failed: missing permissions.")
                 } catch (e: Exception) {
-                    addLog("Failed physical dispatch: ${e.message}")
+                    addLog("Physical dispatch failed: ${e.message}")
                 }
             }
 
             when (cmd.cmd) {
                 "set_gpio" -> {
-                    if (cmd.pin == 13) {
-                        val isOn = cmd.value == 1
-                        _pin13LedState.value = isOn
-                        addLog("Simulated Pin 13 LED changed to: ${if (isOn) "ON (Glowing)" else "OFF"}")
-                    } else if (cmd.pin == 12) {
-                        val isOn = cmd.value == 1
-                        _relay12State.value = isOn
-                        addLog("Simulated Pin 12 Relay active state: ${if (isOn) "CLOSED / POWER ON" else "OPEN / IDLE"}")
-                        if (isOn) {
-                            // If relay triggers watering, boost soil moisture!
-                            triggerWatering()
+                    when (cmd.pin) {
+                        13 -> {
+                            val isOn = cmd.value == 1
+                            _pin13LedState.value = isOn
+                            addLog("Pin 13 LED: ${if (isOn) "ON" else "OFF"}")
+                        }
+                        12 -> {
+                            val isOn = cmd.value == 1
+                            _relay12State.value = isOn
+                            addLog("Pin 12 Relay: ${if (isOn) "CLOSED/POWER ON" else "OPEN/IDLE"}")
+                            if (isOn) triggerWatering()
                         }
                     }
                 }
                 "servo_angle" -> {
                     _servo15Angle.value = cmd.value ?: 0
-                    addLog("Simulated Servo 15 Articulated: ${cmd.value}°")
+                    addLog("Servo 15 Articulated: ${cmd.value}\u00B0")
                 }
                 "play_tone" -> {
-                    addLog("Emergency piezo alarm activated. Freq: ${cmd.frequency ?: 1000}Hz")
+                    addLog("Piezo alarm activated. Freq: ${cmd.frequency ?: 1000}Hz")
                 }
                 "display" -> {
                     _tftTextState.value = cmd.text ?: "Parakram OS"
-                    addLog("ST7789 TFT Buffer updated: \"${cmd.text}\"")
+                    addLog("ST7789 TFT updated: \"${cmd.text}\"")
                 }
                 "flash_ota" -> {
-                    addLog("OTA Firmware Update payload accepted.")
-                    addLog("Firmware flashing... 100%")
+                    addLog("OTA payload accepted. Flashing... 100%")
                     addLog("Resetting ESP32-S3 core...")
                     addLog("Re-establishing BLE secure handshake...")
                 }
@@ -432,17 +406,15 @@ class TinkrBleManager private constructor(private val context: Context) {
             while (isActive) {
                 delay(1500)
 
-                // Fluctuating values slightly to make dynamic sparklines and interactive visuals
                 simulatedTemp += (Math.random() - 0.5) * 0.4
                 simulatedTemp = simulatedTemp.coerceIn(18.0, 39.0)
 
-                simulatedMoist -= 0.15 // Decay moisture slowly over time
+                simulatedMoist -= 0.15
                 if (simulatedMoist < 15.0) {
                     simulatedMoist = 15.0
                     addLog("ALERT: Soil Moisture critical [${simulatedMoist.toInt()}%]!")
                 }
 
-                // Photocell goes dark/bright depending on active hours or random events
                 simulatedLight += (Math.random() - 0.5) * 40.0
                 simulatedLight = simulatedLight.coerceIn(10.0, 1200.0)
 
@@ -456,24 +428,29 @@ class TinkrBleManager private constructor(private val context: Context) {
                 val lightMsg = SensorStreamMessage(now, "light_0", simulatedLight, "lx")
                 val co2Msg = SensorStreamMessage(now, "co2_0", simulatedCo2, "ppm")
 
-                // Emit to pipeline Flow
                 _sensorStream.emit(tempMsg)
                 _sensorStream.emit(moistMsg)
                 _sensorStream.emit(lightMsg)
                 _sensorStream.emit(co2Msg)
 
-                // Save periodic sensor logs to database for analytics
                 val activeBoard = _connectionState.value
-                val address = if (activeBoard is BleConnectionState.Connected) activeBoard.board.address else "Simulated_Board"
+                val address = if (activeBoard is BleConnectionState.Connected)
+                    activeBoard.board.address else "Simulated_Board"
 
                 try {
-                    database.sensorLogDao().insertLog(SensorLogEntity(boardAddress = address, sensorKey = "temp_0", value = simulatedTemp, timestamp = now))
-                    database.sensorLogDao().insertLog(SensorLogEntity(boardAddress = address, sensorKey = "moist_0", value = simulatedMoist, timestamp = now))
-                    database.sensorLogDao().insertLog(SensorLogEntity(boardAddress = address, sensorKey = "light_0", value = simulatedLight, timestamp = now))
-                    database.sensorLogDao().insertLog(SensorLogEntity(boardAddress = address, sensorKey = "co2_0", value = simulatedCo2, timestamp = now))
-                } catch (e: Exception) {
-                    // Fail silently during parallel creation / initialization
-                }
+                    database.sensorLogDao().insertLog(
+                        SensorLogEntity(boardAddress = address, sensorKey = "temp_0", value = simulatedTemp, timestamp = now)
+                    )
+                    database.sensorLogDao().insertLog(
+                        SensorLogEntity(boardAddress = address, sensorKey = "moist_0", value = simulatedMoist, timestamp = now)
+                    )
+                    database.sensorLogDao().insertLog(
+                        SensorLogEntity(boardAddress = address, sensorKey = "light_0", value = simulatedLight, timestamp = now)
+                    )
+                    database.sensorLogDao().insertLog(
+                        SensorLogEntity(boardAddress = address, sensorKey = "co2_0", value = simulatedCo2, timestamp = now)
+                    )
+                } catch (_: Exception) {}
             }
         }
     }

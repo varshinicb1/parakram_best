@@ -1,49 +1,54 @@
 package com.example.protocol
 
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
-// --- PROTOCOL PROTO TYPES ---
-
+@JsonClass(generateAdapter = true)
 data class SensorStreamMessage(
-    val t: Long,       // Timestamp
-    val s: String,     // Sensor Key / Name (e.g. "temp_0", "light_0")
-    val v: Double,     // Numeric Value
-    val u: String      // Unit (e.g. "C", "lx", "%")
+    @Json(name = "t") val t: Long,
+    @Json(name = "s") val s: String,
+    @Json(name = "v") val v: Double,
+    @Json(name = "u") val u: String
 )
 
+@JsonClass(generateAdapter = true)
 data class CommandMessage(
-    val cmd: String,       // e.g., "set_gpio", "play_tone", "servo_angle", "display"
-    val pin: Int? = null,
-    val mode: String? = null, // "output", "input", "input_pullup"
-    val value: Int? = null,   // 0 or 1, or pwm duty
-    val text: String? = null, // text for display or logs
-    val frequency: Int? = null // for buzzer/sound
+    @Json(name = "cmd") val cmd: String,
+    @Json(name = "pin") val pin: Int? = null,
+    @Json(name = "mode") val mode: String? = null,
+    @Json(name = "value") val value: Int? = null,
+    @Json(name = "text") val text: String? = null,
+    @Json(name = "frequency") val frequency: Int? = null
 )
 
+@JsonClass(generateAdapter = true)
 data class HardwareSensorInfo(
-    val key: String,
-    val name: String,
-    val type: String,
-    val unit: String,
-    val pin: Int
+    @Json(name = "key") val key: String,
+    @Json(name = "name") val name: String,
+    @Json(name = "type") val type: String,
+    @Json(name = "unit") val unit: String,
+    @Json(name = "pin") val pin: Int
 )
 
+@JsonClass(generateAdapter = true)
 data class HardwareCapability(
-    val name: String,
-    val description: String,
-    val type: String // e.g. "GPIO", "I2C", "ADC", "PWM", "TFT", "AUDIO"
+    @Json(name = "name") val name: String,
+    @Json(name = "description") val description: String,
+    @Json(name = "type") val type: String
 )
 
+@JsonClass(generateAdapter = true)
 data class HardwareManifest(
-    val manifest_version: String,
-    val firmware_version: String,
-    val sensors: List<HardwareSensorInfo>,
-    val capabilities: List<HardwareCapability>
+    @Json(name = "manifest_version") val manifest_version: String,
+    @Json(name = "firmware_version") val firmware_version: String,
+    @Json(name = "sensors") val sensors: List<HardwareSensorInfo>,
+    @Json(name = "capabilities") val capabilities: List<HardwareCapability>
 )
 
 object TinkrProtocol {
-    private val moshi = Moshi.Builder()
+    private val moshi: Moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
 
@@ -54,7 +59,7 @@ object TinkrProtocol {
     fun parseSensorMsg(json: String): SensorStreamMessage? {
         return try {
             sensorAdapter.fromJson(json)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -66,7 +71,7 @@ object TinkrProtocol {
     fun parseCommand(json: String): CommandMessage? {
         return try {
             commandAdapter.fromJson(json)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -78,7 +83,7 @@ object TinkrProtocol {
     fun parseManifest(json: String): HardwareManifest? {
         return try {
             manifestAdapter.fromJson(json)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -87,7 +92,6 @@ object TinkrProtocol {
         return manifestAdapter.toJson(manifest)
     }
 
-    // Default manifest for a standard Intelligent Board Setup (ESP32-S3 IoT Kit)
     fun getDefaultESP32S3Manifest(): HardwareManifest {
         return HardwareManifest(
             manifest_version = "1",

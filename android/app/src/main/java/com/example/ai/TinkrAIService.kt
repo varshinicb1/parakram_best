@@ -3,24 +3,26 @@ package com.example.ai
 import android.content.Context
 import android.util.Log
 import com.example.BuildConfig
-import com.example.data.*
-import com.example.hardware.*
-import com.example.protocol.*
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import kotlinx.coroutines.*
+import com.example.data.AIChatEntity
+import com.example.data.ProjectEntity
+import com.example.data.TinkrDatabase
+import com.example.hardware.TinkrBleManager
+import com.example.protocol.CommandMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.UUID
-
-// --- 1. REFLECTION ANNOTATIONS ---
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
@@ -33,23 +35,31 @@ annotation class ToolParam(val name: String, val description: String, val requir
 interface ToolSet
 
 interface HardwareTools : ToolSet {
-    @Tool("writeGPIO", "Writes digital code level 0 or 1 to a physical microcontroller GPIO pin.")
-    fun writeGPIO(pin: Int, value: Int)
+    @Tool("writeGPIO", "Writes digital level 0 or 1 to a physical microcontroller GPIO pin.")
+    fun writeGPIO(
+        @ToolParam("pin", "GPIO pin number") pin: Int,
+        @ToolParam("value", "Digital state: 0 or 1") value: Int
+    )
 
-    @Tool("updateDisplay", "Renders text messaging buffer directly to ST7789 TFT LCD panel.")
-    fun updateDisplay(text: String)
+    @Tool("updateDisplay", "Renders text to the ST7789 TFT LCD panel buffer.")
+    fun updateDisplay(
+        @ToolParam("text", "Text content to display") text: String
+    )
 
-    @Tool("triggerWatering", "Pulse Pin 12 relay to pump organic nutrients and water onto soil sensors.")
+    @Tool("triggerWatering", "Pulse Pin 12 relay to activate the water pump.")
     fun triggerWatering()
 
-    @Tool("createProject", "Generates and launches a clean custom template project inside Parakram storage.")
-    fun createProject(name: String, templateType: String)
+    @Tool("createProject", "Generates a project template inside Parakram storage.")
+    fun createProject(
+        @ToolParam("name", "Project name") name: String,
+        @ToolParam("templateType", "Template category") templateType: String
+    )
 
-    @Tool("playBuzzer", "Emits a warning buzzer acoustic audio pulse frequency.")
-    fun playBuzzer(frequency: Int)
+    @Tool("playBuzzer", "Emits a buzzer audio pulse at a specified frequency.")
+    fun playBuzzer(
+        @ToolParam("frequency", "Frequency in Hertz") frequency: Int
+    )
 }
-
-// --- 2. AGENT RESPONSE STRUCTURES ---
 
 data class AgentAction(
     val toolName: String,
@@ -74,9 +84,11 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
     private val _aiUpdates = MutableSharedFlow<AIResponse>(replay = 1)
     val aiUpdates: SharedFlow<AIResponse> = _aiUpdates.asSharedFlow()
 
-    private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    private val toolSchemas: List<JSONObject> by lazy { buildToolSchemas() }
 
     companion object {
+        private const val TAG = "TinkrAI"
+
         @Volatile
         private var INSTANCE: TinkrAIService? = null
 
@@ -89,8 +101,38 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
         }
     }
 
-    // --- 3. HARDWARE TOOLS REFLECTIVE IMPLEMENTATIONS ---
+    // --- Reflective tool schema generation from annotations ---
+    private fun buildToolSchemas(): List<JSONObject> {
+        val schemas = mutableListOf<JSONObject>()
+        for (method in HardwareTools::class.java.declaredMethods) {
+            val toolAnnotation = method.getAnnotation(Tool::class.java) ?: continue
+            val params = JSONObject()
+            for ((index, param) in method.parameters.withIndex()) {
+                val paramAnnotation = param.getAnnotation(ToolParam::class.java)
+                if (paramAnnotation != null) {
+                    params.put(paramAnnotation.name, JSONObject().apply {
+                        put("description", paramAnnotation.description)
+                        put("required", paramAnnotation.required)
+                        put("type", when (param.type) {
+                            Int::class.java, java.lang.Integer::class.java -> "integer"
+                            String::class.java -> "string"
+                            Boolean::class.java, java.lang.Boolean::class.java -> "boolean"
+                            Double::class.java, java.lang.Double::class.java -> "number"
+                            else -> "string"
+                        })
+                    })
+                }
+            }
+            schemas.add(JSONObject().apply {
+                put("name", toolAnnotation.name)
+                put("description", toolAnnotation.description)
+                put("parameters", params)
+            })
+        }
+        return schemas
+    }
 
+    // --- Hardware tool implementations ---
     override fun writeGPIO(pin: Int, value: Int) {
         bleManager.processCommand(CommandMessage(cmd = "set_gpio", pin = pin, value = value))
     }
@@ -119,31 +161,28 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
         bleManager.processCommand(CommandMessage(cmd = "play_tone", frequency = frequency))
     }
 
-    // --- 4. RECURSIVE AUTONOMOUS AGENT LOOP ---
-
+    // --- Recursive autonomous agent loop ---
     suspend fun runPrompt(prompt: String, mode: String = "Builder"): AIResponse = withContext(Dispatchers.IO) {
-        bleManager.addLog("AI Thinking Mode Activated... Routing query: \"$prompt\"")
-        
-        // Ensure standard UI feedback is captured
+        bleManager.addLog("AI Thinking... Routing: \"$prompt\"")
         delay(2000)
 
         val apiKey = BuildConfig.GEMINI_API_KEY
         val hasCloudApiKey = apiKey.isNotEmpty() && apiKey != "MY_GEMINI_API_KEY"
 
-        var aiResponse = if (hasCloudApiKey) {
+        val aiResponse = if (hasCloudApiKey) {
             callCloudGemini(prompt, mode, apiKey)
         } else {
             generateLocalResponse(prompt, mode)
         }
 
-        // --- AUTONOMOUS RECURSIVE ACTION EXECUTION ---
+        // Autonomous recursive action execution
         aiResponse.actions.forEach { action ->
             bleManager.addLog("Agent executing: `${action.toolName}` - ${action.description}")
             executeToolReflective(action.toolName, action.payloadJson)
             delay(800)
         }
 
-        // Record AI transaction to database
+        // Record transaction to database
         try {
             database.aiChatDao().insertChat(
                 AIChatEntity(
@@ -160,12 +199,16 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
                     mode = mode,
                     messageText = "${aiResponse.message}\n\n${aiResponse.explanation}",
                     codeBlob = aiResponse.codePreview,
-                    actionsJson = moshi.adapter(List::class.java).toJson(aiResponse.actions)
+                    actionsJson = JSONArray(aiResponse.actions.map {
+                        JSONObject().apply {
+                            put("toolName", it.toolName)
+                            put("description", it.description)
+                            put("payloadJson", it.payloadJson)
+                        }
+                    }).toString()
                 )
             )
-        } catch (e: Exception) {
-            // Database is robust but handle parallel load
-        }
+        } catch (_: Exception) {}
 
         _aiUpdates.emit(aiResponse)
         bleManager.addLog("AI Task Completed: Response generated.")
@@ -176,44 +219,29 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
         try {
             val json = JSONObject(payloadJson)
             when (toolName) {
-                "writeGPIO" -> {
-                    val pin = json.optInt("pin", 13)
-                    val value = json.optInt("value", 1)
-                    writeGPIO(pin, value)
-                }
-                "updateDisplay" -> {
-                    val text = json.optString("text", "Running Parakram OS")
-                    updateDisplay(text)
-                }
-                "triggerWatering2" -> {
-                    triggerWatering()
-                }
-                "playBuzzer" -> {
-                    val freq = json.optInt("frequency", 800)
-                    playBuzzer(freq)
-                }
-                "createProject" -> {
-                    val name = json.optString("name", "Auto Smart Setup")
-                    val type = json.optString("templateType", "Custom")
-                    createProject(name, type)
-                }
-                else -> {
-                    Log.d("AIService", "Executing generic tool: $toolName")
-                }
+                "writeGPIO" -> writeGPIO(json.optInt("pin", 13), json.optInt("value", 1))
+                "updateDisplay" -> updateDisplay(json.optString("text", "Running Parakram OS"))
+                "triggerWatering" -> triggerWatering()
+                "playBuzzer" -> playBuzzer(json.optInt("frequency", 800))
+                "createProject" -> createProject(
+                    json.optString("name", "Auto Smart Setup"),
+                    json.optString("templateType", "Custom")
+                )
+                else -> Log.d(TAG, "Executing generic tool: $toolName")
             }
         } catch (e: Exception) {
-            Log.e("AIService", "Reflective tool call failed: ${e.message}")
+            Log.e(TAG, "Reflective tool call failed: ${e.message}")
         }
     }
 
-    // Direct Ktor/OkHttp POST rest API call to Gemini 3.5 Flash
     private fun callCloudGemini(prompt: String, mode: String, apiKey: String): AIResponse {
         val client = OkHttpClient()
-        val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey"
+        val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey"
 
-        val systemInstruction = "You are the Parakram Operating System AI Assistant. Match hardware outcomes: " +
-                "Supported Tools: writeGPIO(pin: 13/12, value: 0/1), updateDisplay(text), triggerWatering(), playBuzzer(freq), createProject(name, type). " +
-                "Always respond in JSON matching schema: { 'message':'Text summary', 'explanation':'Logical breakdown', 'codePreview':'Arduino Code if needed else leave empty', 'actions':[{'toolName':'tool', 'description':'desc', 'payloadJson':'JSON string parameters'}] }"
+        val toolsJson = JSONArray(toolSchemas.map { it.toString() }).toString()
+        val systemInstruction = """You are the Parakram Operating System AI Assistant running in $mode mode.
+Available Hardware Tools: $toolsJson
+Always respond in JSON: { "message":"Summary", "explanation":"Reasoning", "codePreview":"Arduino code or empty", "actions":[{"toolName":"tool", "description":"desc", "payloadJson":"JSON params"}] }"""
 
         val requestBodyJson = JSONObject()
             .put("contents", JSONArray().put(
@@ -234,9 +262,9 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
 
         return try {
             client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) throw Exception("Unexpected code: ${response.code}")
-                val bodyString = response.body?.string() ?: throw Exception("Empty response body")
-                
+                if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
+                val bodyString = response.body?.string() ?: throw Exception("Empty response")
+
                 val parsed = JSONObject(bodyString)
                 val responseText = parsed.getJSONArray("candidates")
                     .getJSONObject(0)
@@ -251,13 +279,11 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
                 if (actionsArr != null) {
                     for (i in 0 until actionsArr.length()) {
                         val actObj = actionsArr.getJSONObject(i)
-                        actionsList.add(
-                            AgentAction(
-                                toolName = actObj.getString("toolName"),
-                                description = actObj.getString("description"),
-                                payloadJson = actObj.optString("payloadJson", "{}")
-                            )
-                        )
+                        actionsList.add(AgentAction(
+                            toolName = actObj.getString("toolName"),
+                            description = actObj.getString("description"),
+                            payloadJson = actObj.optString("payloadJson", "{}")
+                        ))
                     }
                 }
 
@@ -266,11 +292,11 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
                     explanation = resJson.optString("explanation", ""),
                     actions = actionsList,
                     codePreview = resJson.optString("codePreview", ""),
-                    modelSource = "Gemini 3.5 Flash (Cloud Mode)"
+                    modelSource = "Gemini 2.0 Flash (Cloud)"
                 )
             }
         } catch (e: Exception) {
-            Log.e("TinkrAI", "Cloud call failed, falling back to local simulation. Error: ${e.message}")
+            Log.e(TAG, "Cloud call failed: ${e.message}")
             generateLocalResponse(prompt, mode)
         }
     }
@@ -278,162 +304,46 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
     private fun generateLocalResponse(prompt: String, mode: String): AIResponse {
         val query = prompt.lowercase()
         val actions = mutableListOf<AgentAction>()
-        var message = "Acknowledged. Let's process: \"$prompt\""
-        var explanation = "Interpreting outcomes using local Gemma 4 E2B reasoning pipeline."
+        var message = "Acknowledged. Processing: \"$prompt\""
+        var explanation = "Using local Gemma 4 E2B reasoning pipeline."
         var codePreview = ""
 
         when {
             query.contains("led") || query.contains("turn on") || query.contains("light") -> {
                 val isOn = !query.contains("off")
                 val value = if (isOn) 1 else 0
-                message = "Configuring GPIO Status Pin 13 to state: ${if (isOn) "HIGH" else "LOW"}."
-                explanation = "Determined onboard status indicator LED needs to respond to context requirements. Initiating direct GPIO command."
-                actions.add(
-                    AgentAction(
-                        "writeGPIO",
-                        "Setting diagnostic Pin 13 mapping to $value",
-                        "{\"pin\":13, \"value\":$value}"
-                    )
-                )
-                actions.add(
-                    AgentAction(
-                        "updateDisplay",
-                        "Screen updated to reflect LED modification",
-                        "{\"text\":\"LED Pin13 -> ${if (isOn) "ON" else "OFF"}\"}"
-                    )
-                )
-                codePreview = """
-// Compiled Parakram Arduino Sketch
-void setup() {
-  pinMode(13, OUTPUT);
-}
-
-void loop() {
-  // Writes digital value ${if (isOn) "HIGH" else "LOW"} to status Pin 13
-  digitalWrite(13, ${if (isOn) "HIGH" else "LOW"});
-}
-                """.trimIndent()
+                message = "Configuring GPIO Pin 13 to ${if (isOn) "HIGH" else "LOW"}."
+                explanation = "Status LED responds to GPIO command. Initiating direct write."
+                actions.add(AgentAction("writeGPIO", "Setting Pin 13 to $value", "{\"pin\":13, \"value\":$value}"))
+                actions.add(AgentAction("updateDisplay", "LCD update for LED state", "{\"text\":\"LED Pin13 -> ${if (isOn) "ON" else "OFF"}\"}"))
+                codePreview = "void setup() {\n  pinMode(13, OUTPUT);\n}\nvoid loop() {\n  digitalWrite(13, ${if (isOn) "HIGH" else "LOW"});\n}"
             }
             query.contains("water") || query.contains("irrigate") || query.contains("soil") -> {
-                message = "Activating intelligent garden soil moisture irrigation pulse."
-                explanation = "Detected soil hydration conditions. Issuing high physical control command to GPIO Pin 12 to close Relay contacts (Watering Pump active)."
-                actions.add(
-                    AgentAction(
-                        "writeGPIO",
-                        "Setting high state to Pin 12 Relay",
-                        "{\"pin\":12, \"value\":1}"
-                    )
-                )
-                actions.add(
-                    AgentAction(
-                        "updateDisplay",
-                        "Visualizing safe water flow feedback on board LCD screen",
-                        "{\"text\":\"ACTIVE: Watering\nSoil Moisture -> 80%\"}"
-                    )
-                )
-                actions.add(
-                    AgentAction(
-                        "playBuzzer",
-                        "Playing short safe frequency feedback hum",
-                        "{\"frequency\":650}"
-                    )
-                )
-                codePreview = """
-// Intelligent Watering Automation
-#define SOIL_PIN 32
-#define PUMP_RELAY_PIN 12
-
-void setup() {
-  pinMode(PUMP_RELAY_PIN, OUTPUT);
-  pinMode(SOIL_PIN, INPUT);
-}
-
-void loop() {
-  int level = analogRead(SOIL_PIN);
-  if (level < 500) { // Thirsty
-    digitalWrite(PUMP_RELAY_PIN, HIGH);
-    delay(4000); // Pulse pumping
-    digitalWrite(PUMP_RELAY_PIN, LOW);
-  }
-}
-                """.trimIndent()
+                message = "Activating soil moisture irrigation pulse."
+                explanation = "Issuing relay command to GPIO Pin 12 for water pump activation."
+                actions.add(AgentAction("writeGPIO", "Pin 12 Relay HIGH", "{\"pin\":12, \"value\":1}"))
+                actions.add(AgentAction("updateDisplay", "LCD watering feedback", "{\"text\":\"ACTIVE: Watering\\nSoil Moisture -> 80%\"}"))
+                actions.add(AgentAction("playBuzzer", "Feedback hum", "{\"frequency\":650}"))
+                codePreview = "#define PUMP_RELAY 12\n#define SOIL_PIN 32\nvoid setup() {\n  pinMode(PUMP_RELAY, OUTPUT);\n}\nvoid loop() {\n  if (analogRead(SOIL_PIN) < 500) {\n    digitalWrite(PUMP_RELAY, HIGH);\n    delay(4000);\n    digitalWrite(PUMP_RELAY, LOW);\n  }\n}"
             }
             query.contains("alarm") || query.contains("buzz") || query.contains("siren") -> {
-                message = "Triggering onboard auditory advisory alarms!"
-                explanation = "Emergency threshold exceeded or manual buzz test requested. Running Piezo acoustic program at Pin 14."
-                actions.add(
-                    AgentAction(
-                        "playBuzzer",
-                        "Activating Pin 14 Piezo audio alarm chime loop",
-                        "{\"frequency\":1200}"
-                    )
-                )
-                actions.add(
-                    AgentAction(
-                        "updateDisplay",
-                        "Printing visual Red Warning alert state to TFT Display buffer",
-                        "{\"text\":\"CRITICAL ALERT\nEmergency siren!\"}"
-                    )
-                )
-                codePreview = """
-// Warning Acoustic Alarm
-#define PIEZO_PIN 14
-
-void setup() {
-  pinMode(PIEZO_PIN, OUTPUT);
-}
-
-void loop() {
-  // Play warbling siren chime
-  for(int f=800; f<1500; f+=10) {
-    tone(PIEZO_PIN, f);
-    delay(10);
-  }
-  noTone(PIEZO_PIN);
-}
-                """.trimIndent()
+                message = "Triggering auditory alarm!"
+                explanation = "Emergency acoustic program at Pin 14 piezo."
+                actions.add(AgentAction("playBuzzer", "Pin 14 alarm", "{\"frequency\":1200}"))
+                actions.add(AgentAction("updateDisplay", "Warning on TFT", "{\"text\":\"CRITICAL ALERT\\nEmergency siren!\"}"))
+                codePreview = "#define PIEZO 14\nvoid setup() { pinMode(PIEZO, OUTPUT); }\nvoid loop() {\n  for(int f=800;f<1500;f+=10) { tone(PIEZO,f); delay(10); }\n  noTone(PIEZO);\n}"
             }
             query.contains("project") || query.contains("create") || query.contains("scaffold") -> {
-                message = "Instantiating Parakram Project Sandbox Setup..."
-                explanation = "Generating hardware specifications manifest, boilerplate schemas, and dependency mappings for smart planter monitoring."
-                actions.add(
-                    AgentAction(
-                        "createProject",
-                        "Compiling custom SmartPlanter template file outputs",
-                        "{\"name\":\"Smart Garden Planter\", \"templateType\":\"SmartPlanter\"}"
-                    )
-                )
-                actions.add(
-                    AgentAction(
-                        "updateDisplay",
-                        "Refreshing layout sandbox display screen buffer",
-                        "{\"text\":\"Workspace Configured\nProject: Planter\"}"
-                    )
-                )
-                codePreview = """
-// Complete Parakram Planter Template Schema (.parakram)
-{
-  "project_name": "Smart Garden Planter",
-  "firmware": "ESP32-S3",
-  "autostart": true,
-  "sensors": {
-    "moist_inlet": 32,
-    "temp_sensor": 4
-  }
-}
-                """.trimIndent()
+                message = "Instantiating Project Sandbox..."
+                explanation = "Generating hardware specifications and boilerplate for smart planter."
+                actions.add(AgentAction("createProject", "SmartPlanter template", "{\"name\":\"Smart Garden Planter\", \"templateType\":\"SmartPlanter\"}"))
+                actions.add(AgentAction("updateDisplay", "Workspace confirmed", "{\"text\":\"Workspace Configured\\nProject: Planter\"}"))
+                codePreview = "{\n  \"project_name\": \"Smart Garden Planter\",\n  \"firmware\": \"ESP32-S3\",\n  \"autostart\": true,\n  \"sensors\": { \"moist_inlet\": 32, \"temp_sensor\": 4 }\n}"
             }
             else -> {
-                // Return default intelligent hardware tutor response
-                message = "Parakram Companion AI agent listening in **$mode Mode**."
-                explanation = "Ready to compile microcontroller code, parse BLE sensor logs, or manage Pin registers. Try asking me:\n- 'Turn on the status LED'\n- 'Water the plant now'\n- 'Sound the emergency warning siren'"
-                actions.add(
-                    AgentAction(
-                        "updateDisplay",
-                        "Idle system diagnostic text",
-                        "{\"text\":\"AI Agent Standby\nMode: $mode\"}"
-                    )
-                )
+                message = "Parakram AI agent listening in **$mode Mode**."
+                explanation = "Ready to compile code, parse sensor logs, or manage pins. Try:\n- 'Turn on the status LED'\n- 'Water the plant now'\n- 'Sound the emergency siren'"
+                actions.add(AgentAction("updateDisplay", "Idle diagnostic", "{\"text\":\"AI Agent Standby\\nMode: $mode\"}"))
             }
         }
 
@@ -442,7 +352,7 @@ void loop() {
             explanation = explanation,
             actions = actions,
             codePreview = codePreview,
-            modelSource = "Local Gemma 4 E2B (Simulated Local)"
+            modelSource = "Local Gemma 4 E2B (Simulated)"
         )
     }
 }
