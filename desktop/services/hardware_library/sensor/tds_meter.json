@@ -1,0 +1,21 @@
+{
+  "id": "tds_meter",
+  "name": "TDS Water Quality",
+  "category": "sensor",
+  "description": "TDS Water Quality firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef TDS_H\n#define TDS_H\nvoid tds_setup();\nvoid tds_loop();\nfloat tds_get_ppm();\nfloat tds_get_voltage();\n#endif",
+    "source": "#include \"tds_meter.h\"\n#include <Arduino.h>\n#define TDS_PIN 34\nstatic float _ppm=0,_v=0;static unsigned long _l=0;\nvoid tds_setup(){pinMode(TDS_PIN,INPUT);Serial.println(\"[tds] OK\");}\nvoid tds_loop(){if(millis()-_l<1000)return;_l=millis();int r=0;for(int i=0;i<10;i++)r+=analogRead(TDS_PIN);_v=r/10.0*3.3/4095.0;float comp=_v*(1.0+0.02*(25.0-25.0));_ppm=(133.42*comp*comp*comp-255.86*comp*comp+857.39*comp)*0.5;}\nfloat tds_get_ppm(){return _ppm;}\nfloat tds_get_voltage(){return _v;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

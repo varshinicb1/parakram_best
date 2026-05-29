@@ -1,0 +1,25 @@
+{
+  "id": "esc_bldc",
+  "name": "ESC BLDC Motor",
+  "category": "actuator",
+  "description": "ESC BLDC Motor firmware block",
+  "libraries": [
+    "ESP32Servo.h"
+  ],
+  "pins": {
+    "signal": 13
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "madhephaestus/ESP32Servo@^3.0.5"
+  ],
+  "firmware_template": {
+    "header": "#ifndef ESC_BLDC_H\n#define ESC_BLDC_H\nvoid esc_setup();\nvoid esc_arm();\nvoid esc_set_throttle(int pct);\nvoid esc_stop();\n#endif",
+    "source": "#include \"esc_bldc.h\"\n#include <ESP32Servo.h>\n#define ESC_PIN 13\nstatic Servo esc;\nvoid esc_setup(){esc.attach(ESC_PIN,1000,2000);esc.writeMicroseconds(1000);Serial.println(\"[esc] OK\");}\nvoid esc_arm(){esc.writeMicroseconds(1000);delay(2000);Serial.println(\"[esc] Armed\");}\nvoid esc_set_throttle(int p){int us=map(constrain(p,0,100),0,100,1000,2000);esc.writeMicroseconds(us);}\nvoid esc_stop(){esc.writeMicroseconds(1000);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

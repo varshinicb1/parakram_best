@@ -1,0 +1,44 @@
+{
+    "id": "encrypted_storage",
+    "name": "Encrypted Storage",
+    "category": "security",
+    "description": "AES-256 encrypted data storage using NVS partitions.",
+    "inputs": [
+        {
+            "name": "data",
+            "data_type": "string",
+            "description": "Data to encrypt and store"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "ready",
+            "data_type": "bool"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "partition_label",
+            "label": "Partition Label",
+            "value_type": "string",
+            "default": "nvs_secure"
+        },
+        {
+            "key": "namespace",
+            "label": "Namespace",
+            "value_type": "string",
+            "default": "encrypted"
+        }
+    ],
+    "libraries": [],
+    "firmware_template": {
+        "header": "#ifndef ENCRYPTED_STORAGE_H\n#define ENCRYPTED_STORAGE_H\n#include <Arduino.h>\n\nvoid encrypted_storage_setup();\nbool encrypted_store(const char* key, const uint8_t* data, size_t len);\nsize_t encrypted_load(const char* key, uint8_t* buffer, size_t maxLen);\n\n#endif",
+        "source": "#include \"encrypted_storage.h\"\n#include <Preferences.h>\n#include \"mbedtls/aes.h\"\n\nPreferences _encStore;\nstatic const uint8_t _aesKey[32] = {0}; // Set your 256-bit key\n\nvoid encrypted_storage_setup() {\n    _encStore.begin(\"encrypted\", false);\n    Serial.println(\"[enc-store] Encrypted storage ready\");\n}\n\nbool encrypted_store(const char* key, const uint8_t* data, size_t len) {\n    // Pad to 16-byte blocks\n    size_t padLen = ((len / 16) + 1) * 16;\n    uint8_t* padded = (uint8_t*)calloc(padLen, 1);\n    memcpy(padded, data, len);\n    uint8_t* encrypted = (uint8_t*)malloc(padLen);\n\n    mbedtls_aes_context aes;\n    mbedtls_aes_init(&aes);\n    mbedtls_aes_setkey_enc(&aes, _aesKey, 256);\n\n    for (size_t i = 0; i < padLen; i += 16) {\n        mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_ENCRYPT, padded + i, encrypted + i);\n    }\n    mbedtls_aes_free(&aes);\n\n    size_t written = _encStore.putBytes(key, encrypted, padLen);\n    free(padded); free(encrypted);\n    return written > 0;\n}\n\nsize_t encrypted_load(const char* key, uint8_t* buffer, size_t maxLen) {\n    size_t encLen = _encStore.getBytesLength(key);\n    if (encLen == 0 || encLen > maxLen) return 0;\n\n    uint8_t* encrypted = (uint8_t*)malloc(encLen);\n    _encStore.getBytes(key, encrypted, encLen);\n\n    mbedtls_aes_context aes;\n    mbedtls_aes_init(&aes);\n    mbedtls_aes_setkey_dec(&aes, _aesKey, 256);\n\n    for (size_t i = 0; i < encLen; i += 16) {\n        mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_DECRYPT, encrypted + i, buffer + i);\n    }\n    mbedtls_aes_free(&aes);\n    free(encrypted);\n    return encLen;\n}"
+    },
+    "icon": "🛡️",
+    "color": "#dc2626",
+    "memory_estimate": {
+        "flash": 12000,
+        "sram": 4000
+    }
+}

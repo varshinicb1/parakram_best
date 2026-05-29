@@ -1,0 +1,27 @@
+{
+  "id": "ina260",
+  "name": "INA260 Power Monitor",
+  "category": "sensor",
+  "description": "INA260 Power Monitor firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_INA260.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x40",
+  "platformio_deps": [
+    "adafruit/Adafruit INA260 Library@^1.5.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef INA260_H\n#define INA260_H\nvoid ina260_setup();\nvoid ina260_loop();\nfloat ina260_get_current_mA();\nfloat ina260_get_voltage();\nfloat ina260_get_power_mW();\n#endif",
+    "source": "#include \"ina260.h\"\n#include <Wire.h>\n#include <Adafruit_INA260.h>\nstatic Adafruit_INA260 ina;\nstatic float _mA=0,_v=0,_mW=0;\nstatic unsigned long _last=0;\nvoid ina260_setup(){Wire.begin();if(!ina.begin()){Serial.println(\"[ina260] Fail!\");return;}Serial.println(\"[ina260] OK\");}\nvoid ina260_loop(){if(millis()-_last<500)return;_last=millis();_mA=ina.readCurrent();_v=ina.readBusVoltage()/1000.0;_mW=ina.readPower();}\nfloat ina260_get_current_mA(){return _mA;}\nfloat ina260_get_voltage(){return _v;}\nfloat ina260_get_power_mW(){return _mW;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

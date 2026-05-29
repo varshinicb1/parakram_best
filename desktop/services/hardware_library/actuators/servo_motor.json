@@ -1,0 +1,56 @@
+{
+  "id": "servo_motor",
+  "name": "Servo Motor",
+  "category": "actuator",
+  "description": "Controls a servo motor position (0-180 degrees). Input accepts angle as float.",
+  "inputs": [
+    {
+      "name": "angle",
+      "data_type": "float",
+      "description": "Target angle (0-180)"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "current_angle",
+      "data_type": "float",
+      "description": "Current servo angle"
+    }
+  ],
+  "configuration": [
+    {
+      "key": "pin",
+      "label": "Signal Pin",
+      "value_type": "int",
+      "default": "13",
+      "description": "GPIO pin for servo signal"
+    },
+    {
+      "key": "min_pulse",
+      "label": "Min Pulse (µs)",
+      "value_type": "int",
+      "default": "544",
+      "description": "Minimum pulse width"
+    },
+    {
+      "key": "max_pulse",
+      "label": "Max Pulse (µs)",
+      "value_type": "int",
+      "default": "2400",
+      "description": "Maximum pulse width"
+    }
+  ],
+  "code_template": "servo_template",
+  "icon": "settings",
+  "color": "#10b981",
+  "libraries": [
+    "ESP32Servo@^0.13.0"
+  ],
+  "pins_required": {
+    "pwm": 1
+  },
+  "firmware_template": {
+    "header": "#ifndef SERVO_MOTOR_H\n#define SERVO_MOTOR_H\n\n#include <Servo.h>\n\nclass ServoMotor {\npublic:\n    void setup(int pin, int min_pulse, int max_pulse);\n    void loop(float angle);\n    float getCurrentAngle() const;\n\nprivate:\n    Servo servo;\n    int current_angle = 0;\n};\n\n#endif // SERVO_MOTOR_H",
+    "source": "#include \"servo_motor.h\"\n\nvoid ServoMotor::setup(int pin, int min_pulse, int max_pulse) {\n    servo.attach(pin, min_pulse, max_pulse);\n    if (!servo.attached()) {\n        Serial.println(\"[servo_motor] Failed to attach servo motor. Retrying...\");\n        delay(1000);\n        setup(pin, min_pulse, max_pulse); // Retry\n    }\n}\n\nvoid ServoMotor::loop(float angle) {\n    if (angle < 0 || angle > 180) {\n        Serial.println(\"[servo_motor] Invalid angle. Must be between 0 and 180 degrees.\");\n        return;\n    }\n    servo.write(angle);\n    current_angle = angle;\n}\n\nfloat ServoMotor::getCurrentAngle() const {\n    return current_angle;\n}"
+  }
+}

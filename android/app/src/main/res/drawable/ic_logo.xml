@@ -1,0 +1,32 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="128dp"
+    android:height="128dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+
+    <!-- Background Outer Hex Shield base (Valorous Frame) -->
+    <path
+        android:pathData="M64,8 L114,35 L114,90 L64,120 L14,90 L14,35 Z"
+        android:fillColor="#15171F"
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="4" />
+
+    <!-- Innermost Glowing Core Board Accent -->
+    <path
+        android:pathData="M64,22 L98,42 L98,82 L64,104 L30,82 L30,42 Z"
+        android:fillColor="#222533"
+        android:strokeColor="#FFB30F"
+        android:strokeWidth="2.5" />
+
+    <!-- Central Glowing Thunderbolt / Energy Bolt representing power & signal -->
+    <path
+        android:pathData="M68,34 L46,68 L62,68 L56,94 L82,60 L64,60 Z"
+        android:fillColor="#FF6B35" />
+
+    <!-- Electronic trace lines to show hardware intelligence -->
+    <path
+        android:pathData="M30,42 L46,30 M98,42 L82,30 M64,8 L64,22 M64,104 L64,120"
+        android:strokeColor="#FFB30F"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+</vector>

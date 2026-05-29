@@ -1,0 +1,23 @@
+{
+  "id": "rs485",
+  "name": "RS485 Serial",
+  "category": "communication",
+  "description": "RS485 Serial firmware block",
+  "libraries": [],
+  "pins": {
+    "rx": 16,
+    "tx": 17,
+    "de": 4
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef RS485_H\n#define RS485_H\nvoid rs485_setup();\nvoid rs485_send(const char* data);\nString rs485_receive();\n#endif",
+    "source": "#include \"rs485.h\"\n#include <HardwareSerial.h>\n#define DE_PIN 4\nstatic HardwareSerial rs(1);\nvoid rs485_setup(){pinMode(DE_PIN,OUTPUT);digitalWrite(DE_PIN,LOW);rs.begin(9600,SERIAL_8N1,16,17);Serial.println(\"[rs485] OK\");}\nvoid rs485_send(const char*d){digitalWrite(DE_PIN,HIGH);delay(1);rs.println(d);rs.flush();digitalWrite(DE_PIN,LOW);}\nString rs485_receive(){String s=\"\";while(rs.available())s+=(char)rs.read();return s;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

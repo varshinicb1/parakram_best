@@ -1,0 +1,22 @@
+{
+  "id": "mq_gas_sensor",
+  "name": "MQ Gas Sensor (MQ-2/MQ-135)",
+  "category": "sensor",
+  "description": "MQ Gas Sensor (MQ-2/MQ-135) firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34,
+    "digital": 35
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef MQ_GAS_H\n#define MQ_GAS_H\nvoid mq_gas_setup();\nvoid mq_gas_loop();\nint mq_gas_get_raw();\nfloat mq_gas_get_ppm();\nbool mq_gas_alert();\n#endif",
+    "source": "#include \"mq_gas_sensor.h\"\n#include <Arduino.h>\n#define MQ_ANALOG_PIN 34\n#define MQ_DIGITAL_PIN 35\n#define MQ_THRESHOLD 2000\nstatic int _raw = 0;\nstatic float _ppm = 0;\nstatic bool _alert = false;\nstatic unsigned long _last = 0;\nvoid mq_gas_setup() {\n  pinMode(MQ_ANALOG_PIN, INPUT);\n  pinMode(MQ_DIGITAL_PIN, INPUT);\n  Serial.println(\"[mq] OK \u2014 warm-up 60s\");\n}\nvoid mq_gas_loop() {\n  if (millis()-_last < 1000) return;\n  _last = millis();\n  _raw = analogRead(MQ_ANALOG_PIN);\n  _ppm = (float)_raw / 4095.0f * 1000.0f;\n  _alert = !digitalRead(MQ_DIGITAL_PIN);\n  if (_alert) Serial.printf(\"[mq] ALERT! raw=%d ppm=%.0f\\n\",_raw,_ppm);\n}\nint mq_gas_get_raw(){return _raw;}\nfloat mq_gas_get_ppm(){return _ppm;}\nbool mq_gas_alert(){return _alert;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

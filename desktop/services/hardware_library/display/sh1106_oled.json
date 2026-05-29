@@ -1,0 +1,28 @@
+{
+  "id": "sh1106_oled",
+  "name": "SH1106 OLED 1.3\"",
+  "category": "display",
+  "description": "SH1106 OLED 1.3\" firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_SH110X.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x3C",
+  "platformio_deps": [
+    "adafruit/Adafruit SH110X@^2.1.10",
+    "adafruit/Adafruit GFX Library@^1.11.9"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SH1106_H\n#define SH1106_H\n#include <Adafruit_SH110X.h>\nvoid sh1106_setup();\nvoid sh1106_clear();\nvoid sh1106_text(int x,int y,const char*text,int size);\nvoid sh1106_update();\n#endif",
+    "source": "#include \"sh1106_oled.h\"\n#include <Wire.h>\n#include <Adafruit_GFX.h>\nstatic Adafruit_SH1106G display(128,64,&Wire,-1);\nvoid sh1106_setup(){Wire.begin();if(!display.begin(0x3C,true)){Serial.println(\"[sh1106] Fail!\");return;}display.clearDisplay();display.setTextColor(SH110X_WHITE);display.display();Serial.println(\"[sh1106] OK 128x64\");}\nvoid sh1106_clear(){display.clearDisplay();}\nvoid sh1106_text(int x,int y,const char*t,int s){display.setTextSize(s);display.setCursor(x,y);display.print(t);}\nvoid sh1106_update(){display.display();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

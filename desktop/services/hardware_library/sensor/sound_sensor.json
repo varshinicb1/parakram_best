@@ -1,0 +1,22 @@
+{
+  "id": "sound_sensor",
+  "name": "Sound Level Sensor",
+  "category": "sensor",
+  "description": "Sound Level Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 36,
+    "digital": 35
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef SOUND_H\n#define SOUND_H\nvoid sound_setup();\nvoid sound_loop();\nint sound_get_level();\nbool sound_detected();\n#endif",
+    "source": "#include \"sound_sensor.h\"\n#include <Arduino.h>\n#define SOUND_A 36\n#define SOUND_D 35\nstatic int _level=0;static bool _det=false;static unsigned long _l=0;\nvoid sound_setup(){pinMode(SOUND_A,INPUT);pinMode(SOUND_D,INPUT);Serial.println(\"[sound] OK\");}\nvoid sound_loop(){if(millis()-_l<50)return;_l=millis();int mn=4095,mx=0;for(int i=0;i<32;i++){int s=analogRead(SOUND_A);if(s<mn)mn=s;if(s>mx)mx=s;}_level=mx-mn;_det=!digitalRead(SOUND_D);}\nint sound_get_level(){return _level;}\nbool sound_detected(){return _det;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

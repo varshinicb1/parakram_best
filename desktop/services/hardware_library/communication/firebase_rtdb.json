@@ -1,0 +1,24 @@
+{
+  "id": "firebase_rtdb",
+  "name": "Firebase Realtime DB",
+  "category": "communication",
+  "description": "Firebase Realtime DB firmware block",
+  "libraries": [
+    "WiFi.h",
+    "Firebase_ESP_Client.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "mobizt/Firebase Arduino Client Library for ESP8266 and ESP32@^4.4.8"
+  ],
+  "firmware_template": {
+    "header": "#ifndef FIREBASE_H\n#define FIREBASE_H\nvoid firebase_setup(const char*host,const char*api_key);\nvoid firebase_loop();\nbool firebase_set_float(const char*path,float value);\nbool firebase_set_string(const char*path,const char*value);\nfloat firebase_get_float(const char*path);\nString firebase_get_string(const char*path);\n#endif",
+    "source": "#include \"firebase_rtdb.h\"\n#include <WiFi.h>\n#include <Firebase_ESP_Client.h>\nstatic FirebaseData fbdo;\nstatic FirebaseAuth auth;\nstatic FirebaseConfig config;\nvoid firebase_setup(const char*host,const char*key){config.database_url=host;config.api_key=key;Firebase.begin(&config,&auth);Firebase.reconnectWiFi(true);Serial.println(\"[firebase] OK\");}\nvoid firebase_loop(){}\nbool firebase_set_float(const char*p,float v){return Firebase.RTDB.setFloat(&fbdo,p,v);}\nbool firebase_set_string(const char*p,const char*v){return Firebase.RTDB.setString(&fbdo,p,v);}\nfloat firebase_get_float(const char*p){Firebase.RTDB.getFloat(&fbdo,p);return fbdo.floatData();}\nString firebase_get_string(const char*p){Firebase.RTDB.getString(&fbdo,p);return fbdo.stringData();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

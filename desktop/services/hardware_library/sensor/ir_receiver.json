@@ -1,0 +1,25 @@
+{
+  "id": "ir_receiver",
+  "name": "IR Receiver (VS1838B)",
+  "category": "sensor",
+  "description": "IR Receiver (VS1838B) firmware block",
+  "libraries": [
+    "IRremote.h"
+  ],
+  "pins": {
+    "signal": 15
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "crankyoldgit/IRremoteESP8266@^2.8.6"
+  ],
+  "firmware_template": {
+    "header": "#ifndef IR_RECEIVER_H\n#define IR_RECEIVER_H\nvoid ir_rx_setup();\nvoid ir_rx_loop();\nuint32_t ir_rx_get_code();\nbool ir_rx_available();\n#endif",
+    "source": "#include \"ir_receiver.h\"\n#include <IRrecv.h>\n#include <IRutils.h>\n#define IR_PIN 15\nstatic IRrecv irrecv(IR_PIN);\nstatic decode_results results;\nstatic uint32_t _code=0;static bool _avail=false;\nvoid ir_rx_setup(){irrecv.enableIRIn();Serial.println(\"[ir_rx] OK\");}\nvoid ir_rx_loop(){if(irrecv.decode(&results)){_code=results.value;_avail=true;irrecv.resume();}}\nuint32_t ir_rx_get_code(){_avail=false;return _code;}\nbool ir_rx_available(){return _avail;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

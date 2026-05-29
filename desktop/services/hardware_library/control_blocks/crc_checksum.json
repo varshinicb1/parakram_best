@@ -1,0 +1,19 @@
+{
+  "id": "crc_checksum",
+  "name": "CRC8/CRC16/CRC32",
+  "category": "control_blocks",
+  "description": "CRC8/CRC16/CRC32 firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef CRC_H\n#define CRC_H\n#include <Arduino.h>\nuint8_t crc8(const uint8_t*data,size_t len);\nuint16_t crc16(const uint8_t*data,size_t len);\nuint32_t crc32(const uint8_t*data,size_t len);\n#endif",
+    "source": "#include \"crc_checksum.h\"\nuint8_t crc8(const uint8_t*d,size_t l){uint8_t c=0;for(size_t i=0;i<l;i++){c^=d[i];for(int j=0;j<8;j++)c=(c&0x80)?(c<<1)^0x31:(c<<1);}return c;}\nuint16_t crc16(const uint8_t*d,size_t l){uint16_t c=0xFFFF;for(size_t i=0;i<l;i++){c^=d[i];for(int j=0;j<8;j++)c=(c&1)?(c>>1)^0xA001:(c>>1);}return c;}\nuint32_t crc32(const uint8_t*d,size_t l){uint32_t c=0xFFFFFFFF;for(size_t i=0;i<l;i++){c^=d[i];for(int j=0;j<8;j++)c=(c&1)?(c>>1)^0xEDB88320:(c>>1);}return c^0xFFFFFFFF;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

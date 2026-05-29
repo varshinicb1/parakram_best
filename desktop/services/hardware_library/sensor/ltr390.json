@@ -1,0 +1,27 @@
+{
+  "id": "ltr390",
+  "name": "LTR390 UV Sensor",
+  "category": "sensor",
+  "description": "LTR390 UV Sensor firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_LTR390.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x53",
+  "platformio_deps": [
+    "adafruit/Adafruit LTR390 Library@^1.1.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef LTR390_H\n#define LTR390_H\nvoid ltr390_setup();\nvoid ltr390_loop();\nfloat ltr390_get_uvi();\nuint32_t ltr390_get_uv_raw();\nuint32_t ltr390_get_als();\n#endif",
+    "source": "#include \"ltr390.h\"\n#include <Wire.h>\n#include <Adafruit_LTR390.h>\nstatic Adafruit_LTR390 ltr;\nstatic float _uvi=0;static uint32_t _uv=0,_als=0;\nstatic unsigned long _last=0;\nvoid ltr390_setup(){Wire.begin();if(!ltr.begin()){Serial.println(\"[ltr390] Fail!\");return;}ltr.setMode(LTR390_MODE_UVS);ltr.setGain(LTR390_GAIN_3);ltr.setResolution(LTR390_RESOLUTION_16BIT);Serial.println(\"[ltr390] OK\");}\nvoid ltr390_loop(){if(millis()-_last<1000)return;_last=millis();if(ltr.newDataAvailable()){_uv=ltr.readUVS();_uvi=ltr.getUVI();}}\nfloat ltr390_get_uvi(){return _uvi;}\nuint32_t ltr390_get_uv_raw(){return _uv;}\nuint32_t ltr390_get_als(){return _als;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

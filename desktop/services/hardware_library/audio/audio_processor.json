@@ -1,0 +1,63 @@
+{
+    "id": "audio_processor",
+    "name": "Audio Processor",
+    "category": "audio",
+    "description": "Real-time audio processing: FFT, RMS level, peak detection, frequency analysis.",
+    "inputs": [
+        {
+            "name": "audio_data",
+            "data_type": "any",
+            "description": "Raw audio buffer from I2S mic"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "dominant_freq",
+            "data_type": "float",
+            "description": "Dominant frequency (Hz)"
+        },
+        {
+            "name": "rms_db",
+            "data_type": "float",
+            "description": "RMS level in dB"
+        },
+        {
+            "name": "is_loud",
+            "data_type": "bool",
+            "description": "Above noise threshold"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "fft_size",
+            "label": "FFT Size",
+            "value_type": "int",
+            "default": "1024"
+        },
+        {
+            "key": "noise_threshold_db",
+            "label": "Noise Threshold (dB)",
+            "value_type": "float",
+            "default": "-40.0"
+        },
+        {
+            "key": "sample_rate",
+            "label": "Sample Rate",
+            "value_type": "int",
+            "default": "16000"
+        }
+    ],
+    "libraries": [
+        "kosme/arduinoFFT@^2.0.0"
+    ],
+    "firmware_template": {
+        "header": "#ifndef AUDIO_PROCESSOR_H\n#define AUDIO_PROCESSOR_H\n#include <Arduino.h>\n\nvoid audio_proc_setup();\nvoid audio_proc_analyze(int32_t* samples, size_t count);\nfloat audio_proc_get_dominant_freq();\nfloat audio_proc_get_rms_db();\nbool audio_proc_is_loud();\n\n#endif",
+        "source": "#include \"audio_processor.h\"\n#include <arduinoFFT.h>\n#include \"config.h\"\n\n#define FFT_SIZE 1024\n\nstatic double _vReal[FFT_SIZE];\nstatic double _vImag[FFT_SIZE];\nstatic float _dominantFreq = 0;\nstatic float _rmsDb = -100.0f;\nstatic bool _isLoud = false;\nstatic const float NOISE_THRESHOLD = -40.0f;\n\nArduinoFFT<double> _fft(_vReal, _vImag, FFT_SIZE, 16000);\n\nvoid audio_proc_setup() {\n    Serial.println(\"[audio-proc] FFT processor ready\");\n}\n\nvoid audio_proc_analyze(int32_t* samples, size_t count) {\n    size_t n = min(count, (size_t)FFT_SIZE);\n    // Fill FFT input\n    float sumSq = 0;\n    for (size_t i = 0; i < n; i++) {\n        float s = (float)(samples[i] >> 14) / 32768.0f;\n        _vReal[i] = s;\n        _vImag[i] = 0;\n        sumSq += s * s;\n    }\n    for (size_t i = n; i < FFT_SIZE; i++) {\n        _vReal[i] = 0; _vImag[i] = 0;\n    }\n    \n    // RMS in dB\n    float rms = sqrt(sumSq / n);\n    _rmsDb = (rms > 0) ? 20.0f * log10(rms) : -100.0f;\n    _isLoud = _rmsDb > NOISE_THRESHOLD;\n    \n    // FFT\n    _fft.windowing(FFTWindow::Hamming, FFTDirection::Forward);\n    _fft.compute(FFTDirection::Forward);\n    _fft.complexToMagnitude();\n    _dominantFreq = _fft.majorPeak();\n}\n\nfloat audio_proc_get_dominant_freq() { return _dominantFreq; }\nfloat audio_proc_get_rms_db() { return _rmsDb; }\nbool audio_proc_is_loud() { return _isLoud; }"
+    },
+    "icon": "🎵",
+    "color": "#a855f7",
+    "memory_estimate": {
+        "flash": 20000,
+        "sram": 16384
+    }
+}

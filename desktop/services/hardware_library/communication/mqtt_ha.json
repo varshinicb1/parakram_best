@@ -1,0 +1,26 @@
+{
+  "id": "mqtt_ha",
+  "name": "MQTT Home Assistant",
+  "category": "communication",
+  "description": "MQTT Home Assistant firmware block",
+  "libraries": [
+    "WiFi.h",
+    "PubSubClient.h",
+    "ArduinoJson.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "knolleary/PubSubClient@^2.8",
+    "bblanchon/ArduinoJson@^7.0.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MQTT_HA_H\n#define MQTT_HA_H\nvoid ha_setup(const char*server,const char*device_name);\nvoid ha_loop();\nvoid ha_publish_sensor(const char*name,float value,const char*unit);\nvoid ha_publish_switch(const char*name,bool state);\n#endif",
+    "source": "#include \"mqtt_ha.h\"\n#include <WiFi.h>\n#include <PubSubClient.h>\n#include <ArduinoJson.h>\nstatic WiFiClient _wc;\nstatic PubSubClient _mq(_wc);\nstatic String _dev;\nvoid ha_setup(const char*srv,const char*dev){_dev=String(dev);_mq.setServer(srv,1883);Serial.printf(\"[ha] OK -> %s\\n\",srv);}\nvoid ha_loop(){if(!_mq.connected()){String id=\"parakram-\"+_dev;_mq.connect(id.c_str());}_mq.loop();}\nvoid ha_publish_sensor(const char*name,float v,const char*unit){String topic=\"homeassistant/sensor/\"+_dev+\"_\"+String(name)+\"/state\";JsonDocument doc;doc[\"value\"]=v;doc[\"unit\"]=unit;String payload;serializeJson(doc,payload);_mq.publish(topic.c_str(),payload.c_str());}\nvoid ha_publish_switch(const char*name,bool s){String topic=\"homeassistant/switch/\"+_dev+\"_\"+String(name)+\"/state\";_mq.publish(topic.c_str(),s?\"ON\":\"OFF\");}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

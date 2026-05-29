@@ -1,0 +1,32 @@
+[package]
+name = "parakram_os"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+embedded-hal = "0.2"
+nb = "1.0"
+rtfm = "0.5"  # For real-time framework
+panic-halt = "0.2"
+
+[dependencies.xtensa-lx-rt]  # For ESP32-S3 Xtensa
+version = "0.1"
+optional = true
+
+[features]
+default = []
+esp32s3 = ["xtensa-lx-rt"]
+
+# Build for Xtensa (ESP-IDF integration)
+[[bin]]
+name = "parakram"
+test = false
+bench = false
+
+[profile.release]
+panic = "abort"
+lto = true
+codegen-units = 1
+opt-level = "s"  # Size optimization for low mem

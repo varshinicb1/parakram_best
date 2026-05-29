@@ -1,0 +1,19 @@
+{
+  "id": "threshold_alert",
+  "name": "Threshold Alert System",
+  "category": "control_blocks",
+  "description": "Threshold Alert System firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef THRESH_ALERT_H\n#define THRESH_ALERT_H\n#include <Arduino.h>\ntypedef void(*alert_cb)(uint8_t id,float value);\nvoid alert_setup();\nuint8_t alert_add(float low,float high,alert_cb cb);\nvoid alert_check(uint8_t id,float value);\n#endif",
+    "source": "#include \"threshold_alert.h\"\n#define MAX_ALERTS 16\nstatic struct{float lo,hi;alert_cb cb;bool triggered;}_alerts[MAX_ALERTS];\nstatic uint8_t _cnt=0;\nvoid alert_setup(){_cnt=0;}\nuint8_t alert_add(float lo,float hi,alert_cb cb){if(_cnt>=MAX_ALERTS)return 255;_alerts[_cnt]={lo,hi,cb,false};return _cnt++;}\nvoid alert_check(uint8_t id,float v){if(id>=_cnt)return;if((v<_alerts[id].lo||v>_alerts[id].hi)&&!_alerts[id].triggered){_alerts[id].triggered=true;if(_alerts[id].cb)_alerts[id].cb(id,v);}else if(v>=_alerts[id].lo&&v<=_alerts[id].hi){_alerts[id].triggered=false;}}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

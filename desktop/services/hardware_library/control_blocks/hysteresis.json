@@ -1,0 +1,19 @@
+{
+  "id": "hysteresis",
+  "name": "Hysteresis Controller",
+  "category": "control_blocks",
+  "description": "Hysteresis Controller firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef HYST_H\n#define HYST_H\nvoid hyst_setup(float low, float high);\nbool hyst_update(float value);\nbool hyst_get_state();\n#endif",
+    "source": "#include \"hysteresis.h\"\nstatic float _lo=0,_hi=0;static bool _state=false;\nvoid hyst_setup(float lo,float hi){_lo=lo;_hi=hi;_state=false;}\nbool hyst_update(float v){if(v>=_hi)_state=true;else if(v<=_lo)_state=false;return _state;}\nbool hyst_get_state(){return _state;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

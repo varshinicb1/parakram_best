@@ -1,0 +1,19 @@
+{
+  "id": "anomaly_detector",
+  "name": "Anomaly Detector",
+  "category": "control_blocks",
+  "description": "Anomaly Detector firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef ANOMALY_DET_H\n#define ANOMALY_DET_H\n#include <Arduino.h>\ntypedef void(*anomaly_cb)(const char*sensor, float value, const char*reason);\nvoid anomaly_setup();\nuint8_t anomaly_add_monitor(const char*name, float min_val, float max_val, float rate_limit);\nbool anomaly_check(uint8_t idx, float value);\nbool anomaly_any_alert();\nvoid anomaly_on_detect(anomaly_cb cb);\nvoid anomaly_reset();\n#endif",
+    "source": "#include \"anomaly_detector.h\"\n#define MAX_MON 32\ntypedef struct {\n  const char* name;\n  float min_val, max_val, rate_limit;\n  float last_val;\n  unsigned long last_time;\n  bool alert;\n} monitor_t;\nstatic monitor_t _m[MAX_MON];\nstatic uint8_t _cnt = 0;\nstatic anomaly_cb _cb = nullptr;\nvoid anomaly_setup() { _cnt = 0; Serial.println(\"[anomaly] OK\"); }\nuint8_t anomaly_add_monitor(const char*n, float mn, float mx, float rl) {\n  if (_cnt >= MAX_MON) return 255;\n  _m[_cnt] = {n, mn, mx, rl, 0, 0, false};\n  return _cnt++;\n}\nbool anomaly_check(uint8_t i, float v) {\n  if (i >= _cnt) return false;\n  monitor_t* m = &_m[i];\n  bool alert = false;\n  const char* reason = \"\";\n  if (v < m->min_val) { alert = true; reason = \"below_min\"; }\n  else if (v > m->max_val) { alert = true; reason = \"above_max\"; }\n  if (m->last_time > 0) {\n    float dt = (millis() - m->last_time) / 1000.0f;\n    if (dt > 0 && abs(v - m->last_val) / dt > m->rate_limit) {\n      alert = true; reason = \"rate_exceeded\";\n    }\n  }\n  if (v != v) { alert = true; reason = \"nan_detected\"; }\n  m->last_val = v; m->last_time = millis(); m->alert = alert;\n  if (alert && _cb) _cb(m->name, v, reason);\n  return alert;\n}\nbool anomaly_any_alert() {\n  for (int i = 0; i < _cnt; i++) if (_m[i].alert) return true;\n  return false;\n}\nvoid anomaly_on_detect(anomaly_cb cb) { _cb = cb; }\nvoid anomaly_reset() { for (int i = 0; i < _cnt; i++) _m[i].alert = false; }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

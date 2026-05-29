@@ -1,0 +1,91 @@
+{
+    "id": "mpu6050",
+    "name": "MPU6050 IMU",
+    "category": "sensor",
+    "description": "6-axis accelerometer and gyroscope with DMP support.",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "accel_x",
+            "data_type": "float",
+            "description": "m/s^2"
+        },
+        {
+            "name": "accel_y",
+            "data_type": "float"
+        },
+        {
+            "name": "accel_z",
+            "data_type": "float"
+        },
+        {
+            "name": "gyro_x",
+            "data_type": "float",
+            "description": "deg/s"
+        },
+        {
+            "name": "gyro_y",
+            "data_type": "float"
+        },
+        {
+            "name": "gyro_z",
+            "data_type": "float"
+        },
+        {
+            "name": "temperature",
+            "data_type": "float"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "i2c_address",
+            "label": "I2C Address",
+            "value_type": "string",
+            "default": "0x68"
+        },
+        {
+            "key": "sda_pin",
+            "label": "SDA Pin",
+            "value_type": "int",
+            "default": "21"
+        },
+        {
+            "key": "scl_pin",
+            "label": "SCL Pin",
+            "value_type": "int",
+            "default": "22"
+        },
+        {
+            "key": "accel_range",
+            "label": "Accel Range (g)",
+            "value_type": "int",
+            "default": "2"
+        },
+        {
+            "key": "gyro_range",
+            "label": "Gyro Range (dps)",
+            "value_type": "int",
+            "default": "250"
+        },
+        {
+            "key": "read_interval",
+            "label": "Read Interval (ms)",
+            "value_type": "int",
+            "default": "100"
+        }
+    ],
+    "libraries": [
+        "adafruit/Adafruit MPU6050@^2.2.0",
+        "adafruit/Adafruit Unified Sensor@^1.1.9"
+    ],
+    "firmware_template": {
+        "header": "#ifndef MPU6050_SENSOR_H\n#define MPU6050_SENSOR_H\n#include <Arduino.h>\n\nvoid mpu6050_setup();\nvoid mpu6050_loop();\nfloat mpu6050_accel_x();\nfloat mpu6050_accel_y();\nfloat mpu6050_accel_z();\nfloat mpu6050_gyro_x();\nfloat mpu6050_gyro_y();\nfloat mpu6050_gyro_z();\nfloat mpu6050_temperature();\nbool mpu6050_ready();\n\n#endif",
+        "source": "#include \"mpu6050_sensor.h\"\n#include <Wire.h>\n#include <Adafruit_MPU6050.h>\n#include <Adafruit_Sensor.h>\n#include \"config.h\"\n\nstatic Adafruit_MPU6050 _mpu;\nstatic bool _mpuReady = false;\nstatic sensors_event_t _accel, _gyro, _temp;\n\nvoid mpu6050_setup() {\n    Wire.begin(21, 22);\n    Wire.setClock(400000); // 400kHz fast mode for IMU\n    \n    for (int i = 0; i < 5; i++) {\n        if (_mpu.begin(0x68, &Wire)) {\n            _mpuReady = true;\n            break;\n        }\n        delay(100);\n    }\n    \n    if (_mpuReady) {\n        _mpu.setAccelerometerRange(MPU6050_RANGE_2_G);\n        _mpu.setGyroRange(MPU6050_RANGE_250_DEG);\n        _mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);\n        Serial.println(\"[mpu6050] IMU initialized\");\n    } else {\n        Serial.println(\"[mpu6050] FAILED - check wiring!\");\n    }\n}\n\nvoid mpu6050_loop() {\n    if (!_mpuReady) return;\n    _mpu.getEvent(&_accel, &_gyro, &_temp);\n}\n\nfloat mpu6050_accel_x() { return _accel.acceleration.x; }\nfloat mpu6050_accel_y() { return _accel.acceleration.y; }\nfloat mpu6050_accel_z() { return _accel.acceleration.z; }\nfloat mpu6050_gyro_x() { return _gyro.gyro.x * 57.2958f; }\nfloat mpu6050_gyro_y() { return _gyro.gyro.y * 57.2958f; }\nfloat mpu6050_gyro_z() { return _gyro.gyro.z * 57.2958f; }\nfloat mpu6050_temperature() { return _temp.temperature; }\nbool mpu6050_ready() { return _mpuReady; }"
+    },
+    "icon": "🧭",
+    "color": "#f59e0b",
+    "memory_estimate": {
+        "flash": 15000,
+        "sram": 3000
+    }
+}

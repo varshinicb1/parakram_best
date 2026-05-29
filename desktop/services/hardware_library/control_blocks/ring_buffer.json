@@ -1,0 +1,19 @@
+{
+  "id": "ring_buffer",
+  "name": "Ring Buffer",
+  "category": "control_blocks",
+  "description": "Ring Buffer firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef RING_BUF_H\n#define RING_BUF_H\n#include <Arduino.h>\nvoid rbuf_setup(uint16_t capacity);\nvoid rbuf_push(float value);\nfloat rbuf_pop();\nfloat rbuf_peek();\nuint16_t rbuf_count();\nbool rbuf_full();\nbool rbuf_empty();\nfloat rbuf_average();\n#endif",
+    "source": "#include \"ring_buffer.h\"\n#define MAX_BUF 512\nstatic float _buf[MAX_BUF];\nstatic uint16_t _cap=256,_head=0,_tail=0,_count=0;\nvoid rbuf_setup(uint16_t c){_cap=min(c,(uint16_t)MAX_BUF);_head=0;_tail=0;_count=0;}\nvoid rbuf_push(float v){_buf[_head]=v;_head=(_head+1)%_cap;if(_count<_cap)_count++;else _tail=(_tail+1)%_cap;}\nfloat rbuf_pop(){if(!_count)return 0;float v=_buf[_tail];_tail=(_tail+1)%_cap;_count--;return v;}\nfloat rbuf_peek(){return _count?_buf[_tail]:0;}\nuint16_t rbuf_count(){return _count;}\nbool rbuf_full(){return _count>=_cap;}\nbool rbuf_empty(){return _count==0;}\nfloat rbuf_average(){if(!_count)return 0;float s=0;for(uint16_t i=0;i<_count;i++)s+=_buf[(_tail+i)%_cap];return s/_count;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

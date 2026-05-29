@@ -1,0 +1,26 @@
+{
+  "id": "drv8825",
+  "name": "DRV8825 Stepper Driver",
+  "category": "actuator",
+  "description": "DRV8825 Stepper Driver firmware block",
+  "libraries": [],
+  "pins": {
+    "step": 25,
+    "dir": 26,
+    "enable": 27,
+    "m0": 12,
+    "m1": 14,
+    "m2": 13
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef DRV8825_H\n#define DRV8825_H\nvoid drv8825_setup();\nvoid drv8825_move(int steps, bool cw);\nvoid drv8825_set_microstep(uint8_t mode);\nvoid drv8825_enable(bool en);\n#endif",
+    "source": "#include \"drv8825.h\"\n#include <Arduino.h>\n#define STEP_P 25\n#define DIR_P 26\n#define EN_P 27\n#define M0_P 12\n#define M1_P 14\n#define M2_P 13\nstatic int _stepsLeft=0;static bool _cw=true;static unsigned long _lastStep=0;static unsigned long _stepDelay=500;\nvoid drv8825_setup(){pinMode(STEP_P,OUTPUT);pinMode(DIR_P,OUTPUT);pinMode(EN_P,OUTPUT);pinMode(M0_P,OUTPUT);pinMode(M1_P,OUTPUT);pinMode(M2_P,OUTPUT);digitalWrite(EN_P,LOW);Serial.println(\"[drv8825] OK\");}\nvoid drv8825_move(int s,bool cw){_stepsLeft=abs(s);_cw=cw;digitalWrite(DIR_P,cw?HIGH:LOW);while(_stepsLeft>0){digitalWrite(STEP_P,HIGH);delayMicroseconds(2);digitalWrite(STEP_P,LOW);delayMicroseconds(_stepDelay);_stepsLeft--;}}\nvoid drv8825_set_microstep(uint8_t m){digitalWrite(M0_P,m&1);digitalWrite(M1_P,(m>>1)&1);digitalWrite(M2_P,(m>>2)&1);}\nvoid drv8825_enable(bool e){digitalWrite(EN_P,e?LOW:HIGH);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

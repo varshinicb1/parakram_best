@@ -1,0 +1,27 @@
+{
+  "id": "mpu9250",
+  "name": "MPU9250 9-DOF IMU",
+  "category": "sensor",
+  "description": "MPU9250 9-DOF IMU firmware block",
+  "libraries": [
+    "Wire.h",
+    "MPU9250.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x68",
+  "platformio_deps": [
+    "bolderflight/Bolder Flight Systems MPU9250@^1.0.2"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MPU9250_H\n#define MPU9250_H\nvoid mpu9250_setup();\nvoid mpu9250_loop();\nfloat mpu9250_accel_x();\nfloat mpu9250_accel_y();\nfloat mpu9250_accel_z();\nfloat mpu9250_gyro_x();\nfloat mpu9250_gyro_y();\nfloat mpu9250_gyro_z();\nfloat mpu9250_mag_x();\nfloat mpu9250_mag_y();\nfloat mpu9250_mag_z();\n#endif",
+    "source": "#include \"mpu9250.h\"\n#include <Wire.h>\n#include <MPU9250.h>\nstatic MPU9250 imu(Wire,0x68);\nstatic float _ax=0,_ay=0,_az=0,_gx=0,_gy=0,_gz=0,_mx=0,_my=0,_mz=0;static unsigned long _l=0;\nvoid mpu9250_setup(){Wire.begin();if(imu.begin()<0){Serial.println(\"[mpu9250] Fail!\");return;}Serial.println(\"[mpu9250] OK 9DOF\");}\nvoid mpu9250_loop(){if(millis()-_l<50)return;_l=millis();imu.readSensor();_ax=imu.getAccelX_mss();_ay=imu.getAccelY_mss();_az=imu.getAccelZ_mss();_gx=imu.getGyroX_rads();_gy=imu.getGyroY_rads();_gz=imu.getGyroZ_rads();_mx=imu.getMagX_uT();_my=imu.getMagY_uT();_mz=imu.getMagZ_uT();}\nfloat mpu9250_accel_x(){return _ax;}\nfloat mpu9250_accel_y(){return _ay;}\nfloat mpu9250_accel_z(){return _az;}\nfloat mpu9250_gyro_x(){return _gx;}\nfloat mpu9250_gyro_y(){return _gy;}\nfloat mpu9250_gyro_z(){return _gz;}\nfloat mpu9250_mag_x(){return _mx;}\nfloat mpu9250_mag_y(){return _my;}\nfloat mpu9250_mag_z(){return _mz;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

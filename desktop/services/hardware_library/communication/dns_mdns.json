@@ -1,0 +1,22 @@
+{
+  "id": "dns_mdns",
+  "name": "mDNS Responder",
+  "category": "communication",
+  "description": "mDNS Responder firmware block",
+  "libraries": [
+    "WiFi.h",
+    "ESPmDNS.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef MDNS_H\n#define MDNS_H\nvoid mdns_setup(const char*hostname);\nvoid mdns_add_service(const char*service,const char*proto,uint16_t port);\n#endif",
+    "source": "#include \"dns_mdns.h\"\n#include <WiFi.h>\n#include <ESPmDNS.h>\nvoid mdns_setup(const char*h){if(!MDNS.begin(h)){Serial.println(\"[mdns] Fail!\");return;}Serial.printf(\"[mdns] OK: %s.local\\n\",h);}\nvoid mdns_add_service(const char*s,const char*p,uint16_t port){MDNS.addService(s,p,port);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

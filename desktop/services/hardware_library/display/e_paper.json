@@ -1,0 +1,29 @@
+{
+  "id": "e_paper",
+  "name": "E-Paper Display (Waveshare)",
+  "category": "display",
+  "description": "E-Paper Display (Waveshare) firmware block",
+  "libraries": [
+    "SPI.h",
+    "GxEPD2.h"
+  ],
+  "pins": {
+    "cs": 5,
+    "dc": 17,
+    "rst": 16,
+    "busy": 4
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "zinggjm/GxEPD2@^1.5.3"
+  ],
+  "firmware_template": {
+    "header": "#ifndef EPAPER_H\n#define EPAPER_H\nvoid epaper_setup();\nvoid epaper_clear();\nvoid epaper_text(int x, int y, const char* text, int size);\nvoid epaper_update();\n#endif",
+    "source": "#include \"e_paper.h\"\n#include <GxEPD2_BW.h>\n#include <Fonts/FreeMonoBold9pt7b.h>\nstatic GxEPD2_BW<GxEPD2_290_T5,GxEPD2_290_T5::HEIGHT> display(GxEPD2_290_T5(5,17,16,4));\nvoid epaper_setup(){display.init(115200);display.setRotation(1);display.setTextColor(GxEPD_BLACK);Serial.println(\"[epaper] OK\");}\nvoid epaper_clear(){display.setFullWindow();display.firstPage();do{display.fillScreen(GxEPD_WHITE);}while(display.nextPage());}\nvoid epaper_text(int x,int y,const char*t,int s){display.setFont(&FreeMonoBold9pt7b);display.setCursor(x,y);display.print(t);}\nvoid epaper_update(){display.display();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

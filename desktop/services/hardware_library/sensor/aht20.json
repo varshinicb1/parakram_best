@@ -1,0 +1,27 @@
+{
+  "id": "aht20",
+  "name": "AHT20 Temp/Humidity",
+  "category": "sensor",
+  "description": "AHT20 Temp/Humidity firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_AHTX0.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x38",
+  "platformio_deps": [
+    "adafruit/Adafruit AHTX0@^2.0.5"
+  ],
+  "firmware_template": {
+    "header": "#ifndef AHT20_H\n#define AHT20_H\nvoid aht20_setup();\nvoid aht20_loop();\nfloat aht20_get_temperature();\nfloat aht20_get_humidity();\n#endif",
+    "source": "#include \"aht20.h\"\n#include <Wire.h>\n#include <Adafruit_AHTX0.h>\nstatic Adafruit_AHTX0 aht;\nstatic float _t=0,_h=0;\nstatic unsigned long _last=0;\nvoid aht20_setup(){Wire.begin();if(!aht.begin()){Serial.println(\"[aht20] Fail!\");return;}Serial.println(\"[aht20] OK\");}\nvoid aht20_loop(){if(millis()-_last<2000)return;_last=millis();sensors_event_t h,t;aht.getEvent(&h,&t);_t=t.temperature;_h=h.relative_humidity;}\nfloat aht20_get_temperature(){return _t;}\nfloat aht20_get_humidity(){return _h;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,27 @@
+{
+  "id": "ads1115",
+  "name": "ADS1115 16-bit ADC",
+  "category": "sensor",
+  "description": "ADS1115 16-bit ADC firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_ADS1X15.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x48",
+  "platformio_deps": [
+    "adafruit/Adafruit ADS1X15@^2.5.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef ADS1115_H\n#define ADS1115_H\n#include <Adafruit_ADS1X15.h>\nvoid ads1115_setup();\nvoid ads1115_loop();\nint16_t ads1115_read_channel(uint8_t ch);\nfloat ads1115_read_voltage(uint8_t ch);\n#endif",
+    "source": "#include \"ads1115.h\"\n#include <Wire.h>\nstatic Adafruit_ADS1115 ads;\nstatic int16_t _raw[4] = {0};\nstatic unsigned long _last = 0;\nvoid ads1115_setup() {\n  Wire.begin();\n  if (!ads.begin(0x48)) { Serial.println(\"[ads1115] Init failed!\"); return; }\n  ads.setGain(GAIN_TWOTHIRDS);\n  Serial.println(\"[ads1115] OK 16-bit\");\n}\nvoid ads1115_loop() {\n  if (millis()-_last < 200) return;\n  _last = millis();\n  for (uint8_t i = 0; i < 4; i++) {\n    _raw[i] = ads.readADC_SingleEnded(i);\n  }\n}\nint16_t ads1115_read_channel(uint8_t ch) { return (ch < 4) ? _raw[ch] : 0; }\nfloat ads1115_read_voltage(uint8_t ch) { return (ch < 4) ? ads.computeVolts(_raw[ch]) : 0.0f; }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "hall_effect",
+  "name": "Hall Effect Sensor",
+  "category": "sensor",
+  "description": "Hall Effect Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "signal": 36
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef HALL_H\n#define HALL_H\nvoid hall_setup();\nvoid hall_loop();\nint hall_get_value();\nbool hall_magnet_present();\n#endif",
+    "source": "#include \"hall_effect.h\"\n#include <Arduino.h>\nstatic int _val=0;static bool _magnet=false;static unsigned long _l=0;\nvoid hall_setup(){Serial.println(\"[hall] OK\");}\nvoid hall_loop(){if(millis()-_l<100)return;_l=millis();_val=hallRead();_magnet=abs(_val)>30;}\nint hall_get_value(){return _val;}\nbool hall_magnet_present(){return _magnet;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

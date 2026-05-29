@@ -1,0 +1,27 @@
+{
+  "id": "encoder_as5600",
+  "name": "AS5600 Magnetic Encoder",
+  "category": "sensor",
+  "description": "AS5600 Magnetic Encoder firmware block",
+  "libraries": [
+    "Wire.h",
+    "AS5600.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x36",
+  "platformio_deps": [
+    "robtillaart/AS5600@^0.6.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef AS5600_H\n#define AS5600_H\nvoid as5600_setup();\nvoid as5600_loop();\nfloat as5600_get_angle();\nuint16_t as5600_get_raw();\nfloat as5600_get_rpm();\n#endif",
+    "source": "#include \"encoder_as5600.h\"\n#include <Wire.h>\n#include <AS5600.h>\nstatic AS5600 enc;\nstatic float _angle=0,_rpm=0;static uint16_t _raw=0;static unsigned long _l=0;static float _lastAngle=0;\nvoid as5600_setup(){Wire.begin();Serial.println(\"[as5600] OK\");}\nvoid as5600_loop(){if(millis()-_l<50)return;unsigned long dt=millis()-_l;_l=millis();_raw=enc.readAngle();_angle=_raw*360.0/4096.0;float da=_angle-_lastAngle;if(da>180)da-=360;if(da<-180)da+=360;_rpm=da/360.0*60000.0/dt;_lastAngle=_angle;}\nfloat as5600_get_angle(){return _angle;}\nuint16_t as5600_get_raw(){return _raw;}\nfloat as5600_get_rpm(){return _rpm;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

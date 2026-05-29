@@ -1,0 +1,29 @@
+{
+  "id": "st7789_tft",
+  "name": "ST7789 TFT 1.54\" SPI",
+  "category": "display",
+  "description": "ST7789 TFT 1.54\" SPI firmware block",
+  "libraries": [
+    "SPI.h",
+    "Adafruit_ST7789.h"
+  ],
+  "pins": {
+    "cs": 5,
+    "dc": 16,
+    "rst": 17
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit ST7735 and ST7789 Library@^1.10.3",
+    "adafruit/Adafruit GFX Library@^1.11.9"
+  ],
+  "firmware_template": {
+    "header": "#ifndef ST7789_H\n#define ST7789_H\n#include <Adafruit_ST7789.h>\nvoid st7789_setup();\nvoid st7789_clear(uint16_t color);\nvoid st7789_text(int x,int y,const char*text,uint16_t color,int size);\nvoid st7789_fill_rect(int x,int y,int w,int h,uint16_t color);\n#endif",
+    "source": "#include \"st7789_tft.h\"\n#include <SPI.h>\n#include <Adafruit_GFX.h>\nstatic Adafruit_ST7789 tft(5,16,17);\nvoid st7789_setup(){tft.init(240,240);tft.setRotation(2);tft.fillScreen(ST77XX_BLACK);Serial.println(\"[st7789] OK 240x240\");}\nvoid st7789_clear(uint16_t c){tft.fillScreen(c);}\nvoid st7789_text(int x,int y,const char*t,uint16_t c,int s){tft.setCursor(x,y);tft.setTextColor(c);tft.setTextSize(s);tft.print(t);}\nvoid st7789_fill_rect(int x,int y,int w,int h,uint16_t c){tft.fillRect(x,y,w,h,c);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

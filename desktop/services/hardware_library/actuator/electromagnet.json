@@ -1,0 +1,21 @@
+{
+  "id": "electromagnet",
+  "name": "Electromagnet",
+  "category": "actuator",
+  "description": "Electromagnet firmware block",
+  "libraries": [],
+  "pins": {
+    "signal": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef ELECTROMAGNET_H\n#define ELECTROMAGNET_H\nvoid emag_setup();\nvoid emag_on();\nvoid emag_off();\nvoid emag_pulse(uint16_t ms);\n#endif",
+    "source": "#include \"electromagnet.h\"\n#include <Arduino.h>\n#define EMAG_PIN 25\nvoid emag_setup(){pinMode(EMAG_PIN,OUTPUT);Serial.println(\"[emag] OK\");}\nvoid emag_on(){digitalWrite(EMAG_PIN,HIGH);}\nvoid emag_off(){digitalWrite(EMAG_PIN,LOW);}\nvoid emag_pulse(uint16_t ms){emag_on();delay(ms);emag_off();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,24 @@
+{
+  "id": "motor_encoder",
+  "name": "Motor with Encoder",
+  "category": "actuator",
+  "description": "Motor with Encoder firmware block",
+  "libraries": [],
+  "pins": {
+    "pwm": 25,
+    "dir": 26,
+    "enc_a": 32,
+    "enc_b": 33
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef MOTOR_ENC_H\n#define MOTOR_ENC_H\nvoid motor_enc_setup();\nvoid motor_enc_set_speed(int speed);\nlong motor_enc_get_position();\nvoid motor_enc_reset_position();\nfloat motor_enc_get_rpm();\n#endif",
+    "source": "#include \"motor_encoder.h\"\n#include <Arduino.h>\n#define MOT_PWM 25\n#define MOT_DIR 26\n#define ENC_A 32\n#define ENC_B 33\nstatic volatile long _pos=0;\nstatic float _rpm=0;static long _lastPos=0;static unsigned long _last=0;\nvoid IRAM_ATTR _enc_isr(){int b=digitalRead(ENC_B);_pos+=(b?1:-1);}\nvoid motor_enc_setup(){pinMode(MOT_DIR,OUTPUT);ledcAttach(MOT_PWM,5000,8);pinMode(ENC_A,INPUT_PULLUP);pinMode(ENC_B,INPUT_PULLUP);attachInterrupt(ENC_A,_enc_isr,RISING);Serial.println(\"[motor_enc] OK\");}\nvoid motor_enc_set_speed(int s){digitalWrite(MOT_DIR,s>=0?HIGH:LOW);ledcWrite(MOT_PWM,constrain(abs(s),0,255));}\nlong motor_enc_get_position(){return _pos;}\nvoid motor_enc_reset_position(){_pos=0;}\nfloat motor_enc_get_rpm(){if(millis()-_last>=100){long dp=_pos-_lastPos;_rpm=dp*600.0/334.0;_lastPos=_pos;_last=millis();}return _rpm;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

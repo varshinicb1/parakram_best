@@ -1,0 +1,49 @@
+{
+    "id": "ota_updater",
+    "name": "OTA Updates",
+    "category": "communication",
+    "description": "Over-the-air firmware updates via ArduinoOTA or HTTP.",
+    "inputs": [
+        {
+            "name": "wifi_connected",
+            "data_type": "bool"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "updating",
+            "data_type": "bool"
+        },
+        {
+            "name": "progress",
+            "data_type": "float"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "hostname",
+            "label": "OTA Hostname",
+            "value_type": "string",
+            "default": "parakram-device"
+        },
+        {
+            "key": "password",
+            "label": "OTA Password",
+            "value_type": "string",
+            "default": ""
+        },
+        {
+            "key": "port",
+            "label": "OTA Port",
+            "value_type": "int",
+            "default": "3232"
+        }
+    ],
+    "libraries": [],
+    "firmware_template": {
+        "header": "#ifndef OTA_UPDATER_H\n#define OTA_UPDATER_H\n#include <Arduino.h>\n\nvoid ota_setup();\nvoid ota_loop();\n\n#endif",
+        "source": "#include \"ota_updater.h\"\n#include <ArduinoOTA.h>\n#include \"config.h\"\n\nvoid ota_setup() {\n    ArduinoOTA.setHostname(\"parakram-device\");\n    ArduinoOTA.onStart([]() {\n        Serial.println(\"[ota] Update starting...\");\n    });\n    ArduinoOTA.onEnd([]() {\n        Serial.println(\"[ota] Update complete. Rebooting...\");\n    });\n    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {\n        Serial.printf(\"[ota] Progress: %u%%\\r\", (progress / (total / 100)));\n    });\n    ArduinoOTA.onError([](ota_error_t error) {\n        Serial.printf(\"[ota] Error[%u]: \", error);\n        if (error == OTA_AUTH_ERROR) Serial.println(\"Auth Failed\");\n        else if (error == OTA_BEGIN_ERROR) Serial.println(\"Begin Failed\");\n        else if (error == OTA_CONNECT_ERROR) Serial.println(\"Connect Failed\");\n        else if (error == OTA_RECEIVE_ERROR) Serial.println(\"Receive Failed\");\n        else if (error == OTA_END_ERROR) Serial.println(\"End Failed\");\n    });\n    ArduinoOTA.begin();\n    Serial.println(\"[ota] OTA ready\");\n}\n\nvoid ota_loop() {\n    ArduinoOTA.handle();\n}"
+    },
+    "icon": "📥",
+    "color": "#22c55e"
+}

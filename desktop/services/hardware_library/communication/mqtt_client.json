@@ -1,0 +1,24 @@
+{
+  "id": "mqtt_client",
+  "name": "MQTT Client",
+  "category": "communication",
+  "description": "MQTT Client firmware block",
+  "libraries": [
+    "WiFi.h",
+    "PubSubClient.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "knolleary/PubSubClient@^2.8"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MQTT_CLIENT_H\n#define MQTT_CLIENT_H\n#include <PubSubClient.h>\nvoid mqtt_setup(const char* server, uint16_t port);\nvoid mqtt_loop();\nbool mqtt_publish(const char* topic, const char* payload);\nvoid mqtt_subscribe(const char* topic);\ntypedef void (*mqtt_cb)(const char* topic, const char* payload);\nvoid mqtt_on_message(mqtt_cb cb);\nbool mqtt_connected();\n#endif",
+    "source": "#include \"mqtt_client.h\"\n#include <WiFi.h>\nstatic WiFiClient _wifiClient;\nstatic PubSubClient _mqtt(_wifiClient);\nstatic mqtt_cb _userCb = nullptr;\nstatic const char* _server = \"\";\nstatic uint16_t _port = 1883;\nvoid _mqtt_callback(char* topic, byte* payload, unsigned int len) {\n  char buf[256];\n  unsigned int n = (len < 255) ? len : 255;\n  memcpy(buf, payload, n); buf[n] = 0;\n  if (_userCb) _userCb(topic, buf);\n}\nvoid mqtt_setup(const char* server, uint16_t port) {\n  _server = server; _port = port;\n  _mqtt.setServer(server, port);\n  _mqtt.setCallback(_mqtt_callback);\n  Serial.printf(\"[mqtt] Server %s:%d\\n\", server, port);\n}\nvoid mqtt_loop() {\n  if (!_mqtt.connected()) {\n    if (_mqtt.connect(\"parakram-device\")) {\n      Serial.println(\"[mqtt] Connected\");\n    }\n  }\n  _mqtt.loop();\n}\nbool mqtt_publish(const char* t, const char* p) { return _mqtt.publish(t, p); }\nvoid mqtt_subscribe(const char* t) { _mqtt.subscribe(t); }\nvoid mqtt_on_message(mqtt_cb cb) { _userCb = cb; }\nbool mqtt_connected() { return _mqtt.connected(); }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

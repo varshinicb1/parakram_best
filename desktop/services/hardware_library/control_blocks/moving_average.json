@@ -1,0 +1,19 @@
+{
+  "id": "moving_average",
+  "name": "Moving Average Filter",
+  "category": "control_blocks",
+  "description": "Moving Average Filter firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef MAVG_H\n#define MAVG_H\nvoid mavg_setup(uint8_t window_size);\nfloat mavg_add(float value);\nfloat mavg_get();\nvoid mavg_reset();\n#endif",
+    "source": "#include \"moving_average.h\"\n#define MAX_WINDOW 64\nstatic float _buf[MAX_WINDOW];\nstatic uint8_t _size=10,_idx=0,_count=0;\nstatic float _sum=0;\nvoid mavg_setup(uint8_t w){_size=min(w,(uint8_t)MAX_WINDOW);_idx=0;_count=0;_sum=0;}\nfloat mavg_add(float v){if(_count<_size){_buf[_idx]=v;_sum+=v;_count++;}else{_sum-=_buf[_idx];_buf[_idx]=v;_sum+=v;}_idx=(_idx+1)%_size;return _sum/_count;}\nfloat mavg_get(){return _count>0?_sum/_count:0;}\nvoid mavg_reset(){_idx=0;_count=0;_sum=0;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

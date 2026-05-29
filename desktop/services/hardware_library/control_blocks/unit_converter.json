@@ -1,0 +1,40 @@
+{
+    "id": "unit_converter",
+    "name": "Unit Converter",
+    "category": "control",
+    "description": "Converts between common measurement units (Celsius/Fahrenheit, meters/feet, etc.).",
+    "inputs": [
+        {
+            "name": "value",
+            "data_type": "float",
+            "description": "Input value in source units"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "converted",
+            "data_type": "float",
+            "description": "Value in target units"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "from_unit",
+            "label": "From Unit",
+            "value_type": "string",
+            "default": "celsius"
+        },
+        {
+            "key": "to_unit",
+            "label": "To Unit",
+            "value_type": "string",
+            "default": "fahrenheit"
+        }
+    ],
+    "firmware_template": {
+        "header": "#ifndef UNIT_CONVERTER_H\n#define UNIT_CONVERTER_H\n#include <Arduino.h>\n\nenum ConversionType {\n    CONV_C_TO_F, CONV_F_TO_C,\n    CONV_M_TO_FT, CONV_FT_TO_M,\n    CONV_PA_TO_HPA, CONV_HPA_TO_PA,\n    CONV_RAD_TO_DEG, CONV_DEG_TO_RAD,\n    CONV_NONE\n};\n\nclass UnitConverter {\npublic:\n    UnitConverter(ConversionType type = CONV_NONE);\n    float convert(float value);\n    void setConversion(ConversionType type);\nprivate:\n    ConversionType _type;\n};\n\n#endif",
+        "source": "#include \"unit_converter.h\"\n\nUnitConverter::UnitConverter(ConversionType type) : _type(type) {}\n\nfloat UnitConverter::convert(float value) {\n    switch (_type) {\n        case CONV_C_TO_F:    return value * 9.0f / 5.0f + 32.0f;\n        case CONV_F_TO_C:    return (value - 32.0f) * 5.0f / 9.0f;\n        case CONV_M_TO_FT:   return value * 3.28084f;\n        case CONV_FT_TO_M:   return value / 3.28084f;\n        case CONV_PA_TO_HPA: return value / 100.0f;\n        case CONV_HPA_TO_PA: return value * 100.0f;\n        case CONV_RAD_TO_DEG: return value * 180.0f / PI;\n        case CONV_DEG_TO_RAD: return value * PI / 180.0f;\n        default: return value;\n    }\n}\n\nvoid UnitConverter::setConversion(ConversionType type) { _type = type; }"
+    },
+    "icon": "repeat",
+    "color": "#0ea5e9"
+}

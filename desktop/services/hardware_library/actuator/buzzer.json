@@ -1,0 +1,21 @@
+{
+  "id": "buzzer",
+  "name": "Piezo Buzzer",
+  "category": "actuator",
+  "description": "Piezo Buzzer firmware block",
+  "libraries": [],
+  "pins": {
+    "signal": 15
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef BUZZER_H\n#define BUZZER_H\nvoid buzzer_setup();\nvoid buzzer_tone(uint16_t freq, uint16_t duration_ms);\nvoid buzzer_beep();\nvoid buzzer_alarm();\nvoid buzzer_off();\n#endif",
+    "source": "#include \"buzzer.h\"\n#include <Arduino.h>\n#define BUZZER_PIN 15\n#define BUZZER_CHANNEL 0\nvoid buzzer_setup() {\n  ledcAttach(BUZZER_PIN, 2000, 8);\n  Serial.println(\"[buzzer] OK pin=15\");\n}\nvoid buzzer_tone(uint16_t freq, uint16_t dur) {\n  ledcWriteTone(BUZZER_PIN, freq);\n  delay(dur);\n  ledcWriteTone(BUZZER_PIN, 0);\n}\nvoid buzzer_beep() { buzzer_tone(1000, 100); }\nvoid buzzer_alarm() {\n  for (int i = 0; i < 3; i++) {\n    buzzer_tone(2000, 200);\n    delay(100);\n  }\n}\nvoid buzzer_off() { ledcWriteTone(BUZZER_PIN, 0); }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

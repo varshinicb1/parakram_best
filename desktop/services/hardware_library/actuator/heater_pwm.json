@@ -1,0 +1,22 @@
+{
+  "id": "heater_pwm",
+  "name": "Heater Element (PWM)",
+  "category": "actuator",
+  "description": "Heater Element (PWM) firmware block",
+  "libraries": [],
+  "pins": {
+    "pwm": 25,
+    "temp_adc": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef HEATER_H\n#define HEATER_H\nvoid heater_setup();\nvoid heater_set_power(uint8_t pct);\nuint8_t heater_get_power();\nvoid heater_off();\n#endif",
+    "source": "#include \"heater_pwm.h\"\n#include <Arduino.h>\n#define HEATER_PIN 25\nstatic uint8_t _power=0;\nvoid heater_setup(){ledcAttach(HEATER_PIN,1000,8);Serial.println(\"[heater] OK\");}\nvoid heater_set_power(uint8_t p){_power=constrain(p,0,100);ledcWrite(HEATER_PIN,map(_power,0,100,0,255));}\nuint8_t heater_get_power(){return _power;}\nvoid heater_off(){heater_set_power(0);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

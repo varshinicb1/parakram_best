@@ -1,0 +1,25 @@
+{
+  "id": "ws2812b_matrix",
+  "name": "WS2812B LED Matrix",
+  "category": "display",
+  "description": "WS2812B LED Matrix firmware block",
+  "libraries": [
+    "FastLED.h"
+  ],
+  "pins": {
+    "data": 16
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "fastled/FastLED@^3.6.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef WS2812B_MATRIX_H\n#define WS2812B_MATRIX_H\n#include <FastLED.h>\nvoid ws2812b_setup(uint16_t num_leds);\nvoid ws2812b_set(uint16_t i,uint8_t r,uint8_t g,uint8_t b);\nvoid ws2812b_fill(uint8_t r,uint8_t g,uint8_t b);\nvoid ws2812b_show();\nvoid ws2812b_clear();\nvoid ws2812b_rainbow();\n#endif",
+    "source": "#include \"ws2812b_matrix.h\"\n#define MAX_LEDS 256\n#define DATA_PIN 16\nstatic CRGB leds[MAX_LEDS];\nstatic uint16_t _numLeds=0;\nvoid ws2812b_setup(uint16_t n){_numLeds=min((uint16_t)MAX_LEDS,n);FastLED.addLeds<WS2812B,DATA_PIN,GRB>(leds,_numLeds);FastLED.setBrightness(50);FastLED.clear();FastLED.show();Serial.printf(\"[ws2812b] OK %d LEDs\\n\",_numLeds);}\nvoid ws2812b_set(uint16_t i,uint8_t r,uint8_t g,uint8_t b){if(i<_numLeds)leds[i]=CRGB(r,g,b);}\nvoid ws2812b_fill(uint8_t r,uint8_t g,uint8_t b){fill_solid(leds,_numLeds,CRGB(r,g,b));}\nvoid ws2812b_show(){FastLED.show();}\nvoid ws2812b_clear(){FastLED.clear();FastLED.show();}\nvoid ws2812b_rainbow(){fill_rainbow(leds,_numLeds,millis()/10,7);FastLED.show();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "laser_module",
+  "name": "Laser Module",
+  "category": "actuator",
+  "description": "Laser Module firmware block",
+  "libraries": [],
+  "pins": {
+    "signal": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef LASER_H\n#define LASER_H\nvoid laser_setup();\nvoid laser_on();\nvoid laser_off();\nvoid laser_blink(uint16_t ms);\n#endif",
+    "source": "#include \"laser_module.h\"\n#include <Arduino.h>\n#define LASER_PIN 25\nvoid laser_setup(){pinMode(LASER_PIN,OUTPUT);Serial.println(\"[laser] OK\");}\nvoid laser_on(){digitalWrite(LASER_PIN,HIGH);}\nvoid laser_off(){digitalWrite(LASER_PIN,LOW);}\nvoid laser_blink(uint16_t ms){laser_on();delay(ms);laser_off();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

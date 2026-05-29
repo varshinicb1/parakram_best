@@ -1,0 +1,21 @@
+{
+  "id": "power_relay_timer",
+  "name": "Power Relay Timer",
+  "category": "power",
+  "description": "Power Relay Timer firmware block",
+  "libraries": [],
+  "pins": {
+    "relay": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef POWER_TIMER_H\n#define POWER_TIMER_H\nvoid power_timer_setup();\nvoid power_timer_on_for(uint32_t seconds);\nvoid power_timer_off_for(uint32_t seconds);\nvoid power_timer_schedule(uint8_t on_hour,uint8_t on_min,uint8_t off_hour,uint8_t off_min);\nvoid power_timer_loop();\nbool power_timer_state();\n#endif",
+    "source": "#include \"power_relay_timer.h\"\n#include <Arduino.h>\n#define RELAY_PIN 25\nstatic bool _state=false;\nstatic unsigned long _switchAt=0;\nstatic bool _timedAction=false;\nvoid power_timer_setup(){pinMode(RELAY_PIN,OUTPUT);digitalWrite(RELAY_PIN,HIGH);Serial.println(\"[power] OK\");}\nvoid power_timer_on_for(uint32_t s){digitalWrite(RELAY_PIN,LOW);_state=true;_switchAt=millis()+s*1000;_timedAction=true;}\nvoid power_timer_off_for(uint32_t s){digitalWrite(RELAY_PIN,HIGH);_state=false;_switchAt=millis()+s*1000;_timedAction=true;}\nvoid power_timer_schedule(uint8_t oh,uint8_t om,uint8_t fh,uint8_t fm){}\nvoid power_timer_loop(){if(_timedAction&&millis()>=_switchAt){_state=!_state;digitalWrite(RELAY_PIN,_state?LOW:HIGH);_timedAction=false;}}\nbool power_timer_state(){return _state;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

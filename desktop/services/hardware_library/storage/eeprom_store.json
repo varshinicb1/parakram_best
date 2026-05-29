@@ -1,0 +1,21 @@
+{
+  "id": "eeprom_store",
+  "name": "EEPROM Storage",
+  "category": "storage",
+  "description": "EEPROM Storage firmware block",
+  "libraries": [
+    "EEPROM.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef EEPROM_STORE_H\n#define EEPROM_STORE_H\n#include <Arduino.h>\nvoid eeprom_setup();\nvoid eeprom_write_int(int addr, int val);\nint eeprom_read_int(int addr);\nvoid eeprom_write_float(int addr, float val);\nfloat eeprom_read_float(int addr);\nvoid eeprom_write_string(int addr, const char* s, int maxlen);\nString eeprom_read_string(int addr, int maxlen);\n#endif",
+    "source": "#include \"eeprom_store.h\"\n#include <EEPROM.h>\n#define EEPROM_SIZE 512\nvoid eeprom_setup(){EEPROM.begin(EEPROM_SIZE);Serial.println(\"[eeprom] OK\");}\nvoid eeprom_write_int(int a,int v){EEPROM.put(a,v);EEPROM.commit();}\nint eeprom_read_int(int a){int v;EEPROM.get(a,v);return v;}\nvoid eeprom_write_float(int a,float v){EEPROM.put(a,v);EEPROM.commit();}\nfloat eeprom_read_float(int a){float v;EEPROM.get(a,v);return v;}\nvoid eeprom_write_string(int a,const char*s,int m){for(int i=0;i<m;i++)EEPROM.write(a+i,i<(int)strlen(s)?s[i]:0);EEPROM.commit();}\nString eeprom_read_string(int a,int m){String s=\"\";for(int i=0;i<m;i++){char c=EEPROM.read(a+i);if(!c)break;s+=c;}return s;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

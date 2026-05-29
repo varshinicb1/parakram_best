@@ -1,0 +1,28 @@
+{
+  "id": "motor_brushless",
+  "name": "Brushless Gimbal Motor",
+  "category": "actuator",
+  "description": "Brushless Gimbal Motor firmware block",
+  "libraries": [
+    "SimpleFOC.h"
+  ],
+  "pins": {
+    "pwm_a": 25,
+    "pwm_b": 26,
+    "pwm_c": 27,
+    "enc": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "askuric/Simple FOC@^2.3.3"
+  ],
+  "firmware_template": {
+    "header": "#ifndef BLDC_GIMBAL_H\n#define BLDC_GIMBAL_H\nvoid gimbal_setup();\nvoid gimbal_loop();\nvoid gimbal_set_angle(float angle);\nfloat gimbal_get_angle();\n#endif",
+    "source": "#include \"motor_brushless.h\"\n#include <SimpleFOC.h>\nstatic BLDCMotor motor(7);\nstatic BLDCDriver3PWM driver(25,26,27);\nvoid gimbal_setup(){driver.voltage_power_supply=12;driver.init();motor.linkDriver(&driver);motor.controller=MotionControlType::angle;motor.init();Serial.println(\"[gimbal] OK\");}\nvoid gimbal_loop(){motor.loopFOC();motor.move();}\nvoid gimbal_set_angle(float a){motor.target=a;}\nfloat gimbal_get_angle(){return motor.shaft_angle;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

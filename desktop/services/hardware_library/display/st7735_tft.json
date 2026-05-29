@@ -1,0 +1,29 @@
+{
+  "id": "st7735_tft",
+  "name": "ST7735 TFT 1.8\" SPI",
+  "category": "display",
+  "description": "ST7735 TFT 1.8\" SPI firmware block",
+  "libraries": [
+    "SPI.h",
+    "Adafruit_ST7735.h"
+  ],
+  "pins": {
+    "cs": 5,
+    "dc": 16,
+    "rst": 17
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit ST7735 and ST7789 Library@^1.10.3",
+    "adafruit/Adafruit GFX Library@^1.11.9"
+  ],
+  "firmware_template": {
+    "header": "#ifndef ST7735_H\n#define ST7735_H\n#include <Adafruit_ST7735.h>\nvoid st7735_setup();\nvoid st7735_clear(uint16_t color);\nvoid st7735_text(int x,int y,const char*text,uint16_t color,int size);\nvoid st7735_rect(int x,int y,int w,int h,uint16_t color);\n#endif",
+    "source": "#include \"st7735_tft.h\"\n#include <SPI.h>\n#include <Adafruit_GFX.h>\nstatic Adafruit_ST7735 tft(5,16,17);\nvoid st7735_setup(){tft.initR(INITR_BLACKTAB);tft.setRotation(1);tft.fillScreen(ST77XX_BLACK);Serial.println(\"[st7735] OK 160x128\");}\nvoid st7735_clear(uint16_t c){tft.fillScreen(c);}\nvoid st7735_text(int x,int y,const char*t,uint16_t c,int s){tft.setCursor(x,y);tft.setTextColor(c);tft.setTextSize(s);tft.print(t);}\nvoid st7735_rect(int x,int y,int w,int h,uint16_t c){tft.drawRect(x,y,w,h,c);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,27 @@
+{
+  "id": "bno055",
+  "name": "BNO055 Absolute Orientation",
+  "category": "sensor",
+  "description": "BNO055 Absolute Orientation firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_BNO055.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x28",
+  "platformio_deps": [
+    "adafruit/Adafruit BNO055@^1.6.3"
+  ],
+  "firmware_template": {
+    "header": "#ifndef BNO055_H\n#define BNO055_H\nvoid bno055_setup();\nvoid bno055_loop();\nfloat bno055_get_heading();\nfloat bno055_get_roll();\nfloat bno055_get_pitch();\nfloat bno055_get_temp();\nuint8_t bno055_get_calibration();\n#endif",
+    "source": "#include \"bno055.h\"\n#include <Wire.h>\n#include <Adafruit_BNO055.h>\n#include <Adafruit_Sensor.h>\nstatic Adafruit_BNO055 bno(55,0x28);\nstatic float _h=0,_r=0,_p=0,_t=0;static uint8_t _cal=0;static unsigned long _l=0;\nvoid bno055_setup(){Wire.begin();if(!bno.begin()){Serial.println(\"[bno055] Fail!\");return;}bno.setExtCrystalUse(true);Serial.println(\"[bno055] OK\");}\nvoid bno055_loop(){if(millis()-_l<100)return;_l=millis();imu::Vector<3> euler=bno.getVector(Adafruit_BNO055::VECTOR_EULER);_h=euler.x();_r=euler.y();_p=euler.z();_t=bno.getTemp();uint8_t s,g,a,m;bno.getCalibration(&s,&g,&a,&m);_cal=s;}\nfloat bno055_get_heading(){return _h;}\nfloat bno055_get_roll(){return _r;}\nfloat bno055_get_pitch(){return _p;}\nfloat bno055_get_temp(){return _t;}\nuint8_t bno055_get_calibration(){return _cal;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

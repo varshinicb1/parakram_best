@@ -1,0 +1,21 @@
+{
+  "id": "spiffs_storage",
+  "name": "SPIFFS File System",
+  "category": "storage",
+  "description": "SPIFFS File System firmware block",
+  "libraries": [
+    "SPIFFS.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef SPIFFS_STORE_H\n#define SPIFFS_STORE_H\nvoid spiffs_setup();\nbool spiffs_write(const char*path,const char*data);\nString spiffs_read(const char*path);\nbool spiffs_exists(const char*path);\nvoid spiffs_remove(const char*path);\nuint32_t spiffs_free_bytes();\n#endif",
+    "source": "#include \"spiffs_storage.h\"\n#include <SPIFFS.h>\nvoid spiffs_setup(){if(!SPIFFS.begin(true)){Serial.println(\"[spiffs] Fail!\");return;}Serial.printf(\"[spiffs] OK %luKB free\\n\",(unsigned long)(SPIFFS.totalBytes()-SPIFFS.usedBytes())/1024);}\nbool spiffs_write(const char*p,const char*d){File f=SPIFFS.open(p,\"w\");if(!f)return false;f.print(d);f.close();return true;}\nString spiffs_read(const char*p){File f=SPIFFS.open(p,\"r\");if(!f)return\"\";String s=f.readString();f.close();return s;}\nbool spiffs_exists(const char*p){return SPIFFS.exists(p);}\nvoid spiffs_remove(const char*p){SPIFFS.remove(p);}\nuint32_t spiffs_free_bytes(){return SPIFFS.totalBytes()-SPIFFS.usedBytes();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

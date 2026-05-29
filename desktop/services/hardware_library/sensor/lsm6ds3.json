@@ -1,0 +1,27 @@
+{
+  "id": "lsm6ds3",
+  "name": "LSM6DS3 IMU 6-Axis",
+  "category": "sensor",
+  "description": "LSM6DS3 IMU 6-Axis firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_LSM6DS3TRC.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x6A",
+  "platformio_deps": [
+    "adafruit/Adafruit LSM6DS@^4.7.3"
+  ],
+  "firmware_template": {
+    "header": "#ifndef LSM6DS3_H\n#define LSM6DS3_H\nvoid lsm6ds3_setup();\nvoid lsm6ds3_loop();\nfloat lsm6ds3_get_accel_x();\nfloat lsm6ds3_get_accel_y();\nfloat lsm6ds3_get_accel_z();\nfloat lsm6ds3_get_gyro_x();\nfloat lsm6ds3_get_gyro_y();\nfloat lsm6ds3_get_gyro_z();\n#endif",
+    "source": "#include \"lsm6ds3.h\"\n#include <Wire.h>\n#include <Adafruit_LSM6DS3TRC.h>\nstatic Adafruit_LSM6DS3TRC lsm;\nstatic float _ax=0,_ay=0,_az=0,_gx=0,_gy=0,_gz=0;\nstatic unsigned long _last=0;\nvoid lsm6ds3_setup(){Wire.begin();if(!lsm.begin_I2C()){Serial.println(\"[lsm6ds3] Fail!\");return;}Serial.println(\"[lsm6ds3] OK\");}\nvoid lsm6ds3_loop(){if(millis()-_last<50)return;_last=millis();sensors_event_t a,g,t;lsm.getEvent(&a,&g,&t);_ax=a.acceleration.x;_ay=a.acceleration.y;_az=a.acceleration.z;_gx=g.gyro.x;_gy=g.gyro.y;_gz=g.gyro.z;}\nfloat lsm6ds3_get_accel_x(){return _ax;}\nfloat lsm6ds3_get_accel_y(){return _ay;}\nfloat lsm6ds3_get_accel_z(){return _az;}\nfloat lsm6ds3_get_gyro_x(){return _gx;}\nfloat lsm6ds3_get_gyro_y(){return _gy;}\nfloat lsm6ds3_get_gyro_z(){return _gz;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

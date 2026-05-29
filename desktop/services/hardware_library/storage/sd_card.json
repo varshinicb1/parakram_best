@@ -1,0 +1,24 @@
+{
+  "id": "sd_card",
+  "name": "SD Card Logger",
+  "category": "storage",
+  "description": "SD Card Logger firmware block",
+  "libraries": [
+    "SD.h",
+    "SPI.h"
+  ],
+  "pins": {
+    "cs": 5
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef SD_CARD_H\n#define SD_CARD_H\nvoid sd_setup();\nbool sd_log(const char* filename, const char* data);\nString sd_read(const char* filename);\nbool sd_exists(const char* filename);\nvoid sd_remove(const char* filename);\n#endif",
+    "source": "#include \"sd_card.h\"\n#include <SD.h>\n#include <SPI.h>\nstatic bool _ok=false;\nvoid sd_setup(){\n  if(!SD.begin(5)){Serial.println(\"[sd] Init failed!\");return;}\n  _ok=true;Serial.printf(\"[sd] OK %lluMB\\n\",SD.cardSize()/1048576);\n}\nbool sd_log(const char*fn,const char*d){\n  if(!_ok)return false;File f=SD.open(fn,FILE_APPEND);\n  if(!f)return false;f.println(d);f.close();return true;\n}\nString sd_read(const char*fn){\n  if(!_ok)return \"\";File f=SD.open(fn);if(!f)return\"\";\n  String s=f.readString();f.close();return s;\n}\nbool sd_exists(const char*fn){return _ok&&SD.exists(fn);}\nvoid sd_remove(const char*fn){if(_ok)SD.remove(fn);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

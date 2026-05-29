@@ -1,0 +1,27 @@
+{
+  "id": "bmp280",
+  "name": "BMP280 Pressure/Altitude",
+  "category": "sensor",
+  "description": "BMP280 Pressure/Altitude firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_BMP280.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x76",
+  "platformio_deps": [
+    "adafruit/Adafruit BMP280 Library@^2.6.8"
+  ],
+  "firmware_template": {
+    "header": "#ifndef BMP280_H\n#define BMP280_H\n#include <Adafruit_BMP280.h>\nvoid bmp280_setup();\nvoid bmp280_loop();\nfloat bmp280_get_temperature();\nfloat bmp280_get_pressure();\nfloat bmp280_get_altitude();\n#endif",
+    "source": "#include \"bmp280.h\"\n#include <Wire.h>\nstatic Adafruit_BMP280 bmp;\nstatic float _temp=0, _pres=0, _alt=0;\nstatic unsigned long _last=0;\nvoid bmp280_setup() {\n  Wire.begin();\n  if (!bmp.begin(0x76)) { Serial.println(\"[bmp280] Init failed!\"); return; }\n  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,\n    Adafruit_BMP280::SAMPLING_X2, Adafruit_BMP280::SAMPLING_X16,\n    Adafruit_BMP280::FILTER_X16, Adafruit_BMP280::STANDBY_MS_500);\n  Serial.println(\"[bmp280] OK\");\n}\nvoid bmp280_loop() {\n  if (millis()-_last < 2000) return;\n  _last = millis();\n  _temp = bmp.readTemperature();\n  _pres = bmp.readPressure() / 100.0F;\n  _alt = bmp.readAltitude(1013.25);\n  Serial.printf(\"[bmp280] T=%.1fC P=%.0fhPa Alt=%.1fm\\n\",_temp,_pres,_alt);\n}\nfloat bmp280_get_temperature(){return _temp;}\nfloat bmp280_get_pressure(){return _pres;}\nfloat bmp280_get_altitude(){return _alt;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

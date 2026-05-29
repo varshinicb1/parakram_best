@@ -1,0 +1,25 @@
+{
+  "id": "i2s_microphone",
+  "name": "I2S MEMS Microphone (INMP441)",
+  "category": "audio",
+  "description": "I2S MEMS Microphone (INMP441) firmware block",
+  "libraries": [
+    "driver/i2s.h"
+  ],
+  "pins": {
+    "ws": 25,
+    "sd": 33,
+    "sck": 26
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef I2S_MIC_H\n#define I2S_MIC_H\n#include <Arduino.h>\nvoid i2s_mic_setup();\nvoid i2s_mic_loop();\nint16_t i2s_mic_get_sample();\nfloat i2s_mic_get_db();\n#endif",
+    "source": "#include \"i2s_microphone.h\"\n#include <driver/i2s.h>\n#define I2S_WS 25\n#define I2S_SD 33\n#define I2S_SCK 26\n#define SAMPLE_RATE 16000\nstatic int16_t _sample = 0;\nstatic float _db = 0;\nvoid i2s_mic_setup() {\n  i2s_config_t cfg = {};\n  cfg.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX);\n  cfg.sample_rate = SAMPLE_RATE;\n  cfg.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;\n  cfg.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;\n  cfg.communication_format = I2S_COMM_FORMAT_STAND_I2S;\n  cfg.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;\n  cfg.dma_buf_count = 4;\n  cfg.dma_buf_len = 1024;\n  i2s_driver_install(I2S_NUM_0, &cfg, 0, NULL);\n  i2s_pin_config_t pins = { .bck_io_num = I2S_SCK, .ws_io_num = I2S_WS, .data_out_num = -1, .data_in_num = I2S_SD };\n  i2s_set_pin(I2S_NUM_0, &pins);\n  Serial.println(\"[i2s_mic] OK 16kHz\");\n}\nvoid i2s_mic_loop() {\n  int16_t buf[64];\n  size_t rd = 0;\n  i2s_read(I2S_NUM_0, buf, sizeof(buf), &rd, portMAX_DELAY);\n  if (rd > 0) {\n    int32_t sum = 0;\n    int n = rd / 2;\n    for (int i = 0; i < n; i++) sum += abs(buf[i]);\n    _sample = buf[0];\n    float rms = (float)sum / n;\n    _db = (rms > 0) ? 20.0f * log10f(rms / 32768.0f) + 94.0f : 0;\n  }\n}\nint16_t i2s_mic_get_sample() { return _sample; }\nfloat i2s_mic_get_db() { return _db; }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

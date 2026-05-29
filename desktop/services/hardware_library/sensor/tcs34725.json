@@ -1,0 +1,27 @@
+{
+  "id": "tcs34725",
+  "name": "TCS34725 Color Sensor",
+  "category": "sensor",
+  "description": "TCS34725 Color Sensor firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_TCS34725.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x29",
+  "platformio_deps": [
+    "adafruit/Adafruit TCS34725@^1.4.4"
+  ],
+  "firmware_template": {
+    "header": "#ifndef TCS34725_H\n#define TCS34725_H\nvoid tcs34725_setup();\nvoid tcs34725_loop();\nuint16_t tcs34725_get_red();\nuint16_t tcs34725_get_green();\nuint16_t tcs34725_get_blue();\nuint16_t tcs34725_get_clear();\nuint16_t tcs34725_get_color_temp();\nuint16_t tcs34725_get_lux();\n#endif",
+    "source": "#include \"tcs34725.h\"\n#include <Wire.h>\n#include <Adafruit_TCS34725.h>\nstatic Adafruit_TCS34725 tcs(TCS34725_INTEGRATIONTIME_600MS,TCS34725_GAIN_1X);\nstatic uint16_t _r=0,_g=0,_b=0,_c=0,_ct=0,_lux=0;\nstatic unsigned long _last=0;\nvoid tcs34725_setup(){Wire.begin();if(!tcs.begin()){Serial.println(\"[tcs34725] Fail!\");return;}Serial.println(\"[tcs34725] OK\");}\nvoid tcs34725_loop(){if(millis()-_last<1000)return;_last=millis();tcs.getRawData(&_r,&_g,&_b,&_c);_ct=tcs.calculateColorTemperature_dn40(_r,_g,_b,_c);_lux=tcs.calculateLux(_r,_g,_b);}\nuint16_t tcs34725_get_red(){return _r;}\nuint16_t tcs34725_get_green(){return _g;}\nuint16_t tcs34725_get_blue(){return _b;}\nuint16_t tcs34725_get_clear(){return _c;}\nuint16_t tcs34725_get_color_temp(){return _ct;}\nuint16_t tcs34725_get_lux(){return _lux;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

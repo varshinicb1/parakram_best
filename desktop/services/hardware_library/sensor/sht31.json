@@ -1,0 +1,27 @@
+{
+  "id": "sht31",
+  "name": "SHT31 Temp/Humidity",
+  "category": "sensor",
+  "description": "SHT31 Temp/Humidity firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_SHT31.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x44",
+  "platformio_deps": [
+    "adafruit/Adafruit SHT31 Library@^2.2.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SHT31_H\n#define SHT31_H\n#include <Adafruit_SHT31.h>\nvoid sht31_setup();\nvoid sht31_loop();\nfloat sht31_get_temperature();\nfloat sht31_get_humidity();\n#endif",
+    "source": "#include \"sht31.h\"\n#include <Wire.h>\nstatic Adafruit_SHT31 sht;\nstatic float _temp=0, _hum=0;\nstatic unsigned long _last=0;\nvoid sht31_setup() {\n  Wire.begin();\n  if (!sht.begin(0x44)) { Serial.println(\"[sht31] Init failed!\"); }\n  else { Serial.println(\"[sht31] OK\"); }\n}\nvoid sht31_loop() {\n  if (millis()-_last<2000) return;\n  _last=millis();\n  _temp=sht.readTemperature();\n  _hum=sht.readHumidity();\n  if(!isnan(_temp)) Serial.printf(\"[sht31] T=%.1fC H=%.0f%%\\n\",_temp,_hum);\n}\nfloat sht31_get_temperature(){return _temp;}\nfloat sht31_get_humidity(){return _hum;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

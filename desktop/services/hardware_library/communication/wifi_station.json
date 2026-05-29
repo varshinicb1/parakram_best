@@ -1,0 +1,21 @@
+{
+  "id": "wifi_station",
+  "name": "WiFi Station",
+  "category": "communication",
+  "description": "WiFi Station firmware block",
+  "libraries": [
+    "WiFi.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef WIFI_STATION_H\n#define WIFI_STATION_H\n#include <WiFi.h>\nvoid wifi_setup(const char* ssid, const char* pass);\nvoid wifi_loop();\nbool wifi_connected();\nString wifi_get_ip();\nint wifi_get_rssi();\n#endif",
+    "source": "#include \"wifi_station.h\"\nstatic bool _connected = false;\nvoid wifi_setup(const char* ssid, const char* pass) {\n  WiFi.mode(WIFI_STA);\n  WiFi.begin(ssid, pass);\n  Serial.printf(\"[wifi] Connecting to %s\", ssid);\n  int retries = 0;\n  while (WiFi.status() != WL_CONNECTED && retries < 40) {\n    delay(500); Serial.print(\".\"); retries++;\n  }\n  if (WiFi.status() == WL_CONNECTED) {\n    _connected = true;\n    Serial.printf(\"\\n[wifi] OK IP=%s RSSI=%d\\n\", WiFi.localIP().toString().c_str(), WiFi.RSSI());\n  } else {\n    Serial.println(\"\\n[wifi] FAILED!\");\n  }\n}\nvoid wifi_loop() {\n  _connected = (WiFi.status() == WL_CONNECTED);\n}\nbool wifi_connected() { return _connected; }\nString wifi_get_ip() { return WiFi.localIP().toString(); }\nint wifi_get_rssi() { return WiFi.RSSI(); }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

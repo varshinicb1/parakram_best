@@ -1,0 +1,23 @@
+{
+  "id": "joystick",
+  "name": "Analog Joystick",
+  "category": "sensor",
+  "description": "Analog Joystick firmware block",
+  "libraries": [],
+  "pins": {
+    "x": 34,
+    "y": 35,
+    "sw": 32
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef JOYSTICK_H\n#define JOYSTICK_H\nvoid joystick_setup();\nvoid joystick_loop();\nint joystick_get_x();\nint joystick_get_y();\nbool joystick_button();\nfloat joystick_get_angle();\n#endif",
+    "source": "#include \"joystick.h\"\n#include <Arduino.h>\n#include <math.h>\n#define JOY_X 34\n#define JOY_Y 35\n#define JOY_SW 32\nstatic int _x=0,_y=0;static bool _btn=false;static float _angle=0;static unsigned long _l=0;\nvoid joystick_setup(){pinMode(JOY_X,INPUT);pinMode(JOY_Y,INPUT);pinMode(JOY_SW,INPUT_PULLUP);Serial.println(\"[joy] OK\");}\nvoid joystick_loop(){if(millis()-_l<50)return;_l=millis();_x=analogRead(JOY_X)-2048;_y=analogRead(JOY_Y)-2048;_btn=!digitalRead(JOY_SW);_angle=atan2((float)_y,(float)_x)*180.0/M_PI;}\nint joystick_get_x(){return _x;}\nint joystick_get_y(){return _y;}\nbool joystick_button(){return _btn;}\nfloat joystick_get_angle(){return _angle;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

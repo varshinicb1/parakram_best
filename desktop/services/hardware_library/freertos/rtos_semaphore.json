@@ -1,0 +1,44 @@
+{
+    "id": "rtos_semaphore",
+    "name": "FreeRTOS Semaphore",
+    "category": "freertos",
+    "description": "Mutex or binary semaphore for protecting shared resources (I2C bus, SPI, etc.).",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "locked",
+            "data_type": "bool"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "sem_name",
+            "label": "Name",
+            "value_type": "string",
+            "default": "i2c_mutex"
+        },
+        {
+            "key": "sem_type",
+            "label": "Type",
+            "value_type": "string",
+            "default": "mutex"
+        },
+        {
+            "key": "timeout_ms",
+            "label": "Timeout (ms)",
+            "value_type": "int",
+            "default": "1000"
+        }
+    ],
+    "libraries": [],
+    "firmware_template": {
+        "header": "#ifndef RTOS_SEMAPHORE_H\n#define RTOS_SEMAPHORE_H\n#include <Arduino.h>\n#include <freertos/FreeRTOS.h>\n#include <freertos/semphr.h>\n\nSemaphoreHandle_t rtos_mutex_create();\nSemaphoreHandle_t rtos_binary_sem_create();\nbool rtos_sem_take(SemaphoreHandle_t sem, uint32_t timeoutMs = 1000);\nvoid rtos_sem_give(SemaphoreHandle_t sem);\n\n// RAII-style lock guard\nclass SemLock {\npublic:\n    SemLock(SemaphoreHandle_t sem, uint32_t timeoutMs = 1000);\n    ~SemLock();\n    bool acquired() const;\nprivate:\n    SemaphoreHandle_t _sem;\n    bool _acquired;\n};\n\n#endif",
+        "source": "#include \"rtos_semaphore.h\"\n\nSemaphoreHandle_t rtos_mutex_create() {\n    SemaphoreHandle_t m = xSemaphoreCreateMutex();\n    if (m) Serial.println(\"[rtos-sem] Mutex created\");\n    return m;\n}\n\nSemaphoreHandle_t rtos_binary_sem_create() {\n    SemaphoreHandle_t s = xSemaphoreCreateBinary();\n    if (s) {\n        xSemaphoreGive(s); // Start available\n        Serial.println(\"[rtos-sem] Binary semaphore created\");\n    }\n    return s;\n}\n\nbool rtos_sem_take(SemaphoreHandle_t sem, uint32_t timeoutMs) {\n    if (!sem) return false;\n    return xSemaphoreTake(sem, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;\n}\n\nvoid rtos_sem_give(SemaphoreHandle_t sem) {\n    if (sem) xSemaphoreGive(sem);\n}\n\nSemLock::SemLock(SemaphoreHandle_t sem, uint32_t timeoutMs)\n    : _sem(sem), _acquired(false) {\n    _acquired = rtos_sem_take(_sem, timeoutMs);\n    if (!_acquired) Serial.println(\"[rtos-sem] WARNING: Lock timeout!\");\n}\n\nSemLock::~SemLock() {\n    if (_acquired) rtos_sem_give(_sem);\n}\n\nbool SemLock::acquired() const { return _acquired; }"
+    },
+    "icon": "🔒",
+    "color": "#059669",
+    "memory_estimate": {
+        "flash": 1500,
+        "sram": 200
+    }
+}

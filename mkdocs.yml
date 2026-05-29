@@ -1,0 +1,32 @@
+site_name: Parakram Hardware Compiler
+site_description: Zero-Code Autonomous Hardware Compilation — by Vidyuthlabs
+site_url: https://varshinicb1.github.io/Parakram_new/
+repo_url: https://github.com/varshinicb1/Parakram_new
+repo_name: Parakram
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  logo: assets/lightning.png
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: cyan
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+
+nav:
+  - Welcome: index.md
+  - Getting Started:
+    - Setup & Installation: getting_started/setup.md
+    - Web Serial Flasher: getting_started/flasher.md
+  - Architecture:
+    - AI Pipeline: architecture/ai_pipeline.md
+    - Compiler Bytecode: architecture/compiler.md
+    - Firmware C-HAL: architecture/firmware.md
+  - Contributing: contributing.md

@@ -1,0 +1,27 @@
+{
+  "id": "vl6180x",
+  "name": "VL6180X Proximity/Lux",
+  "category": "sensor",
+  "description": "VL6180X Proximity/Lux firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_VL6180X.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x29",
+  "platformio_deps": [
+    "adafruit/Adafruit_VL6180X@^1.5.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef VL6180X_H\n#define VL6180X_H\nvoid vl6180x_setup();\nvoid vl6180x_loop();\nuint8_t vl6180x_get_range_mm();\nfloat vl6180x_get_lux();\n#endif",
+    "source": "#include \"vl6180x.h\"\n#include <Wire.h>\n#include <Adafruit_VL6180X.h>\nstatic Adafruit_VL6180X vl;\nstatic uint8_t _range=0;static float _lux=0;\nstatic unsigned long _last=0;\nvoid vl6180x_setup(){Wire.begin();if(!vl.begin()){Serial.println(\"[vl6180x] Fail!\");return;}Serial.println(\"[vl6180x] OK\");}\nvoid vl6180x_loop(){if(millis()-_last<200)return;_last=millis();_range=vl.readRange();_lux=vl.readLux(VL6180X_ALS_GAIN_5);}\nuint8_t vl6180x_get_range_mm(){return _range;}\nfloat vl6180x_get_lux(){return _lux;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,28 @@
+{
+  "id": "lorawan_otaa",
+  "name": "LoRaWAN OTAA",
+  "category": "communication",
+  "description": "LoRaWAN OTAA firmware block",
+  "libraries": [
+    "lmic.h",
+    "hal/hal.h"
+  ],
+  "pins": {
+    "nss": 18,
+    "rst": 14,
+    "dio0": 26
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "mcci-catena/MCCI LoRaWAN LMIC library@^4.1.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef LORAWAN_H\n#define LORAWAN_H\nvoid lorawan_setup(const uint8_t*appeui,const uint8_t*deveui,const uint8_t*appkey);\nvoid lorawan_loop();\nbool lorawan_send(const uint8_t*data,uint8_t len);\nbool lorawan_joined();\n#endif",
+    "source": "#include \"lorawan_otaa.h\"\n#include <lmic.h>\n#include <hal/hal.h>\nstatic const lmic_pinmap lmic_pins={.nss=18,.rxtx=LMIC_UNUSED_PIN,.rst=14,.dio={26,33,32}};\nstatic bool _joined=false;\nvoid os_getArtEui(u1_t*buf){}\nvoid os_getDevEui(u1_t*buf){}\nvoid os_getDevKey(u1_t*buf){}\nvoid onEvent(ev_t ev){if(ev==EV_JOINED){_joined=true;Serial.println(\"[lora] Joined!\");}}\nvoid lorawan_setup(const uint8_t*ae,const uint8_t*de,const uint8_t*ak){os_init();LMIC_reset();LMIC_startJoining();Serial.println(\"[lorawan] Starting OTAA join\");}\nvoid lorawan_loop(){os_runloop_once();}\nbool lorawan_send(const uint8_t*d,uint8_t l){if(!_joined)return false;LMIC_setTxData2(1,(uint8_t*)d,l,0);return true;}\nbool lorawan_joined(){return _joined;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

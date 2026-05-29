@@ -1,0 +1,26 @@
+{
+  "id": "load_cell_hx710",
+  "name": "HX710 Pressure Sensor",
+  "category": "sensor",
+  "description": "HX710 Pressure Sensor firmware block",
+  "libraries": [
+    "Q2HX711.h"
+  ],
+  "pins": {
+    "sck": 25,
+    "dt": 26
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "queuetue/Q2 HX711 Library@^1.0.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef HX710_H\n#define HX710_H\nvoid hx710_setup();\nvoid hx710_loop();\nfloat hx710_get_pressure();\nint32_t hx710_get_raw();\n#endif",
+    "source": "#include \"load_cell_hx710.h\"\n#include <Q2HX711.h>\nstatic Q2HX711 hx(26,25);\nstatic int32_t _raw=0;static float _pressure=0;static unsigned long _l=0;\nvoid hx710_setup(){Serial.println(\"[hx710] OK\");}\nvoid hx710_loop(){if(millis()-_l<500)return;_l=millis();_raw=hx.read();_pressure=(_raw-8388608.0)/8388608.0*40.0;}\nfloat hx710_get_pressure(){return _pressure;}\nint32_t hx710_get_raw(){return _raw;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

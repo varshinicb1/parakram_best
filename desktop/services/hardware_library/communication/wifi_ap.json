@@ -1,0 +1,21 @@
+{
+  "id": "wifi_ap",
+  "name": "WiFi Access Point",
+  "category": "communication",
+  "description": "WiFi Access Point firmware block",
+  "libraries": [
+    "WiFi.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef WIFI_AP_H\n#define WIFI_AP_H\nvoid wifi_ap_setup(const char* ssid, const char* pass);\nint wifi_ap_client_count();\nString wifi_ap_get_ip();\n#endif",
+    "source": "#include \"wifi_ap.h\"\n#include <WiFi.h>\nvoid wifi_ap_setup(const char*s,const char*p){WiFi.softAP(s,p);Serial.printf(\"[wifi_ap] SSID=%s IP=%s\\n\",s,WiFi.softAPIP().toString().c_str());}\nint wifi_ap_client_count(){return WiFi.softAPgetStationNum();}\nString wifi_ap_get_ip(){return WiFi.softAPIP().toString();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,35 @@
+{
+    "id": "low_pass_filter",
+    "name": "Low Pass Filter",
+    "category": "control",
+    "description": "Exponential moving average filter for smoothing high-frequency noise.",
+    "inputs": [
+        {
+            "name": "value",
+            "data_type": "float",
+            "description": "Raw input signal"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "filtered",
+            "data_type": "float",
+            "description": "Filtered output"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "alpha",
+            "label": "Alpha (0-1)",
+            "value_type": "float",
+            "default": "0.3",
+            "description": "Smoothing factor. Lower = smoother, slower response"
+        }
+    ],
+    "firmware_template": {
+        "header": "#ifndef LOW_PASS_FILTER_H\n#define LOW_PASS_FILTER_H\n#include <Arduino.h>\n\nclass LowPassFilter {\npublic:\n    LowPassFilter(float alpha = 0.3f);\n    float update(float newValue);\n    float getValue() const;\n    void setAlpha(float alpha);\n    void reset(float value = 0.0f);\nprivate:\n    float _alpha;\n    float _output;\n    bool _initialized;\n};\n\n#endif",
+        "source": "#include \"low_pass_filter.h\"\n\nLowPassFilter::LowPassFilter(float alpha)\n    : _alpha(constrain(alpha, 0.0f, 1.0f)), _output(0.0f), _initialized(false) {}\n\nfloat LowPassFilter::update(float newValue) {\n    if (!_initialized) {\n        _output = newValue;\n        _initialized = true;\n    } else {\n        _output = _alpha * newValue + (1.0f - _alpha) * _output;\n    }\n    return _output;\n}\n\nfloat LowPassFilter::getValue() const { return _output; }\n\nvoid LowPassFilter::setAlpha(float alpha) {\n    _alpha = constrain(alpha, 0.0f, 1.0f);\n}\n\nvoid LowPassFilter::reset(float value) {\n    _output = value; _initialized = false;\n}"
+    },
+    "icon": "wave",
+    "color": "#06b6d4"
+}

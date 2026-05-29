@@ -1,0 +1,21 @@
+{
+  "id": "voltage_divider",
+  "name": "Voltage Divider Sensor",
+  "category": "sensor",
+  "description": "Voltage Divider Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 35
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef VDIV_H\n#define VDIV_H\nvoid vdiv_setup(float r1, float r2);\nvoid vdiv_loop();\nfloat vdiv_get_voltage();\n#endif",
+    "source": "#include \"voltage_divider.h\"\n#include <Arduino.h>\n#define VDIV_PIN 35\nstatic float _r1=30000,_r2=7500,_v=0;static unsigned long _l=0;\nvoid vdiv_setup(float r1,float r2){_r1=r1;_r2=r2;analogReadResolution(12);Serial.println(\"[vdiv] OK\");}\nvoid vdiv_loop(){if(millis()-_l<1000)return;_l=millis();int r=0;for(int i=0;i<10;i++)r+=analogRead(VDIV_PIN);r/=10;_v=(r*3.3/4095.0)*((_r1+_r2)/_r2);}\nfloat vdiv_get_voltage(){return _v;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

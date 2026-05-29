@@ -1,0 +1,27 @@
+{
+  "id": "tmp117",
+  "name": "TMP117 High-Accuracy Temp",
+  "category": "sensor",
+  "description": "TMP117 High-Accuracy Temp firmware block",
+  "libraries": [
+    "Wire.h",
+    "SparkFun_TMP117.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x48",
+  "platformio_deps": [
+    "sparkfun/SparkFun High Precision Temperature Sensor TMP117 Qwiic@^1.0.4"
+  ],
+  "firmware_template": {
+    "header": "#ifndef TMP117_H\n#define TMP117_H\nvoid tmp117_setup();\nvoid tmp117_loop();\nfloat tmp117_get_temperature();\n#endif",
+    "source": "#include \"tmp117.h\"\n#include <Wire.h>\n#include <SparkFun_TMP117.h>\nstatic TMP117 sensor;\nstatic float _t=0;static unsigned long _l=0;\nvoid tmp117_setup(){Wire.begin();if(!sensor.begin()){Serial.println(\"[tmp117] Fail!\");return;}Serial.println(\"[tmp117] OK \u00b10.1C\");}\nvoid tmp117_loop(){if(millis()-_l<1000)return;_l=millis();if(sensor.dataReady())_t=sensor.readTempC();}\nfloat tmp117_get_temperature(){return _t;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

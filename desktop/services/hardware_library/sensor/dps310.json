@@ -1,0 +1,27 @@
+{
+  "id": "dps310",
+  "name": "DPS310 Barometric Pressure",
+  "category": "sensor",
+  "description": "DPS310 Barometric Pressure firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_DPS310.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x77",
+  "platformio_deps": [
+    "adafruit/Adafruit DPS310@^1.1.2"
+  ],
+  "firmware_template": {
+    "header": "#ifndef DPS310_H\n#define DPS310_H\nvoid dps310_setup();\nvoid dps310_loop();\nfloat dps310_get_pressure();\nfloat dps310_get_temperature();\nfloat dps310_get_altitude();\n#endif",
+    "source": "#include \"dps310.h\"\n#include <Wire.h>\n#include <Adafruit_DPS310.h>\nstatic Adafruit_DPS310 dps;\nstatic float _p=0,_t=0,_a=0;static unsigned long _l=0;\nvoid dps310_setup(){Wire.begin();if(!dps.begin_I2C()){Serial.println(\"[dps310] Fail!\");return;}dps.configurePressure(DPS310_64HZ,DPS310_64SAMPLES);dps.configureTemperature(DPS310_64HZ,DPS310_64SAMPLES);Serial.println(\"[dps310] OK\");}\nvoid dps310_loop(){if(millis()-_l<1000)return;_l=millis();sensors_event_t te,pe;dps.getEvents(&te,&pe);_t=te.temperature;_p=pe.pressure;_a=44330.0*(1.0-pow(_p/1013.25,0.1903));}\nfloat dps310_get_pressure(){return _p;}\nfloat dps310_get_temperature(){return _t;}\nfloat dps310_get_altitude(){return _a;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

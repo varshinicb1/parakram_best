@@ -1,0 +1,27 @@
+{
+  "id": "solar_mppt",
+  "name": "Solar MPPT Monitor",
+  "category": "power",
+  "description": "Solar MPPT Monitor firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_INA219.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit INA219@^1.2.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SOLAR_H\n#define SOLAR_H\nvoid solar_setup();\nvoid solar_loop();\nfloat solar_get_voltage();\nfloat solar_get_current();\nfloat solar_get_power();\nfloat solar_get_energy_wh();\n#endif",
+    "source": "#include \"solar_mppt.h\"\n#include <Wire.h>\n#include <Adafruit_INA219.h>\nstatic Adafruit_INA219 ina;\nstatic float _v=0,_mA=0,_mW=0,_wh=0;\nstatic unsigned long _last=0;\nvoid solar_setup(){Wire.begin();ina.begin();ina.setCalibration_32V_2A();Serial.println(\"[solar] OK\");}\nvoid solar_loop(){if(millis()-_last<1000)return;unsigned long dt=millis()-_last;_last=millis();_v=ina.getBusVoltage_V();_mA=ina.getCurrent_mA();_mW=ina.getPower_mW();_wh+=_mW*dt/3600000.0;}\nfloat solar_get_voltage(){return _v;}\nfloat solar_get_current(){return _mA;}\nfloat solar_get_power(){return _mW;}\nfloat solar_get_energy_wh(){return _wh;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

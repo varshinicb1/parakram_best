@@ -1,0 +1,22 @@
+{
+  "id": "flame_sensor",
+  "name": "Flame/Fire Sensor",
+  "category": "sensor",
+  "description": "Flame/Fire Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34,
+    "digital": 35
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef FLAME_H\n#define FLAME_H\nvoid flame_setup();\nvoid flame_loop();\nint flame_get_raw();\nbool flame_detected();\n#endif",
+    "source": "#include \"flame_sensor.h\"\n#include <Arduino.h>\n#define FLAME_A 34\n#define FLAME_D 35\nstatic int _raw=0;static bool _flame=false;static unsigned long _l=0;\nvoid flame_setup(){pinMode(FLAME_A,INPUT);pinMode(FLAME_D,INPUT);Serial.println(\"[flame] OK\");}\nvoid flame_loop(){if(millis()-_l<200)return;_l=millis();_raw=analogRead(FLAME_A);_flame=!digitalRead(FLAME_D);}\nint flame_get_raw(){return _raw;}\nbool flame_detected(){return _flame;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

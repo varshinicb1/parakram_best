@@ -1,0 +1,21 @@
+{
+  "id": "ntp_time",
+  "name": "NTP Time Sync",
+  "category": "communication",
+  "description": "NTP Time Sync firmware block",
+  "libraries": [
+    "WiFi.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef NTP_TIME_H\n#define NTP_TIME_H\nvoid ntp_setup(const char* tz, const char* server);\nString ntp_get_time();\nString ntp_get_date();\nunsigned long ntp_get_epoch();\n#endif",
+    "source": "#include \"ntp_time.h\"\n#include <WiFi.h>\n#include <time.h>\nvoid ntp_setup(const char*tz,const char*srv){configTime(0,0,srv);setenv(\"TZ\",tz,1);tzset();Serial.println(\"[ntp] OK\");}\nString ntp_get_time(){struct tm t;if(!getLocalTime(&t))return\"--:--:--\";char buf[9];strftime(buf,sizeof(buf),\"%H:%M:%S\",&t);return String(buf);}\nString ntp_get_date(){struct tm t;if(!getLocalTime(&t))return\"----/--/--\";char buf[11];strftime(buf,sizeof(buf),\"%Y/%m/%d\",&t);return String(buf);}\nunsigned long ntp_get_epoch(){time_t now;time(&now);return now;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

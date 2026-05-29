@@ -1,0 +1,51 @@
+{
+    "id": "secure_boot",
+    "name": "Secure Boot Config",
+    "category": "security",
+    "description": "ESP32 secure boot and flash encryption configuration.",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "secure_boot_enabled",
+            "data_type": "bool"
+        },
+        {
+            "name": "flash_encrypted",
+            "data_type": "bool"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "secure_boot_v2",
+            "label": "Secure Boot V2",
+            "value_type": "bool",
+            "default": "true"
+        },
+        {
+            "key": "flash_encryption",
+            "label": "Flash Encryption",
+            "value_type": "bool",
+            "default": "false"
+        },
+        {
+            "key": "encryption_mode",
+            "label": "Encryption Mode",
+            "value_type": "string",
+            "default": "development"
+        }
+    ],
+    "libraries": [],
+    "firmware_template": {
+        "header": "#ifndef SECURE_BOOT_H\n#define SECURE_BOOT_H\n#include <Arduino.h>\n\nvoid secure_boot_setup();\nbool is_secure_boot_enabled();\nbool is_flash_encrypted();\nvoid print_security_status();\n\n#endif",
+        "source": "#include \"secure_boot.h\"\n#include <esp_secure_boot.h>\n#include <esp_flash_encrypt.h>\n\nvoid secure_boot_setup() {\n    print_security_status();\n}\n\nbool is_secure_boot_enabled() {\n    return esp_secure_boot_enabled();\n}\n\nbool is_flash_encrypted() {\n    return esp_flash_encryption_enabled();\n}\n\nvoid print_security_status() {\n    Serial.println(\"[security] === Security Status ===\");\n    Serial.printf(\"[security] Secure Boot: %s\\n\", is_secure_boot_enabled() ? \"ENABLED\" : \"DISABLED\");\n    Serial.printf(\"[security] Flash Encryption: %s\\n\", is_flash_encrypted() ? \"ENABLED\" : \"DISABLED\");\n    Serial.printf(\"[security] Chip revision: %d\\n\", ESP.getChipRevision());\n    Serial.printf(\"[security] SDK version: %s\\n\", ESP.getSdkVersion());\n    Serial.println(\"[security] ========================\");\n}"
+    },
+    "icon": "🔐",
+    "color": "#991b1b",
+    "memory_estimate": {
+        "flash": 2000,
+        "sram": 500
+    },
+    "platformio_flags": [
+        "-DCONFIG_SECURE_BOOT_V2_ENABLED=y"
+    ]
+}

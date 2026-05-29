@@ -1,0 +1,39 @@
+{
+    "id": "or_combinator",
+    "name": "OR Combinator",
+    "category": "control",
+    "description": "Outputs true when ANY input is true. For multi-sensor alarm triggers.",
+    "inputs": [
+        {
+            "name": "input_1",
+            "data_type": "bool",
+            "description": "First condition"
+        },
+        {
+            "name": "input_2",
+            "data_type": "bool",
+            "description": "Second condition"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "result",
+            "data_type": "bool",
+            "description": "True if any input is true"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "input_count",
+            "label": "Input Count",
+            "value_type": "int",
+            "default": "2"
+        }
+    ],
+    "firmware_template": {
+        "header": "#ifndef OR_COMBINATOR_H\n#define OR_COMBINATOR_H\n#include <Arduino.h>\n\nclass ORCombinator {\npublic:\n    ORCombinator(int inputCount = 2);\n    void setInput(int index, bool value);\n    bool compute();\n    bool getResult() const;\nprivate:\n    bool* _inputs;\n    int _count;\n    bool _result;\n};\n\n#endif",
+        "source": "#include \"or_combinator.h\"\n\nORCombinator::ORCombinator(int inputCount)\n    : _count(inputCount), _result(false) {\n    _inputs = new bool[inputCount];\n    for (int i = 0; i < inputCount; i++) _inputs[i] = false;\n}\n\nvoid ORCombinator::setInput(int index, bool value) {\n    if (index >= 0 && index < _count) _inputs[index] = value;\n}\n\nbool ORCombinator::compute() {\n    _result = false;\n    for (int i = 0; i < _count; i++) {\n        if (_inputs[i]) { _result = true; break; }\n    }\n    return _result;\n}\n\nbool ORCombinator::getResult() const { return _result; }"
+    },
+    "icon": "git-merge",
+    "color": "#f97316"
+}

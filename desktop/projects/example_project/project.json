@@ -1,0 +1,10 @@
+{
+    "id": "example_project",
+    "name": "Example Project",
+    "description": "Temperature monitoring with threshold alert — demonstrates TemperatureSensor → ThresholdLogic → WiFiAlert pattern",
+    "target_board": "esp32dev",
+    "framework": "arduino",
+    "created_at": "2026-03-09T22:00:00",
+    "updated_at": "2026-03-09T22:00:00",
+    "version": 1
+}

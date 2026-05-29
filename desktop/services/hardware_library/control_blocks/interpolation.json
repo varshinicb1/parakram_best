@@ -1,0 +1,19 @@
+{
+  "id": "interpolation",
+  "name": "Linear Interpolation",
+  "category": "control_blocks",
+  "description": "Linear Interpolation firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef INTERP_H\n#define INTERP_H\nfloat lerp(float a,float b,float t);\nfloat map_range(float val,float in_min,float in_max,float out_min,float out_max);\nfloat clamp(float val,float mn,float mx);\nfloat smooth_step(float edge0,float edge1,float x);\n#endif",
+    "source": "#include \"interpolation.h\"\nfloat lerp(float a,float b,float t){return a+(b-a)*t;}\nfloat map_range(float v,float imn,float imx,float omn,float omx){return omn+(v-imn)*(omx-omn)/(imx-imn);}\nfloat clamp(float v,float mn,float mx){return v<mn?mn:(v>mx?mx:v);}\nfloat smooth_step(float e0,float e1,float x){float t=clamp((x-e0)/(e1-e0),0,1);return t*t*(3-2*t);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

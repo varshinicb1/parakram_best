@@ -1,0 +1,24 @@
+{
+  "id": "thingspeak",
+  "name": "ThingSpeak IoT Cloud",
+  "category": "communication",
+  "description": "ThingSpeak IoT Cloud firmware block",
+  "libraries": [
+    "WiFi.h",
+    "ThingSpeak.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "mathworks/ThingSpeak@^2.0.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef THINGSPEAK_H\n#define THINGSPEAK_H\nvoid thingspeak_setup(unsigned long channel,const char*api_key);\nvoid thingspeak_set_field(uint8_t field,float value);\nint thingspeak_write();\n#endif",
+    "source": "#include \"thingspeak.h\"\n#include <WiFi.h>\n#include <ThingSpeak.h>\nstatic WiFiClient _client;\nstatic unsigned long _ch=0;\nstatic const char*_key=\"\";\nvoid thingspeak_setup(unsigned long ch,const char*k){_ch=ch;_key=k;ThingSpeak.begin(_client);Serial.printf(\"[ts] OK ch=%lu\\n\",ch);}\nvoid thingspeak_set_field(uint8_t f,float v){ThingSpeak.setField(f,v);}\nint thingspeak_write(){return ThingSpeak.writeFields(_ch,_key);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

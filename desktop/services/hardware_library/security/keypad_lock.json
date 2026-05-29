@@ -1,0 +1,25 @@
+{
+  "id": "keypad_lock",
+  "name": "Keypad Door Lock",
+  "category": "security",
+  "description": "Keypad Door Lock firmware block",
+  "libraries": [
+    "Keypad.h"
+  ],
+  "pins": {
+    "relay": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "chris--a/Keypad@^3.1.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef KEYPAD_LOCK_H\n#define KEYPAD_LOCK_H\nvoid lock_setup(const char*code);\nvoid lock_loop();\nvoid lock_unlock(uint16_t sec);\nvoid lock_lock();\nbool lock_is_locked();\n#endif",
+    "source": "#include \"keypad_lock.h\"\n#include <Arduino.h>\n#define LOCK_PIN 25\nstatic bool _locked=true;static String _code;static unsigned long _unlockAt=0;\nvoid lock_setup(const char*c){_code=String(c);pinMode(LOCK_PIN,OUTPUT);digitalWrite(LOCK_PIN,HIGH);Serial.println(\"[lock] OK\");}\nvoid lock_loop(){if(!_locked&&millis()>=_unlockAt){lock_lock();}}\nvoid lock_unlock(uint16_t s){digitalWrite(LOCK_PIN,LOW);_locked=false;_unlockAt=millis()+s*1000UL;Serial.println(\"[lock] UNLOCKED\");}\nvoid lock_lock(){digitalWrite(LOCK_PIN,HIGH);_locked=true;Serial.println(\"[lock] LOCKED\");}\nbool lock_is_locked(){return _locked;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

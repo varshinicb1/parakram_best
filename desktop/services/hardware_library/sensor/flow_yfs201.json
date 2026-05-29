@@ -1,0 +1,21 @@
+{
+  "id": "flow_yfs201",
+  "name": "Water Flow Sensor (YF-S201)",
+  "category": "sensor",
+  "description": "Water Flow Sensor (YF-S201) firmware block",
+  "libraries": [],
+  "pins": {
+    "signal": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef FLOW_H\n#define FLOW_H\nvoid flow_setup();\nvoid flow_loop();\nfloat flow_get_liters_per_min();\nfloat flow_get_total_liters();\nvoid flow_reset_total();\n#endif",
+    "source": "#include \"flow_yfs201.h\"\n#include <Arduino.h>\n#define FLOW_PIN 25\nstatic volatile uint16_t _pulses=0;\nstatic float _lpm=0,_totalL=0;static unsigned long _l=0;\nvoid IRAM_ATTR _flow_isr(){_pulses++;}\nvoid flow_setup(){pinMode(FLOW_PIN,INPUT_PULLUP);attachInterrupt(FLOW_PIN,_flow_isr,RISING);Serial.println(\"[flow] OK\");}\nvoid flow_loop(){if(millis()-_l<1000)return;unsigned long dt=millis()-_l;_l=millis();_lpm=_pulses*60.0/7.5;_totalL+=_pulses/7.5/60.0;_pulses=0;}\nfloat flow_get_liters_per_min(){return _lpm;}\nfloat flow_get_total_liters(){return _totalL;}\nvoid flow_reset_total(){_totalL=0;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

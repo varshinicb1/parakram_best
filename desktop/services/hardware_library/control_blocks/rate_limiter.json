@@ -1,0 +1,19 @@
+{
+  "id": "rate_limiter",
+  "name": "Rate Limiter",
+  "category": "control_blocks",
+  "description": "Rate Limiter firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef RATE_LIMIT_H\n#define RATE_LIMIT_H\n#include <Arduino.h>\nvoid rate_limit_setup(uint32_t min_interval_ms);\nbool rate_limit_check();\nvoid rate_limit_reset();\n#endif",
+    "source": "#include \"rate_limiter.h\"\nstatic uint32_t _interval=1000;static unsigned long _last=0;\nvoid rate_limit_setup(uint32_t ms){_interval=ms;_last=0;}\nbool rate_limit_check(){if(millis()-_last>=_interval){_last=millis();return true;}return false;}\nvoid rate_limit_reset(){_last=0;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

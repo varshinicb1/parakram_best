@@ -1,0 +1,22 @@
+{
+  "id": "rain_sensor",
+  "name": "Rain Drop Sensor",
+  "category": "sensor",
+  "description": "Rain Drop Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34,
+    "digital": 35
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef RAIN_SENSOR_H\n#define RAIN_SENSOR_H\nvoid rain_setup();\nvoid rain_loop();\nint rain_get_raw();\nbool rain_detected();\n#endif",
+    "source": "#include \"rain_sensor.h\"\n#include <Arduino.h>\n#define RAIN_A 34\n#define RAIN_D 35\nstatic int _raw=0;static bool _rain=false;\nstatic unsigned long _last=0;\nvoid rain_setup(){pinMode(RAIN_A,INPUT);pinMode(RAIN_D,INPUT);Serial.println(\"[rain] OK\");}\nvoid rain_loop(){if(millis()-_last<500)return;_last=millis();_raw=analogRead(RAIN_A);_rain=!digitalRead(RAIN_D);}\nint rain_get_raw(){return _raw;}\nbool rain_detected(){return _rain;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

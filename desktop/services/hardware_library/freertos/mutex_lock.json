@@ -1,0 +1,19 @@
+{
+  "id": "mutex_lock",
+  "name": "FreeRTOS Mutex",
+  "category": "freertos",
+  "description": "FreeRTOS Mutex firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef MUTEX_H\n#define MUTEX_H\n#include <Arduino.h>\nvoid mutex_setup();\nbool mutex_take(uint32_t timeout_ms);\nvoid mutex_give();\n#endif",
+    "source": "#include \"mutex_lock.h\"\nstatic SemaphoreHandle_t _mtx=NULL;\nvoid mutex_setup(){_mtx=xSemaphoreCreateMutex();Serial.println(\"[mutex] OK\");}\nbool mutex_take(uint32_t ms){return xSemaphoreTake(_mtx,ms/portTICK_PERIOD_MS)==pdTRUE;}\nvoid mutex_give(){xSemaphoreGive(_mtx);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

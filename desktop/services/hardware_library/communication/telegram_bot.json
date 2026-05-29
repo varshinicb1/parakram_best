@@ -1,0 +1,25 @@
+{
+  "id": "telegram_bot",
+  "name": "Telegram Bot",
+  "category": "communication",
+  "description": "Telegram Bot firmware block",
+  "libraries": [
+    "WiFi.h",
+    "WiFiClientSecure.h",
+    "UniversalTelegramBot.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "witnessmenow/Universal-Arduino-Telegram-Bot@^1.3.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef TELEGRAM_H\n#define TELEGRAM_H\nvoid telegram_setup(const char*token);\nvoid telegram_loop();\nvoid telegram_send(const char*chat_id,const char*msg);\ntypedef void(*telegram_cb)(const char*chat_id,const char*text);\nvoid telegram_on_message(telegram_cb cb);\n#endif",
+    "source": "#include \"telegram_bot.h\"\n#include <WiFi.h>\n#include <WiFiClientSecure.h>\n#include <UniversalTelegramBot.h>\nstatic WiFiClientSecure _sc;\nstatic UniversalTelegramBot*_bot=nullptr;\nstatic telegram_cb _cb=nullptr;\nstatic unsigned long _l=0;\nvoid telegram_setup(const char*tok){_sc.setCACert(TELEGRAM_CERTIFICATE_ROOT);_bot=new UniversalTelegramBot(tok,_sc);Serial.println(\"[telegram] OK\");}\nvoid telegram_loop(){if(millis()-_l<2000||!_bot)return;_l=millis();int n=_bot->getUpdates(_bot->last_message_received+1);for(int i=0;i<n;i++){if(_cb)_cb(_bot->messages[i].chat_id.c_str(),_bot->messages[i].text.c_str());}}\nvoid telegram_send(const char*id,const char*msg){if(_bot)_bot->sendMessage(id,msg,\"\");}\nvoid telegram_on_message(telegram_cb cb){_cb=cb;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

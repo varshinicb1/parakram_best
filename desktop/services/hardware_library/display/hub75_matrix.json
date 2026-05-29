@@ -1,0 +1,23 @@
+{
+  "id": "hub75_matrix",
+  "name": "HUB75 RGB LED Matrix",
+  "category": "display",
+  "description": "HUB75 RGB LED Matrix firmware block",
+  "libraries": [
+    "ESP32-HUB75-MatrixPanel-I2S-DMA.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "mrfaptastic/ESP32 HUB75 LED MATRIX PANEL DMA Display@^3.0.10"
+  ],
+  "firmware_template": {
+    "header": "#ifndef HUB75_H\n#define HUB75_H\nvoid hub75_setup();\nvoid hub75_clear();\nvoid hub75_pixel(int x,int y,uint8_t r,uint8_t g,uint8_t b);\nvoid hub75_text(int x,int y,const char*text,uint8_t r,uint8_t g,uint8_t b);\nvoid hub75_fill_rect(int x,int y,int w,int h,uint8_t r,uint8_t g,uint8_t b);\n#endif",
+    "source": "#include \"hub75_matrix.h\"\n#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>\nstatic MatrixPanel_I2S_DMA*dma=nullptr;\nvoid hub75_setup(){HUB75_I2S_CFG cfg(64,32,1);dma=new MatrixPanel_I2S_DMA(cfg);dma->begin();dma->setBrightness8(90);dma->clearScreen();Serial.println(\"[hub75] OK 64x32\");}\nvoid hub75_clear(){if(dma)dma->clearScreen();}\nvoid hub75_pixel(int x,int y,uint8_t r,uint8_t g,uint8_t b){if(dma)dma->drawPixelRGB888(x,y,r,g,b);}\nvoid hub75_text(int x,int y,const char*t,uint8_t r,uint8_t g,uint8_t b){if(!dma)return;dma->setTextColor(dma->color565(r,g,b));dma->setCursor(x,y);dma->print(t);}\nvoid hub75_fill_rect(int x,int y,int w,int h,uint8_t r,uint8_t g,uint8_t b){if(dma)dma->fillRect(x,y,w,h,dma->color565(r,g,b));}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

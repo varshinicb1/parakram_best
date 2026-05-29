@@ -1,0 +1,27 @@
+{
+  "id": "tb6612fng",
+  "name": "TB6612FNG Dual Motor",
+  "category": "actuator",
+  "description": "TB6612FNG Dual Motor firmware block",
+  "libraries": [],
+  "pins": {
+    "ain1": 25,
+    "ain2": 26,
+    "pwma": 27,
+    "bin1": 14,
+    "bin2": 12,
+    "pwmb": 13,
+    "stby": 33
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef TB6612_H\n#define TB6612_H\nvoid tb6612_setup();\nvoid tb6612_motor_a(int speed);\nvoid tb6612_motor_b(int speed);\nvoid tb6612_brake();\nvoid tb6612_standby(bool en);\n#endif",
+    "source": "#include \"tb6612fng.h\"\n#include <Arduino.h>\n#define AIN1 25\n#define AIN2 26\n#define PWMA 27\n#define BIN1 14\n#define BIN2 12\n#define PWMB 13\n#define STBY 33\nvoid tb6612_setup(){pinMode(AIN1,OUTPUT);pinMode(AIN2,OUTPUT);pinMode(BIN1,OUTPUT);pinMode(BIN2,OUTPUT);pinMode(STBY,OUTPUT);ledcAttach(PWMA,5000,8);ledcAttach(PWMB,5000,8);digitalWrite(STBY,HIGH);Serial.println(\"[tb6612] OK\");}\nvoid tb6612_motor_a(int s){if(s>0){digitalWrite(AIN1,HIGH);digitalWrite(AIN2,LOW);}else if(s<0){digitalWrite(AIN1,LOW);digitalWrite(AIN2,HIGH);s=-s;}else{digitalWrite(AIN1,LOW);digitalWrite(AIN2,LOW);}ledcWrite(PWMA,constrain(s,0,255));}\nvoid tb6612_motor_b(int s){if(s>0){digitalWrite(BIN1,HIGH);digitalWrite(BIN2,LOW);}else if(s<0){digitalWrite(BIN1,LOW);digitalWrite(BIN2,HIGH);s=-s;}else{digitalWrite(BIN1,LOW);digitalWrite(BIN2,LOW);}ledcWrite(PWMB,constrain(s,0,255));}\nvoid tb6612_brake(){tb6612_motor_a(0);tb6612_motor_b(0);}\nvoid tb6612_standby(bool e){digitalWrite(STBY,e?LOW:HIGH);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

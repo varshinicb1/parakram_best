@@ -1,0 +1,21 @@
+{
+  "id": "light_sensor",
+  "name": "Photoresistor (LDR)",
+  "category": "sensor",
+  "description": "Photoresistor (LDR) firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef LDR_H\n#define LDR_H\nvoid ldr_setup();\nvoid ldr_loop();\nint ldr_get_raw();\nfloat ldr_get_percent();\nbool ldr_is_dark();\n#endif",
+    "source": "#include \"light_sensor.h\"\n#include <Arduino.h>\n#define LDR_PIN 34\nstatic int _raw=0;static float _pct=0;static bool _dark=false;static unsigned long _l=0;\nvoid ldr_setup(){pinMode(LDR_PIN,INPUT);Serial.println(\"[ldr] OK\");}\nvoid ldr_loop(){if(millis()-_l<500)return;_l=millis();_raw=analogRead(LDR_PIN);_pct=_raw*100.0/4095.0;_dark=_raw<500;}\nint ldr_get_raw(){return _raw;}\nfloat ldr_get_percent(){return _pct;}\nbool ldr_is_dark(){return _dark;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

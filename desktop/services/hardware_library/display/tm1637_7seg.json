@@ -1,0 +1,26 @@
+{
+  "id": "tm1637_7seg",
+  "name": "TM1637 7-Segment Display",
+  "category": "display",
+  "description": "TM1637 7-Segment Display firmware block",
+  "libraries": [
+    "TM1637Display.h"
+  ],
+  "pins": {
+    "clk": 25,
+    "dio": 26
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "avishorp/TM1637@^1.2.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef TM1637_H\n#define TM1637_H\nvoid tm1637_setup();\nvoid tm1637_show_number(int num);\nvoid tm1637_show_time(uint8_t h,uint8_t m);\nvoid tm1637_set_brightness(uint8_t b);\nvoid tm1637_clear();\n#endif",
+    "source": "#include \"tm1637_7seg.h\"\n#include <TM1637Display.h>\nstatic TM1637Display seg(25,26);\nvoid tm1637_setup(){seg.setBrightness(4);seg.clear();Serial.println(\"[tm1637] OK\");}\nvoid tm1637_show_number(int n){seg.showNumberDec(n,false);}\nvoid tm1637_show_time(uint8_t h,uint8_t m){seg.showNumberDecEx(h*100+m,0x40,true);}\nvoid tm1637_set_brightness(uint8_t b){seg.setBrightness(b);}\nvoid tm1637_clear(){seg.clear();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

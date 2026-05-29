@@ -1,0 +1,27 @@
+{
+  "id": "nau7802",
+  "name": "NAU7802 24-bit ADC (Scale)",
+  "category": "sensor",
+  "description": "NAU7802 24-bit ADC (Scale) firmware block",
+  "libraries": [
+    "Wire.h",
+    "SparkFun_Qwiic_Scale_NAU7802.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "",
+  "platformio_deps": [
+    "sparkfun/SparkFun Qwiic Scale NAU7802@^1.0.6"
+  ],
+  "firmware_template": {
+    "header": "#ifndef NAU7802_H\n#define NAU7802_H\nvoid nau7802_setup();\nvoid nau7802_loop();\nfloat nau7802_get_weight();\nint32_t nau7802_get_raw();\nvoid nau7802_tare();\nvoid nau7802_calibrate(float known_weight);\n#endif",
+    "source": "#include \"nau7802.h\"\n#include <Wire.h>\n#include <SparkFun_Qwiic_Scale_NAU7802_Arduino_Library.h>\nstatic NAU7802 nau;\nstatic int32_t _raw=0;static float _weight=0,_cal=1.0;static int32_t _tare=0;static unsigned long _l=0;\nvoid nau7802_setup(){Wire.begin();if(!nau.begin()){Serial.println(\"[nau7802] Fail!\");return;}nau.setSampleRate(NAU7802_SPS_320);Serial.println(\"[nau7802] OK\");}\nvoid nau7802_loop(){if(millis()-_l<100)return;_l=millis();if(nau.available()){_raw=nau.getReading();_weight=(_raw-_tare)*_cal;}}\nfloat nau7802_get_weight(){return _weight;}\nint32_t nau7802_get_raw(){return _raw;}\nvoid nau7802_tare(){_tare=_raw;}\nvoid nau7802_calibrate(float kw){_cal=kw/(_raw-_tare);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "flex_sensor",
+  "name": "Flex/Bend Sensor",
+  "category": "sensor",
+  "description": "Flex/Bend Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef FLEX_H\n#define FLEX_H\nvoid flex_setup();\nvoid flex_loop();\nint flex_get_raw();\nfloat flex_get_angle();\n#endif",
+    "source": "#include \"flex_sensor.h\"\n#include <Arduino.h>\n#define FLEX_PIN 34\nstatic int _raw=0;static float _angle=0;static unsigned long _l=0;\nvoid flex_setup(){pinMode(FLEX_PIN,INPUT);Serial.println(\"[flex] OK\");}\nvoid flex_loop(){if(millis()-_l<100)return;_l=millis();_raw=analogRead(FLEX_PIN);_angle=map(_raw,0,4095,0,180);}\nint flex_get_raw(){return _raw;}\nfloat flex_get_angle(){return _angle;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

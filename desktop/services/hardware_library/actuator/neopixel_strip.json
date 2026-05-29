@@ -1,0 +1,25 @@
+{
+  "id": "neopixel_strip",
+  "name": "NeoPixel LED Strip",
+  "category": "actuator",
+  "description": "NeoPixel LED Strip firmware block",
+  "libraries": [
+    "Adafruit_NeoPixel.h"
+  ],
+  "pins": {
+    "data": 16
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit NeoPixel@^1.12.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef NEOPIXEL_H\n#define NEOPIXEL_H\n#include <Adafruit_NeoPixel.h>\nvoid neopixel_setup();\nvoid neopixel_loop();\nvoid neopixel_set(uint16_t i, uint8_t r, uint8_t g, uint8_t b);\nvoid neopixel_fill(uint8_t r, uint8_t g, uint8_t b);\nvoid neopixel_clear();\nvoid neopixel_set_brightness(uint8_t b);\n#endif",
+    "source": "#include \"neopixel.h\"\n#define NUM_LEDS 30\n#define LED_PIN 16\nstatic Adafruit_NeoPixel strip(NUM_LEDS,LED_PIN,NEO_GRB+NEO_KHZ800);\nvoid neopixel_setup(){strip.begin();strip.setBrightness(50);strip.show();Serial.println(\"[neo] OK\");}\nvoid neopixel_loop(){}\nvoid neopixel_set(uint16_t i,uint8_t r,uint8_t g,uint8_t b){strip.setPixelColor(i,strip.Color(r,g,b));strip.show();}\nvoid neopixel_fill(uint8_t r,uint8_t g,uint8_t b){strip.fill(strip.Color(r,g,b));strip.show();}\nvoid neopixel_clear(){strip.clear();strip.show();}\nvoid neopixel_set_brightness(uint8_t b){strip.setBrightness(b);strip.show();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

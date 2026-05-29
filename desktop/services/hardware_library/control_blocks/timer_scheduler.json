@@ -1,0 +1,19 @@
+{
+  "id": "timer_scheduler",
+  "name": "Timer/Scheduler",
+  "category": "control_blocks",
+  "description": "Timer/Scheduler firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef TIMER_SCHED_H\n#define TIMER_SCHED_H\n#include <Arduino.h>\ntypedef void(*timer_cb)();\nvoid scheduler_setup();\nuint8_t scheduler_add(uint32_t interval_ms,timer_cb callback);\nvoid scheduler_remove(uint8_t id);\nvoid scheduler_loop();\n#endif",
+    "source": "#include \"timer_scheduler.h\"\n#define MAX_TIMERS 16\nstatic struct{uint32_t interval;timer_cb cb;unsigned long last;bool active;}_timers[MAX_TIMERS];\nstatic uint8_t _count=0;\nvoid scheduler_setup(){for(int i=0;i<MAX_TIMERS;i++)_timers[i].active=false;Serial.println(\"[sched] OK\");}\nuint8_t scheduler_add(uint32_t ms,timer_cb cb){if(_count>=MAX_TIMERS)return 255;uint8_t id=_count++;_timers[id]={ms,cb,millis(),true};return id;}\nvoid scheduler_remove(uint8_t id){if(id<MAX_TIMERS)_timers[id].active=false;}\nvoid scheduler_loop(){unsigned long now=millis();for(int i=0;i<_count;i++){if(_timers[i].active&&now-_timers[i].last>=_timers[i].interval){_timers[i].last=now;_timers[i].cb();}}}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

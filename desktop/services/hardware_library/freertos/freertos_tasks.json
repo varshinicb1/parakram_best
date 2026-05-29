@@ -1,0 +1,19 @@
+{
+  "id": "freertos_tasks",
+  "name": "FreeRTOS Task Manager",
+  "category": "freertos",
+  "description": "FreeRTOS Task Manager firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef FREERTOS_TASKS_H\n#define FREERTOS_TASKS_H\n#include <Arduino.h>\nvoid task_manager_setup();\nvoid task_create(const char* name, void (*fn)(void*), uint32_t stack, int priority, int core);\nvoid task_delay_ms(uint32_t ms);\nuint32_t task_get_free_heap();\n#endif",
+    "source": "#include \"freertos_tasks.h\"\nvoid task_manager_setup() {\n  Serial.printf(\"[rtos] Free heap: %lu bytes\\n\", (unsigned long)ESP.getFreeHeap());\n  Serial.printf(\"[rtos] Cores: %d\\n\", ESP.getChipCores());\n}\nvoid task_create(const char* name, void (*fn)(void*), uint32_t stack, int pri, int core) {\n  BaseType_t r = xTaskCreatePinnedToCore(fn, name, stack, NULL, pri, NULL, core);\n  Serial.printf(\"[rtos] Task '%s' on core %d: %s\\n\", name, core, r == pdPASS ? \"OK\" : \"FAIL\");\n}\nvoid task_delay_ms(uint32_t ms) { vTaskDelay(ms / portTICK_PERIOD_MS); }\nuint32_t task_get_free_heap() { return ESP.getFreeHeap(); }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

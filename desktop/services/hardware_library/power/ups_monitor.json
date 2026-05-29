@@ -1,0 +1,28 @@
+{
+  "id": "ups_monitor",
+  "name": "UPS Battery Monitor",
+  "category": "power",
+  "description": "UPS Battery Monitor firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_INA219.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22,
+    "charge_detect": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit INA219@^1.2.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef UPS_H\n#define UPS_H\nvoid ups_setup();\nvoid ups_loop();\nfloat ups_get_voltage();\nfloat ups_get_current();\nbool ups_is_charging();\nbool ups_is_low();\nuint8_t ups_get_percent();\n#endif",
+    "source": "#include \"ups_monitor.h\"\n#include <Wire.h>\n#include <Adafruit_INA219.h>\n#define CHARGE_PIN 34\nstatic Adafruit_INA219 ina;\nstatic float _v=0,_mA=0;static bool _charging=false,_low=false;static uint8_t _pct=0;static unsigned long _l=0;\nvoid ups_setup(){Wire.begin();ina.begin();pinMode(CHARGE_PIN,INPUT);Serial.println(\"[ups] OK\");}\nvoid ups_loop(){if(millis()-_l<2000)return;_l=millis();_v=ina.getBusVoltage_V();_mA=ina.getCurrent_mA();_charging=digitalRead(CHARGE_PIN);_pct=constrain(map((int)(_v*100),320,420,0,100),0,100);_low=_pct<15;}\nfloat ups_get_voltage(){return _v;}\nfloat ups_get_current(){return _mA;}\nbool ups_is_charging(){return _charging;}\nbool ups_is_low(){return _low;}\nuint8_t ups_get_percent(){return _pct;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

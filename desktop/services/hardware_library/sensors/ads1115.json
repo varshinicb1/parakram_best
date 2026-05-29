@@ -1,0 +1,74 @@
+{
+    "id": "ads1115",
+    "name": "ADS1115 ADC",
+    "category": "sensor",
+    "description": "16-bit 4-channel ADC with programmable gain amplifier.",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "channel_0",
+            "data_type": "float",
+            "description": "Voltage on A0"
+        },
+        {
+            "name": "channel_1",
+            "data_type": "float",
+            "description": "Voltage on A1"
+        },
+        {
+            "name": "channel_2",
+            "data_type": "float",
+            "description": "Voltage on A2"
+        },
+        {
+            "name": "channel_3",
+            "data_type": "float",
+            "description": "Voltage on A3"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "i2c_address",
+            "label": "I2C Address",
+            "value_type": "string",
+            "default": "0x48"
+        },
+        {
+            "key": "gain",
+            "label": "Gain",
+            "value_type": "string",
+            "default": "GAIN_ONE"
+        },
+        {
+            "key": "data_rate",
+            "label": "Data Rate (SPS)",
+            "value_type": "int",
+            "default": "128"
+        },
+        {
+            "key": "active_channels",
+            "label": "Active Channels",
+            "value_type": "int",
+            "default": "4"
+        },
+        {
+            "key": "read_interval",
+            "label": "Read Interval (ms)",
+            "value_type": "int",
+            "default": "500"
+        }
+    ],
+    "libraries": [
+        "adafruit/Adafruit ADS1X15@^2.5.0"
+    ],
+    "firmware_template": {
+        "header": "#ifndef ADS1115_SENSOR_H\n#define ADS1115_SENSOR_H\n#include <Arduino.h>\n\nvoid ads1115_setup();\nvoid ads1115_loop();\nfloat ads1115_voltage(int channel);\nint16_t ads1115_raw(int channel);\nbool ads1115_ready();\n\n#endif",
+        "source": "#include \"ads1115_sensor.h\"\n#include <Wire.h>\n#include <Adafruit_ADS1X15.h>\n#include \"config.h\"\n\nstatic Adafruit_ADS1115 _ads;\nstatic bool _adsReady = false;\nstatic float _voltages[4] = {0};\nstatic int16_t _rawValues[4] = {0};\n\nvoid ads1115_setup() {\n    Wire.begin(21, 22);\n    if (_ads.begin(0x48, &Wire)) {\n        _adsReady = true;\n        _ads.setGain(GAIN_ONE); // +/- 4.096V range\n        _ads.setDataRate(RATE_ADS1115_128SPS);\n        Serial.println(\"[ads1115] 16-bit ADC ready\");\n    } else {\n        Serial.println(\"[ads1115] FAILED\");\n    }\n}\n\nvoid ads1115_loop() {\n    if (!_adsReady) return;\n    for (int ch = 0; ch < 4; ch++) {\n        _rawValues[ch] = _ads.readADC_SingleEnded(ch);\n        _voltages[ch] = _ads.computeVolts(_rawValues[ch]);\n    }\n}\n\nfloat ads1115_voltage(int channel) {\n    return (channel >= 0 && channel < 4) ? _voltages[channel] : 0;\n}\n\nint16_t ads1115_raw(int channel) {\n    return (channel >= 0 && channel < 4) ? _rawValues[channel] : 0;\n}\n\nbool ads1115_ready() { return _adsReady; }"
+    },
+    "icon": "📈",
+    "color": "#22c55e",
+    "memory_estimate": {
+        "flash": 6000,
+        "sram": 1000
+    }
+}

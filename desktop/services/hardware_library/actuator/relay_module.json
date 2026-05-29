@@ -1,0 +1,22 @@
+{
+  "id": "relay_module",
+  "name": "Relay Module",
+  "category": "actuator",
+  "description": "Relay Module firmware block",
+  "libraries": [],
+  "pins": {
+    "relay1": 25,
+    "relay2": 26
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef RELAY_MODULE_H\n#define RELAY_MODULE_H\nvoid relay_setup();\nvoid relay_set(uint8_t ch, bool on);\nbool relay_get(uint8_t ch);\nvoid relay_toggle(uint8_t ch);\n#endif",
+    "source": "#include \"relay_module.h\"\n#include <Arduino.h>\nstatic const uint8_t _pins[]={25,26};static bool _state[2]={false};\nvoid relay_setup(){for(int i=0;i<2;i++){pinMode(_pins[i],OUTPUT);digitalWrite(_pins[i],HIGH);}Serial.println(\"[relay] OK\");}\nvoid relay_set(uint8_t ch,bool on){if(ch>=2)return;_state[ch]=on;digitalWrite(_pins[ch],on?LOW:HIGH);Serial.printf(\"[relay] CH%d=%s\\n\",ch,on?\"ON\":\"OFF\");}\nbool relay_get(uint8_t ch){return ch<2?_state[ch]:false;}\nvoid relay_toggle(uint8_t ch){if(ch<2)relay_set(ch,!_state[ch]);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

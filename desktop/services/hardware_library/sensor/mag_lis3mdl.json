@@ -1,0 +1,27 @@
+{
+  "id": "mag_lis3mdl",
+  "name": "LIS3MDL 3-Axis Magnetometer",
+  "category": "sensor",
+  "description": "LIS3MDL 3-Axis Magnetometer firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_LIS3MDL.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x1C",
+  "platformio_deps": [
+    "adafruit/Adafruit LIS3MDL@^1.2.2"
+  ],
+  "firmware_template": {
+    "header": "#ifndef LIS3MDL_H\n#define LIS3MDL_H\nvoid lis3mdl_setup();\nvoid lis3mdl_loop();\nfloat lis3mdl_get_x();\nfloat lis3mdl_get_y();\nfloat lis3mdl_get_z();\nfloat lis3mdl_get_heading();\n#endif",
+    "source": "#include \"mag_lis3mdl.h\"\n#include <Wire.h>\n#include <Adafruit_LIS3MDL.h>\n#include <math.h>\nstatic Adafruit_LIS3MDL mag;\nstatic float _x=0,_y=0,_z=0,_heading=0;\nstatic unsigned long _last=0;\nvoid lis3mdl_setup(){Wire.begin();if(!mag.begin_I2C()){Serial.println(\"[lis3mdl] Fail!\");return;}mag.setPerformanceMode(LIS3MDL_MEDIUMMODE);mag.setOperationMode(LIS3MDL_CONTINUOUSMODE);mag.setDataRate(LIS3MDL_DATARATE_155_HZ);Serial.println(\"[lis3mdl] OK\");}\nvoid lis3mdl_loop(){if(millis()-_last<100)return;_last=millis();mag.read();_x=mag.x;_y=mag.y;_z=mag.z;_heading=atan2(_y,_x)*180.0/M_PI;if(_heading<0)_heading+=360;}\nfloat lis3mdl_get_x(){return _x;}\nfloat lis3mdl_get_y(){return _y;}\nfloat lis3mdl_get_z(){return _z;}\nfloat lis3mdl_get_heading(){return _heading;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

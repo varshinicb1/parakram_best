@@ -1,0 +1,22 @@
+{
+  "id": "http_client",
+  "name": "HTTP REST Client",
+  "category": "communication",
+  "description": "HTTP REST Client firmware block",
+  "libraries": [
+    "WiFi.h",
+    "HTTPClient.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef HTTP_CLIENT_H\n#define HTTP_CLIENT_H\n#include <Arduino.h>\nvoid http_client_setup();\nString http_get(const char* url);\nint http_post(const char* url, const char* payload);\n#endif",
+    "source": "#include \"http_client.h\"\n#include <WiFi.h>\n#include <HTTPClient.h>\nvoid http_client_setup(){Serial.println(\"[http] OK\");}\nString http_get(const char*url){\n  HTTPClient http;http.begin(url);\n  int code=http.GET();String res=\"\";\n  if(code>0)res=http.getString();\n  http.end();return res;\n}\nint http_post(const char*url,const char*payload){\n  HTTPClient http;http.begin(url);http.addHeader(\"Content-Type\",\"application/json\");\n  int code=http.POST(payload);http.end();return code;\n}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

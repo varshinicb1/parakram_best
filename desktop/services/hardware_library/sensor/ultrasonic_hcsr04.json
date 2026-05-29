@@ -1,0 +1,22 @@
+{
+  "id": "ultrasonic_hcsr04",
+  "name": "HC-SR04 Ultrasonic",
+  "category": "sensor",
+  "description": "HC-SR04 Ultrasonic firmware block",
+  "libraries": [],
+  "pins": {
+    "trig": 5,
+    "echo": 18
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef HCSR04_H\n#define HCSR04_H\nvoid hcsr04_setup();\nvoid hcsr04_loop();\nfloat hcsr04_get_distance_cm();\n#endif",
+    "source": "#include \"hcsr04.h\"\n#include <Arduino.h>\n#define TRIG 5\n#define ECHO 18\nstatic float _dist=0;\nstatic unsigned long _last=0;\nvoid hcsr04_setup(){pinMode(TRIG,OUTPUT);pinMode(ECHO,INPUT);Serial.println(\"[hcsr04] OK\");}\nvoid hcsr04_loop(){\n  if(millis()-_last<100)return;\n  _last=millis();\n  digitalWrite(TRIG,LOW);delayMicroseconds(2);\n  digitalWrite(TRIG,HIGH);delayMicroseconds(10);\n  digitalWrite(TRIG,LOW);\n  long dur=pulseIn(ECHO,HIGH,30000);\n  _dist=dur*0.0343/2.0;\n  if(_dist>0&&_dist<400)Serial.printf(\"[hcsr04] %.1fcm\\n\",_dist);\n}\nfloat hcsr04_get_distance_cm(){return _dist;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

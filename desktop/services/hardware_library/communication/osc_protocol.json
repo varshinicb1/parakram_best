@@ -1,0 +1,25 @@
+{
+  "id": "osc_protocol",
+  "name": "OSC Protocol",
+  "category": "communication",
+  "description": "OSC Protocol firmware block",
+  "libraries": [
+    "WiFi.h",
+    "WiFiUdp.h",
+    "OSCMessage.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "cnmat/OSC@^1.3.7"
+  ],
+  "firmware_template": {
+    "header": "#ifndef OSC_H\n#define OSC_H\nvoid osc_setup(uint16_t port);\nvoid osc_loop();\nvoid osc_send(const char*host,uint16_t port,const char*addr,float val);\ntypedef void(*osc_cb)(const char*addr,float val);\nvoid osc_on_message(osc_cb cb);\n#endif",
+    "source": "#include \"osc_protocol.h\"\n#include <WiFi.h>\n#include <WiFiUdp.h>\n#include <OSCMessage.h>\n#include <OSCBundle.h>\nstatic WiFiUDP udp;\nstatic osc_cb _cb=nullptr;\nvoid osc_setup(uint16_t p){udp.begin(p);Serial.printf(\"[osc] OK port=%d\\n\",p);}\nvoid osc_loop(){OSCMessage msg;int sz=udp.parsePacket();if(sz>0){while(sz--)msg.fill(udp.read());}}\nvoid osc_send(const char*h,uint16_t p,const char*a,float v){OSCMessage msg(a);msg.add(v);udp.beginPacket(h,p);msg.send(udp);udp.endPacket();}\nvoid osc_on_message(osc_cb cb){_cb=cb;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,57 @@
+{
+    "id": "vl53l0x",
+    "name": "VL53L0X Distance",
+    "category": "sensor",
+    "description": "Time-of-Flight laser distance sensor, range up to 2m.",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "distance_mm",
+            "data_type": "int",
+            "description": "Distance in mm"
+        },
+        {
+            "name": "out_of_range",
+            "data_type": "bool"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "i2c_address",
+            "label": "I2C Address",
+            "value_type": "string",
+            "default": "0x29"
+        },
+        {
+            "key": "timing_budget_us",
+            "label": "Timing Budget (us)",
+            "value_type": "int",
+            "default": "200000"
+        },
+        {
+            "key": "long_range",
+            "label": "Long Range Mode",
+            "value_type": "bool",
+            "default": "false"
+        },
+        {
+            "key": "read_interval",
+            "label": "Read Interval (ms)",
+            "value_type": "int",
+            "default": "250"
+        }
+    ],
+    "libraries": [
+        "pololu/VL53L0X@^1.3.0"
+    ],
+    "firmware_template": {
+        "header": "#ifndef VL53L0X_SENSOR_H\n#define VL53L0X_SENSOR_H\n#include <Arduino.h>\n\nvoid vl53l0x_setup();\nvoid vl53l0x_loop();\nint vl53l0x_distance_mm();\nbool vl53l0x_out_of_range();\nbool vl53l0x_ready();\n\n#endif",
+        "source": "#include \"vl53l0x_sensor.h\"\n#include <Wire.h>\n#include <VL53L0X.h>\n#include \"config.h\"\n\nstatic VL53L0X _tof;\nstatic bool _tofReady = false;\nstatic int _distanceMm = 0;\nstatic bool _outOfRange = false;\n\nvoid vl53l0x_setup() {\n    Wire.begin(21, 22);\n    _tof.setTimeout(500);\n    if (_tof.init()) {\n        _tofReady = true;\n        _tof.setMeasurementTimingBudget(200000);\n        _tof.startContinuous();\n        Serial.println(\"[vl53l0x] ToF sensor ready\");\n    } else {\n        Serial.println(\"[vl53l0x] FAILED\");\n    }\n}\n\nvoid vl53l0x_loop() {\n    if (!_tofReady) return;\n    uint16_t reading = _tof.readRangeContinuousMillimeters();\n    if (_tof.timeoutOccurred()) {\n        _outOfRange = true;\n    } else {\n        _outOfRange = (reading >= 8190);\n        _distanceMm = reading;\n    }\n}\n\nint vl53l0x_distance_mm() { return _distanceMm; }\nbool vl53l0x_out_of_range() { return _outOfRange; }\nbool vl53l0x_ready() { return _tofReady; }"
+    },
+    "icon": "📏",
+    "color": "#6366f1",
+    "memory_estimate": {
+        "flash": 8000,
+        "sram": 1000
+    }
+}

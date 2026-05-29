@@ -1,0 +1,27 @@
+{
+  "id": "seven_seg_max7219",
+  "name": "7-Segment MAX7219 8-digit",
+  "category": "display",
+  "description": "7-Segment MAX7219 8-digit firmware block",
+  "libraries": [
+    "LedControl.h"
+  ],
+  "pins": {
+    "data": 23,
+    "cs": 5,
+    "clk": 18
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "wayoda/LedControl@^1.0.6"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SEG_MAX7219_H\n#define SEG_MAX7219_H\nvoid seg7_setup();\nvoid seg7_show_number(long num);\nvoid seg7_show_float(float num,uint8_t decimals);\nvoid seg7_clear();\nvoid seg7_set_brightness(uint8_t b);\n#endif",
+    "source": "#include \"seven_seg_max7219.h\"\n#include <LedControl.h>\nstatic LedControl lc(23,18,5,1);\nvoid seg7_setup(){lc.shutdown(0,false);lc.setIntensity(0,4);lc.clearDisplay(0);Serial.println(\"[seg7] OK 8 digits\");}\nvoid seg7_show_number(long n){lc.clearDisplay(0);bool neg=n<0;if(neg)n=-n;for(int i=0;i<8&&(n>0||i==0);i++){lc.setDigit(0,i,n%10,false);n/=10;}}\nvoid seg7_show_float(float n,uint8_t d){long mul=1;for(uint8_t i=0;i<d;i++)mul*=10;long val=(long)(n*mul);lc.clearDisplay(0);bool neg=val<0;if(neg)val=-val;for(int i=0;i<8&&(val>0||i==0);i++){lc.setDigit(0,i,val%10,i==d);val/=10;}}\nvoid seg7_clear(){lc.clearDisplay(0);}\nvoid seg7_set_brightness(uint8_t b){lc.setIntensity(0,constrain(b,0,15));}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

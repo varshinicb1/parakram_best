@@ -1,0 +1,23 @@
+{
+  "id": "rotary_encoder",
+  "name": "Rotary Encoder (KY-040)",
+  "category": "sensor",
+  "description": "Rotary Encoder (KY-040) firmware block",
+  "libraries": [],
+  "pins": {
+    "clk": 32,
+    "dt": 33,
+    "sw": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef ROTARY_ENCODER_H\n#define ROTARY_ENCODER_H\nvoid encoder_setup();\nvoid encoder_loop();\nint encoder_get_position();\nbool encoder_button_pressed();\nvoid encoder_reset();\n#endif",
+    "source": "#include \"rotary_encoder.h\"\n#include <Arduino.h>\n#define ENC_CLK 32\n#define ENC_DT 33\n#define ENC_SW 25\nstatic volatile int _pos = 0;\nstatic volatile bool _btn = false;\nstatic int _lastCLK = HIGH;\nvoid IRAM_ATTR _enc_isr() {\n  int clk = digitalRead(ENC_CLK);\n  if (clk != _lastCLK && clk == LOW) {\n    if (digitalRead(ENC_DT) != clk) _pos++; else _pos--;\n  }\n  _lastCLK = clk;\n}\nvoid IRAM_ATTR _btn_isr() { _btn = true; }\nvoid encoder_setup() {\n  pinMode(ENC_CLK, INPUT_PULLUP);\n  pinMode(ENC_DT, INPUT_PULLUP);\n  pinMode(ENC_SW, INPUT_PULLUP);\n  attachInterrupt(ENC_CLK, _enc_isr, CHANGE);\n  attachInterrupt(ENC_SW, _btn_isr, FALLING);\n  Serial.println(\"[encoder] OK\");\n}\nvoid encoder_loop() {}\nint encoder_get_position(){return _pos;}\nbool encoder_button_pressed(){bool b=_btn;_btn=false;return b;}\nvoid encoder_reset(){_pos=0;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

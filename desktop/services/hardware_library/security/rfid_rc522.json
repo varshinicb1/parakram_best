@@ -1,0 +1,27 @@
+{
+  "id": "rfid_rc522",
+  "name": "RFID Reader (RC522)",
+  "category": "security",
+  "description": "RFID Reader (RC522) firmware block",
+  "libraries": [
+    "SPI.h",
+    "MFRC522.h"
+  ],
+  "pins": {
+    "cs": 5,
+    "rst": 27
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "miguelbalboa/MFRC522@^1.4.10"
+  ],
+  "firmware_template": {
+    "header": "#ifndef RFID_H\n#define RFID_H\n#include <MFRC522.h>\nvoid rfid_setup();\nvoid rfid_loop();\nbool rfid_card_present();\nString rfid_get_uid();\ntypedef void (*rfid_cb)(const char* uid);\nvoid rfid_on_scan(rfid_cb cb);\n#endif",
+    "source": "#include \"rfid_rc522.h\"\n#include <SPI.h>\nstatic MFRC522 rfid(5,27);\nstatic rfid_cb _cb=nullptr;static String _uid=\"\";\nvoid rfid_setup(){SPI.begin();rfid.PCD_Init();Serial.println(\"[rfid] OK\");}\nvoid rfid_loop(){\n  if(!rfid.PICC_IsNewCardPresent()||!rfid.PICC_ReadCardSerial())return;\n  _uid=\"\";for(byte i=0;i<rfid.uid.size;i++){if(rfid.uid.uidByte[i]<0x10)_uid+=\"0\";_uid+=String(rfid.uid.uidByte[i],HEX);}\n  _uid.toUpperCase();Serial.printf(\"[rfid] UID: %s\\n\",_uid.c_str());\n  if(_cb)_cb(_uid.c_str());rfid.PICC_HaltA();\n}\nbool rfid_card_present(){return rfid.PICC_IsNewCardPresent();}\nString rfid_get_uid(){return _uid;}\nvoid rfid_on_scan(rfid_cb cb){_cb=cb;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}
