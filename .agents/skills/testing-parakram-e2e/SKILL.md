@@ -24,6 +24,12 @@ description: End-to-end testing procedures for the Parakram unified stack (backe
 # Backend
 cd backend && cargo build --release
 
+# Backend unit tests (all 41 tests including builder + validator + marketplace + compiler)
+cd backend && cargo test --nocapture
+
+# Builder-specific tests (V2 hallucination-proof IR builder)
+cd backend && cargo test -- ir::builder --nocapture
+
 # Firmware VM test harness (host x86)
 cd firmware/test_harness && make clean && make test
 
@@ -113,6 +119,28 @@ When PostgreSQL credentials are unavailable, verify the driver registry through 
 
 This is valid because the registry is an in-memory `HashMap` populated from source code constants, not from the database.
 
+## Testing the V2 IR Builder (No DB Needed)
+
+The hallucination-proof IR builder (`backend/src/ir/builder.rs`) is a pure deterministic function — it takes a `StructuredIntent` + `DriverRegistry` and returns a `BuildResult`. It can be fully tested via Rust unit tests without a running backend.
+
+Key test patterns (add `#[cfg(test)]` block to `builder.rs`):
+1. **Valid intent → correct IR**: Create a `StructuredIntent` with real drivers (e.g., `drv_bme280` sensor + `drv_relay` actuator), verify the built `IRDocument` has correct devices, state vars, triggers, pipelines, and node types.
+2. **Unknown driver → UNKNOWN_DRIVER**: Use a fake driver name, verify error code and that `valid_options` lists all 69 real drivers.
+3. **Unknown capability → UNKNOWN_CAPABILITY**: Use a real driver with a fake capability, verify `valid_options` lists that driver's real capabilities.
+4. **Invalid operator → INVALID_OPERATOR**: Use an op not in `[gt, lt, eq, gte, lte, ne]`.
+5. **Poll interval bounds**: Verify 50ms and 100000ms are rejected, 100ms and 60000ms are accepted.
+6. **Display nodes**: Set `show_on_display: true`, verify `display.text` nodes are generated.
+7. **End-to-end with validator**: Pass the built IR through `validator::validate_ir()` — it should pass all 8 validation steps.
+
+The V2 HTTP endpoint (`POST /api/llm/intent/v2`) requires a running backend with auth. If `SUPABASE_DB_URL` is available:
+```bash
+# Test V2 endpoint (requires JWT token)
+curl -s -X POST http://localhost:8400/api/llm/intent/v2 \
+  -H "Authorization: Bearer <jwt_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"description": "monitor temperature and turn on fan if hot", "board_id": "VDYT-S3-R1"}'
+```
+
 ## Driver Type Values
 
 Valid `driver_type` values in registry.rs (line 15):
@@ -155,6 +183,8 @@ These are fixed by the PCB and must be consistent across all golden blocks:
 - `POST /api/provisioning/key-exchange` -> `KeyExchangeResponse` JSON
 - `GET /api/provisioning/session/:device_id` -> session details
 - `DELETE /api/provisioning/session/:device_id` -> 200 OK
+- `POST /api/llm/intent` (V1) -> `IntentResponse` with `feasible`, `ir`, `ir_preview`, `validation`, `llm_model`, `generation_time_ms`
+- `POST /api/llm/intent/v2` -> `IntentV2Response` with `feasible`, `pipeline` ("v2-deterministic"), `intent`, `ir`, `validation`, `build_errors`, `build_summary`, `llm_model`, `generation_time_ms`
 
 ## CodeLM Test Details
 
@@ -178,3 +208,4 @@ The CodeLM tests verify the block-token transformer architecture:
 - **`sqlx-postgres` future-incompat warning**: Informational only, does not affect build success.
 - **Desktop IDE TS errors after Tauri API changes**: `invoke()` returns `Promise<unknown>`, not typed. Use `unknown` + runtime narrowing in `.then()` callbacks.
 - **CodeLM tests need PYTHONPATH**: Run with `PYTHONPATH=.` or `PYTHONPATH=/path/to/ai/codelm` to resolve imports.
+- **Rust toolchain version**: The `aligned` crate v0.4.3 requires edition2024. If `cargo build` fails with "feature `edition2024` is required", run `rustup update stable` to upgrade from 1.83 to 1.96+.
