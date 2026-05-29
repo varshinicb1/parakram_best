@@ -9,6 +9,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_netif.h"
+#include "esp_heap_caps.h"
 #include "lwip/sockets.h"
 #include "system_config.h"
 #include "freertos/FreeRTOS.h"
@@ -43,7 +44,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
 
 /* TCP server task for receiving deployment payloads */
 static void tcp_server_task(void *arg) {
-    static uint8_t rx_buffer[SYS_PROGRAM_MAX_SIZE];
+    static EXT_RAM_BSS_ATTR uint8_t rx_buffer[SYS_PROGRAM_MAX_SIZE];
     struct sockaddr_in server_addr = {
         .sin_family = AF_INET,
         .sin_addr.s_addr = htonl(INADDR_ANY),
