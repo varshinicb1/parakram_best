@@ -82,7 +82,7 @@ class GoldenBlocksRepository private constructor() {
             val api = ParakramApiClient.getApi()
             val response = api.listDrivers()
             if (response.isSuccessful) {
-                val drivers = response.body() ?: emptyList()
+                val drivers = response.body()?.drivers ?: emptyList()
                 _blocks.value = drivers.map { driver ->
                     GoldenBlock(
                         name = driver.name,
