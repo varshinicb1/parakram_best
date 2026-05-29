@@ -1,0 +1,253 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ── Build backend binary ───────────────────────────────────────────────────
+  build-backend:
+    name: Build Backend (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact: parakram-backend-linux-amd64
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            artifact: parakram-backend-macos-amd64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            artifact: parakram-backend-macos-arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+
+      - name: Build release binary
+        run: |
+          cd backend
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: Package binary
+        run: |
+          mkdir -p dist
+          cp backend/target/${{ matrix.target }}/release/parakram-backend dist/${{ matrix.artifact }}
+          chmod +x dist/${{ matrix.artifact }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
+
+  # ── Build firmware test harness ────────────────────────────────────────────
+  build-firmware-test:
+    name: Build Firmware Test Harness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build VM test harness
+        run: |
+          cd firmware/test_harness
+          gcc -o vm_test vm_test.c mock_subsystems.c ../main/runtime/vm.c \
+            -I../main/include -I. \
+            -DPARAKRAM_TARGET_MCU=0 \
+            -DPAL_ESP32S3=1 \
+            -DCONFIGURATION_TEST_HOST=1 \
+            -lm
+
+      - name: Run VM tests
+        run: ./firmware/test_harness/vm_test
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          tar czf dist/firmware-test-harness-linux-amd64.tar.gz \
+            -C firmware/test_harness vm_test
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-test-harness-linux-amd64
+          path: dist/firmware-test-harness-linux-amd64.tar.gz
+
+  # ── Package Desktop IDE frontend ───────────────────────────────────────────
+  build-desktop-frontend:
+    name: Build Desktop Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install & build
+        run: |
+          cd desktop
+          npm install --no-fund --no-audit
+          npx tsc --noEmit
+          npm run build
+
+      - name: Package
+        run: |
+          tar czf dist-desktop-frontend.tar.gz -C desktop/dist .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-frontend
+          path: dist-desktop-frontend.tar.gz
+
+  # ── Package golden blocks ──────────────────────────────────────────────────
+  package-golden-blocks:
+    name: Package Golden Blocks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate & package
+        run: |
+          python3 -c "
+          import json, os, glob, sys
+          files = glob.glob('desktop/services/hardware_library/**/*.json', recursive=True)
+          errors = 0
+          for f in files:
+              try:
+                  json.load(open(f))
+              except Exception as e:
+                  print(f'INVALID: {f}: {e}')
+                  errors += 1
+          print(f'{len(files)} golden blocks validated')
+          if errors > 0:
+              sys.exit(1)
+          "
+          tar czf golden-blocks.tar.gz -C desktop/services hardware_library
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: golden-blocks
+          path: golden-blocks.tar.gz
+
+  # ── Package CodeLM model ───────────────────────────────────────────────────
+  package-codelm:
+    name: Package CodeLM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package
+        run: |
+          tar czf codelm.tar.gz \
+            ai/codelm/model/ \
+            ai/codelm/corpus/ \
+            ai/codelm/parakram/ \
+            ai/codelm/main.py \
+            ai/codelm/config.py \
+            ai/codelm/tests/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codelm
+          path: codelm.tar.gz
+
+  # ── Package ROS 2 messages ─────────────────────────────────────────────────
+  package-ros2-msgs:
+    name: Package ROS 2 Messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package
+        run: |
+          tar czf parakram-msgs.tar.gz -C ros2_ws/src parakram_msgs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parakram-msgs
+          path: parakram-msgs.tar.gz
+
+  # ── Package deploy configs ─────────────────────────────────────────────────
+  package-deploy:
+    name: Package Deploy Configs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package
+        run: |
+          tar czf deploy-configs.tar.gz \
+            deploy/ \
+            docker-compose.yml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deploy-configs
+          path: deploy-configs.tar.gz
+
+  # ── Create GitHub Release ──────────────────────────────────────────────────
+  release:
+    name: Create Release
+    needs:
+      - build-backend
+      - build-firmware-test
+      - build-desktop-frontend
+      - package-golden-blocks
+      - package-codelm
+      - package-ros2-msgs
+      - package-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Collect release assets
+        run: |
+          mkdir -p release-assets
+          # Backend binaries
+          cp artifacts/parakram-backend-linux-amd64/parakram-backend-linux-amd64 release-assets/
+          cp artifacts/parakram-backend-macos-amd64/parakram-backend-macos-amd64 release-assets/
+          cp artifacts/parakram-backend-macos-arm64/parakram-backend-macos-arm64 release-assets/
+          # Archives
+          cp artifacts/firmware-test-harness-linux-amd64/firmware-test-harness-linux-amd64.tar.gz release-assets/
+          cp artifacts/desktop-frontend/dist-desktop-frontend.tar.gz release-assets/parakram-studio-frontend.tar.gz
+          cp artifacts/golden-blocks/golden-blocks.tar.gz release-assets/
+          cp artifacts/codelm/codelm.tar.gz release-assets/parakram-codelm.tar.gz
+          cp artifacts/parakram-msgs/parakram-msgs.tar.gz release-assets/
+          cp artifacts/deploy-configs/deploy-configs.tar.gz release-assets/
+          ls -la release-assets/
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          # Extract section for this version from CHANGELOG.md
+          awk "/^## \[${VERSION}\]/{found=1; next} /^## \[/{found=0} found" CHANGELOG.md > release-notes.md
+          echo "Release notes extracted for v${VERSION}"
+          cat release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+          files: release-assets/*
+          generate_release_notes: false
