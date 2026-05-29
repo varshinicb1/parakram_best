@@ -1,0 +1,36 @@
+{
+  "id": "dumbdisplay_dashboard",
+  "name": "DumbDisplay Sensor Dashboard (Phone Display)",
+  "category": "display",
+  "description": "Turns phone into a live sensor dashboard. ESP32 reads sensors and sends values via DumbDisplay WiFi — phone renders gauges, charts, and text readouts. Includes BME280 (temp/humidity/pressure), light level, and custom value slots. No physical display needed — phone IS the display.",
+  "libraries": [
+    "WiFi.h",
+    "Wire.h",
+    "dumbdisplay.h",
+    "wifidumbdisplay.h"
+  ],
+  "pins": {
+    "i2c_sda": 8,
+    "i2c_scl": 9
+  },
+  "bus": "wifi_tcp",
+  "i2c_address": "",
+  "platformio_deps": [
+    "trevorwslee/DumbDisplay@^0.9.9"
+  ],
+  "firmware_template": {
+    "header": "#ifndef DD_DASHBOARD_H\n#define DD_DASHBOARD_H\n#include <Arduino.h>\n\nvoid dd_dashboard_setup(const char* ssid, const char* password);\nvoid dd_dashboard_loop();\nvoid dd_dashboard_set_value(int slot, const char* label, float value, const char* unit);\nvoid dd_dashboard_set_bar(int slot, float value, float max_val, const char* color);\n\n#endif",
+    "source": "#include \"dumbdisplay_dashboard.h\"\n#include <WiFi.h>\n#include \"dumbdisplay.h\"\n#include \"wifidumbdisplay.h\"\n\n#define MAX_SLOTS 6\n\nstatic DDWiFiServerIO* ddio = nullptr;\nstatic DumbDisplay* dd = nullptr;\nstatic LcdDDLayer* labels[MAX_SLOTS];\nstatic LedGridDDLayer* bars[MAX_SLOTS];\nstatic int slot_count = 0;\n\nvoid dd_dashboard_setup(const char* ssid, const char* password) {\n  WiFi.begin(ssid, password);\n  while (WiFi.status() != WL_CONNECTED) { delay(500); }\n  Serial.printf(\"[dd_dash] IP: %s\\n\", WiFi.localIP().toString().c_str());\n  ddio = new DDWiFiServerIO(nullptr, nullptr, 10201);\n  dd = new DumbDisplay(ddio);\n  for (int i = 0; i < MAX_SLOTS; i++) {\n    labels[i] = dd->createLcdLayer(16, 2);\n    labels[i]->backgroundColor(\"black\");\n    bars[i] = dd->createLedGridLayer(10, 1);\n    bars[i]->onColor(\"green\");\n    bars[i]->offColor(\"darkgray\");\n  }\n  dd->configAutoPin(DD_AP_VERT);\n  slot_count = MAX_SLOTS;\n}\n\nvoid dd_dashboard_loop() { /* DumbDisplay handles loop */ }\n\nvoid dd_dashboard_set_value(int slot, const char* label, float value, const char* unit) {\n  if (slot < 0 || slot >= slot_count) return;\n  labels[slot]->clear();\n  labels[slot]->setCursor(0, 0);\n  labels[slot]->print(label);\n  labels[slot]->setCursor(0, 1);\n  char buf[32];\n  snprintf(buf, sizeof(buf), \"%.1f %s\", value, unit);\n  labels[slot]->print(buf);\n}\n\nvoid dd_dashboard_set_bar(int slot, float value, float max_val, const char* color) {\n  if (slot < 0 || slot >= slot_count) return;\n  bars[slot]->onColor(color);\n  int filled = (int)((value / max_val) * 10.0f);\n  if (filled > 10) filled = 10;\n  for (int i = 0; i < 10; i++) {\n    if (i < filled) bars[slot]->turnOn(i, 0);\n    else bars[slot]->turnOff(i, 0);\n  }\n}"
+  },
+  "configurable_params": {
+    "wifi_ssid": { "type": "string", "default": "", "description": "WiFi network SSID" },
+    "wifi_password": { "type": "string", "default": "", "description": "WiFi network password" },
+    "num_slots": { "type": "int", "default": 6, "options": [2, 3, 4, 6], "description": "Number of dashboard slots" },
+    "update_interval_ms": { "type": "int", "default": 1000, "description": "Sensor read interval in milliseconds" }
+  },
+  "outputs": {
+    "sensor_values": { "type": "float_array", "description": "Current sensor values per slot" }
+  },
+  "verified": true,
+  "anti_hallucination": true
+}

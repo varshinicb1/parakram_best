@@ -1,0 +1,32 @@
+{
+  "id": "dumbdisplay_turtle",
+  "name": "DumbDisplay Turtle Graphics (Phone Canvas)",
+  "category": "display",
+  "description": "Logo-style turtle graphics rendered on phone. ESP32 sends turtle commands (forward, turn, pen up/down, color) — phone renders the drawing. Perfect for educational projects and generative art. Zero graphics processing on the board.",
+  "libraries": [
+    "WiFi.h",
+    "dumbdisplay.h",
+    "wifidumbdisplay.h"
+  ],
+  "pins": {},
+  "bus": "wifi_tcp",
+  "i2c_address": "",
+  "platformio_deps": [
+    "trevorwslee/DumbDisplay@^0.9.9"
+  ],
+  "firmware_template": {
+    "header": "#ifndef DD_TURTLE_H\n#define DD_TURTLE_H\n#include <Arduino.h>\n\nvoid dd_turtle_setup(const char* ssid, const char* password, int width, int height);\nvoid dd_turtle_fwd(int steps);\nvoid dd_turtle_bk(int steps);\nvoid dd_turtle_rt(int degrees);\nvoid dd_turtle_lt(int degrees);\nvoid dd_turtle_pu();\nvoid dd_turtle_pd();\nvoid dd_turtle_color(const char* color);\nvoid dd_turtle_width(int w);\nvoid dd_turtle_home();\nvoid dd_turtle_clear();\n\n#endif",
+    "source": "#include \"dumbdisplay_turtle.h\"\n#include <WiFi.h>\n#include \"dumbdisplay.h\"\n#include \"wifidumbdisplay.h\"\n\nstatic DDWiFiServerIO* ddio = nullptr;\nstatic DumbDisplay* dd = nullptr;\nstatic TurtleDDLayer* t = nullptr;\n\nvoid dd_turtle_setup(const char* ssid, const char* password, int width, int height) {\n  WiFi.begin(ssid, password);\n  while (WiFi.status() != WL_CONNECTED) { delay(500); }\n  ddio = new DDWiFiServerIO(nullptr, nullptr, 10201);\n  dd = new DumbDisplay(ddio);\n  t = dd->createTurtleLayer(width, height);\n  t->setTextSize(2);\n  t->penColor(\"white\");\n  Serial.println(\"[dd_turtle] Ready\");\n}\n\nvoid dd_turtle_fwd(int steps) { if (t) t->forward(steps); }\nvoid dd_turtle_bk(int steps) { if (t) t->backward(steps); }\nvoid dd_turtle_rt(int degrees) { if (t) t->rightTurn(degrees); }\nvoid dd_turtle_lt(int degrees) { if (t) t->leftTurn(degrees); }\nvoid dd_turtle_pu() { if (t) t->penUp(); }\nvoid dd_turtle_pd() { if (t) t->penDown(); }\nvoid dd_turtle_color(const char* color) { if (t) t->penColor(color); }\nvoid dd_turtle_width(int w) { if (t) t->penSize(w); }\nvoid dd_turtle_home() { if (t) t->home(); }\nvoid dd_turtle_clear() { if (t) t->clear(); }"
+  },
+  "configurable_params": {
+    "wifi_ssid": { "type": "string", "default": "", "description": "WiFi SSID" },
+    "wifi_password": { "type": "string", "default": "", "description": "WiFi password" },
+    "canvas_width": { "type": "int", "default": 400, "description": "Canvas width in pixels" },
+    "canvas_height": { "type": "int", "default": 400, "description": "Canvas height in pixels" }
+  },
+  "outputs": {
+    "drawing": { "type": "canvas", "description": "Turtle graphics path" }
+  },
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -62,7 +62,7 @@ impl DriverRegistry {
         self.drivers.insert(spec.name.clone(), spec);
     }
 
-    /// Populate registry with all 60 drivers.
+    /// Populate registry with all 67 drivers.
     fn populate(&mut self) {
         // ====== SENSORS ======
 
@@ -689,6 +689,96 @@ impl DriverRegistry {
             max_latency_us: 1000, min_interval_ms: 1000,
             i2c_addresses: vec![],
             failure_modes: vec![FailureMode { error: "TIMEOUT".into(), description: "No pulse detected".into() }],
+        });
+
+        // ====== DUMBDISPLAY (PHONE-RENDERED) ======
+
+        self.add(DriverSpec {
+            name: "drv_dumbdisplay".into(), display_name: "DumbDisplay (Phone-Rendered)".into(),
+            version: "1.0.0".into(), driver_type: "display".into(),
+            bus_types: vec!["wifi_tcp".into(), "bluetooth_serial".into()],
+            capabilities: vec!["display_text".into(), "display_gfx".into(), "display_led_grid".into(), "display_clear".into(), "turtle_graphics".into(), "touch_feedback".into()],
+            max_latency_us: 1000, min_interval_ms: 16,
+            i2c_addresses: vec![],
+            failure_modes: vec![FailureMode { error: "TIMEOUT".into(), description: "Phone not connected".into() }],
+        });
+
+        // ====== I2C AUTO-DETECT ======
+
+        self.add(DriverSpec {
+            name: "drv_i2c_scanner".into(), display_name: "I2C Peripheral Scanner".into(),
+            version: "1.0.0".into(), driver_type: "sensor".into(),
+            bus_types: vec!["i2c_0".into(), "i2c_1".into(), "i2c".into()],
+            capabilities: vec!["i2c_scan".into(), "device_manifest".into()],
+            max_latency_us: 50000, min_interval_ms: 5000,
+            i2c_addresses: vec![],
+            failure_modes: vec![FailureMode { error: "BUS_FAIL".into(), description: "I2C bus error during scan".into() }],
+        });
+
+        // ====== WIFI PROVISIONING ======
+
+        self.add(DriverSpec {
+            name: "drv_wifi_provision".into(), display_name: "WiFi Provisioning (SoftAP)".into(),
+            version: "1.0.0".into(), driver_type: "combo".into(),
+            bus_types: vec!["wifi".into()],
+            capabilities: vec!["wifi_provision".into(), "wifi_status".into()],
+            max_latency_us: 5000000, min_interval_ms: 1000,
+            i2c_addresses: vec![],
+            failure_modes: vec![FailureMode { error: "TIMEOUT".into(), description: "Portal timeout — no credentials entered".into() }],
+        });
+
+        // ====== BLE OTA ======
+
+        self.add(DriverSpec {
+            name: "drv_ble_ota".into(), display_name: "BLE OTA Firmware Updater".into(),
+            version: "1.0.0".into(), driver_type: "combo".into(),
+            bus_types: vec!["ble".into()],
+            capabilities: vec!["ble_ota".into(), "ota_progress".into()],
+            max_latency_us: 10000000, min_interval_ms: 500,
+            i2c_addresses: vec![],
+            failure_modes: vec![
+                FailureMode { error: "CRC_FAIL".into(), description: "SHA-256 hash mismatch".into() },
+                FailureMode { error: "TIMEOUT".into(), description: "BLE transfer timeout".into() },
+            ],
+        });
+
+        // ====== HTTP OTA ======
+
+        self.add(DriverSpec {
+            name: "drv_http_ota".into(), display_name: "HTTP OTA (ElegantOTA)".into(),
+            version: "1.0.0".into(), driver_type: "combo".into(),
+            bus_types: vec!["wifi".into()],
+            capabilities: vec!["http_ota".into(), "ota_progress".into()],
+            max_latency_us: 10000000, min_interval_ms: 500,
+            i2c_addresses: vec![],
+            failure_modes: vec![
+                FailureMode { error: "CRC_FAIL".into(), description: "Firmware hash mismatch".into() },
+                FailureMode { error: "TIMEOUT".into(), description: "HTTP upload timeout".into() },
+            ],
+        });
+
+        // ====== WAKE WORD ======
+
+        self.add(DriverSpec {
+            name: "drv_wake_word".into(), display_name: "Wake Word Detector (TFLite Micro)".into(),
+            version: "1.0.0".into(), driver_type: "sensor".into(),
+            bus_types: vec!["i2s_0".into(), "i2s".into()],
+            capabilities: vec!["wake_word".into(), "voice_activity".into()],
+            max_latency_us: 10000, min_interval_ms: 20,
+            i2c_addresses: vec![],
+            failure_modes: vec![FailureMode { error: "HW_FAULT".into(), description: "TFLite model load failed".into() }],
+        });
+
+        // ====== BLUETOOTH A2DP ======
+
+        self.add(DriverSpec {
+            name: "drv_bt_a2dp".into(), display_name: "Bluetooth A2DP Audio".into(),
+            version: "1.0.0".into(), driver_type: "actuator".into(),
+            bus_types: vec!["bluetooth_classic".into(), "i2s_1".into()],
+            capabilities: vec!["bt_a2dp_play".into(), "bt_a2dp_volume".into()],
+            max_latency_us: 50000, min_interval_ms: 100,
+            i2c_addresses: vec![],
+            failure_modes: vec![FailureMode { error: "TIMEOUT".into(), description: "Bluetooth disconnected".into() }],
         });
     }
 }
