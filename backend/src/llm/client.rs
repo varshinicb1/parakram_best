@@ -153,11 +153,20 @@ pub struct LLMClient {
 
 impl LLMClient {
     /// Resolve provider from environment. Priority:
-    ///   1. OPENROUTER_API_KEY — primary for cloud deployments
-    ///   2. ANTHROPIC_API_KEY  — alternative cloud option
-    ///   3. LLM_BASE_URL       — self-hosted backend with local/private LLM
+    ///   1. NVIDIA_NIM_API_KEY — NVIDIA NIM free tier (OpenAI-compatible)
+    ///   2. OPENROUTER_API_KEY — primary for cloud deployments
+    ///   3. ANTHROPIC_API_KEY  — alternative cloud option
+    ///   4. LLM_BASE_URL       — self-hosted backend with local/private LLM
     pub fn new(api_key: String, model: String) -> Self {
-        let (resolved_key, provider) = if let Ok(or_key) = std::env::var("OPENROUTER_API_KEY") {
+        let (resolved_key, provider) = if let Ok(nim_key) = std::env::var("NVIDIA_NIM_API_KEY") {
+            let mdl = std::env::var("NVIDIA_NIM_MODEL")
+                .unwrap_or_else(|_| "meta/llama-3.1-70b-instruct".to_string());
+            tracing::info!("Using NVIDIA NIM provider: {}", mdl);
+            (nim_key, Provider::OpenAICompat {
+                base_url: "https://integrate.api.nvidia.com/v1".to_string(),
+                model: mdl,
+            })
+        } else if let Ok(or_key) = std::env::var("OPENROUTER_API_KEY") {
             let mdl = std::env::var("OPENROUTER_MODEL")
                 .unwrap_or(model);
             (or_key, Provider::OpenRouter { model: mdl })
