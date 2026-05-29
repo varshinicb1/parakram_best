@@ -21,6 +21,7 @@ extern "C" {
 #define DRIVER_MAX_FAILURE_MODES    4
 #define DRIVER_MAX_PINS             4
 #define DRIVER_MAX_STRING_VAL       32
+#define DRIVER_MAX_PARAMS           8
 
 typedef enum {
     DRIVER_TYPE_SENSOR   = 0,
@@ -32,7 +33,7 @@ typedef enum {
 typedef enum {
     BUS_TYPE_I2C     = 0, BUS_TYPE_SPI     = 1, BUS_TYPE_UART    = 2,
     BUS_TYPE_ONEWIRE = 3, BUS_TYPE_ADC     = 4, BUS_TYPE_GPIO    = 5,
-    BUS_TYPE_PWM     = 6, BUS_TYPE_RMT     = 7,
+    BUS_TYPE_PWM     = 6, BUS_TYPE_RMT     = 7, BUS_TYPE_USB     = 8,
 } bus_type_t;
 
 typedef enum {
@@ -57,6 +58,9 @@ typedef enum {
     CAP_WAKE_WORD = 58, CAP_VOICE_ACTIVITY = 59,
     CAP_BT_A2DP_PLAY = 60, CAP_BT_A2DP_VOLUME = 61,
     CAP_HTTP_OTA = 62, CAP_CAMERA_FRAME = 63,
+    CAP_CAMERA_FRAME_COUNT = 64, CAP_CAMERA_RESOLUTION = 65,
+    CAP_CAMERA_FPS = 66, CAP_CAMERA_STREAMING = 67,
+    CAP_LUA_EXEC = 68, CAP_LUA_MEM_USED = 69,
 } capability_t;
 
 typedef enum {
@@ -91,6 +95,11 @@ typedef struct {
 } pin_resource_t;
 
 typedef struct {
+    const char     *key;
+    union { int32_t i; float f; bool b; const char *s; } value;
+} driver_param_t;
+
+typedef struct {
     bus_type_t      bus_type;
     uint8_t         bus_index;
     uint8_t         i2c_address;
@@ -105,6 +114,8 @@ typedef struct {
     uint8_t         led_count;
     uint8_t         display_cols;
     uint8_t         display_rows;
+    driver_param_t  params[DRIVER_MAX_PARAMS];
+    uint8_t         num_params;
 } driver_config_t;
 
 typedef struct {

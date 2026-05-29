@@ -15,7 +15,7 @@ This is the **unified monorepo** combining all Parakram projects.
 | Rust backend (axum) | **Compiles + runs** (port 8400) | `backend/` |
 | IR validation (8-step) | **Working** | `backend/src/ir/validator.rs` |
 | Bytecode compiler | **Working** | `backend/src/compiler/` |
-| Driver registry (67 specs) | **Working** | `backend/src/drivers/registry.rs` |
+| Driver registry (69 specs) | **Working** | `backend/src/drivers/registry.rs` |
 | LLM pipeline | **Working** | `backend/src/llm/` |
 | JWT auth | **Working** | `backend/src/api/auth.rs` |
 | Stripe billing | **Working** | `backend/src/billing/` |
@@ -29,16 +29,21 @@ This is the **unified monorepo** combining all Parakram projects.
 | Android DumbDisplay server | **Working** | `android/.../display/` (TCP port 10201) |
 | Android Vosk offline STT | **Working** | `android/.../ai/VoskSpeechService.kt` |
 | iOS app (SwiftUI) | **Working** | `ios/` |
-| ESP32-S3 firmware (67 drivers) | **Builds** (needs idf.py) | `firmware/` |
+| iOS DumbDisplay client | **Working** | `ios/Parakram/Display/` |
+| ESP32-S3 firmware (69 drivers) | **Builds** (needs idf.py) | `firmware/` |
 | Multi-MCU HAL | **Complete** | `firmware/hal/` |
 | Desktop Tauri IDE | **Working** | `desktop/` (React + Tauri) |
 | Python sidecar services | **Working** | `desktop/services/` |
 | 248 golden blocks | **Working** | `desktop/services/hardware_library/` |
 | OTA firmware updates | **Working** | `firmware/main/ota_manager.c` |
+| BLE E2E encryption | **Working** | `firmware/main/security/ble_crypto.c` |
+| Lua scripting sandbox | **Working** | `firmware/main/scripting/lua_sandbox.c` |
+| UVC camera driver | **Working** | `firmware/main/drivers/drv_uvc_camera.c` |
 | Secure provisioning (X25519) | **Working** | `backend/src/api/provisioning.rs` |
 | Cloud deployment | **Ready** | `deploy/` |
 | CI/CD | **Ready** | `.github/workflows/ci.yml` |
 | CodeLM model | **Working** | `ai/codelm/` (block-token transformer) |
+| CodeLM backend bridge | **Working** | `backend/src/api/codelm.rs` → port 8401 |
 | RTOS kernel (experimental) | **Compiles** | `rtos/` |
 
 ---
@@ -86,13 +91,13 @@ docker-compose up --build
 | LLM → IR pipeline | `backend/src/llm/` |
 | IR schema & validator | `backend/src/ir/` |
 | Bytecode compiler | `backend/src/compiler/` |
-| Driver registry (67 specs) | `backend/src/drivers/registry.rs` |
+| Driver registry (69 specs) | `backend/src/drivers/registry.rs` |
 | All backend API endpoints | `backend/src/api/` |
 | Secure provisioning API | `backend/src/api/provisioning.rs` |
 | Database schema | `backend/src/db/mod.rs` |
 | Firmware boot sequence | `firmware/main/app_main.c` |
 | Bytecode VM | `firmware/main/runtime/vm.c` |
-| Firmware drivers (67) | `firmware/main/drivers/` |
+| Firmware drivers (69) | `firmware/main/drivers/` |
 | Multi-MCU PAL header | `firmware/hal/include/parakram_pal.h` |
 | ESP32-S3 PAL impl | `firmware/hal/esp32s3/pal_impl.c` |
 | RP2040 PAL impl | `firmware/hal/rp2040/pal_impl.c` |
@@ -105,6 +110,10 @@ docker-compose up --build
 | Android Vosk STT | `android/app/src/.../ai/VoskSpeechService.kt` |
 | Android protocol | `android/app/src/.../protocol/TinkrProtocol.kt` |
 | iOS BLE manager | `ios/Parakram/BLE/BLEManager.swift` |
+| iOS DumbDisplay | `ios/Parakram/Display/` |
+| BLE E2E encryption | `firmware/main/security/ble_crypto.c` |
+| Lua scripting sandbox | `firmware/main/scripting/lua_sandbox.c` |
+| CodeLM backend bridge | `backend/src/api/codelm.rs` |
 | Desktop Tauri config | `desktop/src-tauri/tauri.conf.json` |
 | Desktop React frontend | `desktop/src/` |
 | Desktop Python services | `desktop/services/` |

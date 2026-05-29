@@ -780,5 +780,35 @@ impl DriverRegistry {
             i2c_addresses: vec![],
             failure_modes: vec![FailureMode { error: "TIMEOUT".into(), description: "Bluetooth disconnected".into() }],
         });
+
+        // ====== UVC CAMERA ======
+
+        self.add(DriverSpec {
+            name: "drv_uvc_camera".into(), display_name: "USB Camera (UVC, ESP32-S3 OTG)".into(),
+            version: "1.0.0".into(), driver_type: "sensor".into(),
+            bus_types: vec!["usb".into()],
+            capabilities: vec!["camera_frame_count".into(), "camera_resolution".into(), "camera_fps".into(), "camera_streaming".into()],
+            max_latency_us: 66000, min_interval_ms: 33,
+            i2c_addresses: vec![],
+            failure_modes: vec![
+                FailureMode { error: "HW_FAULT".into(), description: "USB camera not detected".into() },
+                FailureMode { error: "TIMEOUT".into(), description: "Frame capture timeout".into() },
+            ],
+        });
+
+        // ====== LUA SCRIPTING ======
+
+        self.add(DriverSpec {
+            name: "drv_lua_sandbox".into(), display_name: "Lua 5.4 Scripting Sandbox".into(),
+            version: "1.0.0".into(), driver_type: "combo".into(),
+            bus_types: vec!["internal".into()],
+            capabilities: vec!["lua_exec".into(), "lua_mem_used".into()],
+            max_latency_us: 5000000, min_interval_ms: 100,
+            i2c_addresses: vec![],
+            failure_modes: vec![
+                FailureMode { error: "TIMEOUT".into(), description: "Script exceeded max runtime".into() },
+                FailureMode { error: "OUT_OF_MEMORY".into(), description: "Lua heap limit reached".into() },
+            ],
+        });
     }
 }

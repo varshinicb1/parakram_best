@@ -3,6 +3,7 @@
 pub mod assets;
 pub mod auth;
 pub mod billing;
+pub mod codelm;
 pub mod configurator;
 pub mod devices;
 pub mod fleet;
@@ -76,6 +77,7 @@ pub fn router() -> Router<AppState> {
         .nest("/ir", ir::router())
         .nest("/llm", llm::router()
             .layer(middleware::from_fn(rate_limit::llm_rate_limit)))
+        .nest("/codelm", codelm::router())
         .nest("/ros", ros::router())
         .nest("/devices", devices::router())
         .nest("/drivers", system::drivers_router())
