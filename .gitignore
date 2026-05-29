@@ -23,7 +23,10 @@ ios/.build/
 
 # Firmware build output
 firmware/build/
+firmware/sdkconfig
+firmware/sdkconfig.old
 firmware/components/lvgl/
+firmware/managed_components/
 
 # Desktop
 desktop/app/node_modules/

@@ -1,4 +1,18 @@
-# Parakram Firmware — 16 MB flash partition table
+# Parakram Universal Factory Firmware — 16 MB Flash Partition Table
+# Board: Vidyuthlabs S3-PRO (ESP32-S3-WROOM-1 N16R8)
+#
+# Layout:
+#   0x0000 - 0x7FFF  : Bootloader (32 KB, managed by ESP-IDF)
+#   0x8000 - 0x8FFF  : Partition table (4 KB)
+#   0x9000 - 0xEFFF  : NVS (24 KB) — WiFi creds, device config, manifest
+#   0xF000 - 0x10FFF : OTA data (8 KB) — tracks active OTA slot
+#   0x11000 - 0x11FFF: PHY init data (4 KB)
+#   0x20000 - 0x3DFFFF: OTA_0 (3,840 KB = factory app)
+#   0x3E0000 - 0x79FFFF: OTA_1 (3,840 KB = update slot)
+#   0x7A0000 - 0x7BFFFF: Program (128 KB) — bytecode VM program storage
+#   0x7C0000 - 0x7DFFFF: Coredump (128 KB) — crash dump for post-mortem
+#   0x7E0000 - 0xFFFFFF: Storage (8,320 KB) — SPIFFS/FAT for logs, assets
+#
 # Name,     Type,  SubType,  Offset,    Size,     Flags
 nvs,        data,  nvs,      0x9000,    0x6000,
 otadata,    data,  ota,      0xF000,    0x2000,
@@ -6,4 +20,5 @@ phy_init,   data,  phy,      0x11000,   0x1000,
 ota_0,      app,   ota_0,    0x20000,   0x3C0000,
 ota_1,      app,   ota_1,    0x3E0000,  0x3C0000,
 program,    data,  0x80,     0x7A0000,  0x20000,
-storage,    data,  fat,      0x7C0000,  0x840000,
+coredump,   data,  coredump, 0x7C0000,  0x20000,
+storage,    data,  fat,      0x7E0000,  0x820000,

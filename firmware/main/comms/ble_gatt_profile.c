@@ -33,8 +33,8 @@ static bool s_connected = false;
 static uint16_t s_conn_handle = 0;
 static ble_payload_rx_cb_t s_payload_cb = NULL;
 
-/* Static RX buffer for chunked payload assembly */
-static uint8_t s_rx_buffer[SYS_PROGRAM_MAX_SIZE];
+/* Static RX buffer for chunked payload assembly (placed in PSRAM) */
+static EXT_RAM_BSS_ATTR uint8_t s_rx_buffer[SYS_PROGRAM_MAX_SIZE];
 static uint32_t s_rx_offset = 0;
 static uint32_t s_rx_expected = 0;
 

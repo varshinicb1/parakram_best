@@ -149,23 +149,23 @@ These are fixed by the PCB and must be consistent across all golden blocks:
 
 ## API Response Shapes
 
-- `GET /api/drivers` → `{"drivers": [...], "total": N}`
-- `GET /api/drivers/{name}` → single `DriverSpec` JSON object
-- `GET /api/system/health` → `{"status": "ok", "database": "connected"|"disconnected", ...}`
-- `POST /api/provisioning/key-exchange` → `KeyExchangeResponse` JSON
-- `GET /api/provisioning/session/:device_id` → session details
-- `DELETE /api/provisioning/session/:device_id` → 200 OK
+- `GET /api/drivers` -> `{"drivers": [...], "total": N}`
+- `GET /api/drivers/{name}` -> single `DriverSpec` JSON object
+- `GET /api/system/health` -> `{"status": "ok", "database": "connected"|"disconnected", ...}`
+- `POST /api/provisioning/key-exchange` -> `KeyExchangeResponse` JSON
+- `GET /api/provisioning/session/:device_id` -> session details
+- `DELETE /api/provisioning/session/:device_id` -> 200 OK
 
 ## CodeLM Test Details
 
 The CodeLM tests verify the block-token transformer architecture:
 - **test_model_forward_pass**: Creates model with vocab_size=1024, batch=2, seq_len=16. Output must be `(2, 16, 1024)`.
 - **test_model_parameter_count**: Total params must be between 1M and 200M (fits 6GB VRAM).
-- **test_tokenizer_roundtrip**: Encode `["block_gpio_init", "block_spi_transfer", "block_i2c_read"]` → decode must return identical list.
+- **test_tokenizer_roundtrip**: Encode `["block_gpio_init", "block_spi_transfer", "block_i2c_read"]` -> decode must return identical list.
 - **test_constraint_head**: Output shape `(2, 4)`, all values in [0, 1] (sigmoid).
 - **test_composition_head**: Output shape `(2, K)` where K = number of candidates.
 - **test_source_definitions**: All 16 upstream repos have name, URL (https), ref, tier (1-3), license.
-- **test_extractor_regex**: C function extraction regex matches ≥ 2 functions from test code.
+- **test_extractor_regex**: C function extraction regex matches >= 2 functions from test code.
 - **test_tag_inference**: Peripheral tags correctly inferred from function names/bodies.
 
 ## Common Issues
