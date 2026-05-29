@@ -42,6 +42,10 @@ idf_component_register(
         "drivers/drv_mlx90614.c"
         "drivers/drv_mfrc522.c"
 
+        # ── Sensors (System / Auto-detect) ──────────────────────────────
+        "drivers/drv_i2c_scanner.c"
+        "drivers/drv_wake_word.c"
+
         # ── Sensors (GPIO / ADC / One-Wire) ───────────────────────────────
         "drivers/drv_dht22.c"
         "drivers/drv_ds18b20.c"
@@ -79,6 +83,7 @@ idf_component_register(
         "drivers/drv_sh1106.c"
         "drivers/drv_ili9341.c"
         "drivers/drv_st7789.c"
+        "drivers/drv_dumbdisplay.c"
 
         # ── Touch controllers ─────────────────────────────────────────────
         "drivers/drv_cst816s.c"
@@ -87,9 +92,12 @@ idf_component_register(
         # ── Audio ─────────────────────────────────────────────────────────
         "drivers/drv_inmp441.c"
         "drivers/drv_max98357a.c"
+        "drivers/drv_pam8403.c"
+        "drivers/drv_bt_a2dp.c"
 
         # ── Camera ────────────────────────────────────────────────────────
         "drivers/drv_ov2640.c"
+        "drivers/drv_uvc_camera.c"
 
         # ── HAL ───────────────────────────────────────────────────────────
         "../hal/esp32s3/pal_impl.c"
@@ -100,9 +108,18 @@ idf_component_register(
         "comms/ble_gatt_profile.c"
         "comms/mqtt_client.c"
 
+        # ── System (OTA / Provisioning) ───────────────────────────────────
+        "drivers/drv_wifi_provision.c"
+        "drivers/drv_ble_ota.c"
+        "drivers/drv_http_ota.c"
+
+        # ── Scripting ────────────────────────────────────────────────────────
+        "scripting/lua_sandbox.c"
+
         # ── Security ──────────────────────────────────────────────────────
         "security/payload_verify.c"
         "security/device_identity.c"
+        "security/ble_crypto.c"
 
         # ── Safety ────────────────────────────────────────────────────────
         "safety/watchdog.c"
@@ -112,11 +129,9 @@ idf_component_register(
     INCLUDE_DIRS
         "include"
         "../hal/include"
-        "../components/lvgl"
-        "../components/lvgl/src"
 
     REQUIRES
         driver esp_wifi esp_event nvs_flash esp_timer lvgl
         bt mbedtls mqtt esp_adc fatfs
-        esp_http_client app_update
+        esp_http_client app_update lua
 )

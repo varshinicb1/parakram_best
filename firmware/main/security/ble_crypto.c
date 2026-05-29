@@ -14,6 +14,7 @@
  *   6. Board decrypts and configures WiFi
  */
 
+#include "esp_err.h"
 #include "esp_log.h"
 #include "esp_random.h"
 #include <string.h>

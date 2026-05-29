@@ -13,7 +13,9 @@
 
 #include "driver_abi.h"
 #include <string.h>
+#include <inttypes.h>
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 
 static const char *TAG = "DRV_UVC";
 
@@ -57,7 +59,7 @@ static esp_err_t uvc_init(const driver_config_t *cfg) {
         return ESP_ERR_NO_MEM;
     }
 
-    ESP_LOGI(TAG, "UVC camera init: %ux%u @ %u fps", uvc_state.width, uvc_state.height, uvc_state.fps);
+    ESP_LOGI(TAG, "UVC camera init: %ux%u @ %" PRIu32 " fps", uvc_state.width, uvc_state.height, uvc_state.fps);
     return ESP_OK;
 }
 
