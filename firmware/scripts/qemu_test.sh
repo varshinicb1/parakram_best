@@ -49,14 +49,20 @@ python3 -m esptool --chip esp32s3 merge_bin \
     0x20000 "$BUILD_DIR/parakram_firmware.bin" 2>&1 | tail -1
 
 # Step 3: Run QEMU
+# Use -display none + -serial file: instead of -nographic because QEMU's
+# -nographic mode produces zero serial output when run from a non-interactive
+# bash script (stdout buffering issue with the emulated UART).
 echo ""
 echo "[3/4] Running QEMU ESP32-S3 (${TIMEOUT}s timeout)..."
 timeout "$TIMEOUT" "$QEMU" \
     -M esp32s3 \
     -drive "file=$BUILD_DIR/merged_qemu.bin,if=mtd,format=raw" \
-    -nographic \
+    -display none \
+    -serial "file:$OUTPUT_FILE" \
+    -monitor none \
     -no-reboot \
-    2>&1 | tee "$OUTPUT_FILE" || true
+    > /dev/null 2>&1 || true
+echo "  Serial output: $(wc -c < "$OUTPUT_FILE") bytes captured"
 
 # Step 4: Validate boot sequence
 echo ""
