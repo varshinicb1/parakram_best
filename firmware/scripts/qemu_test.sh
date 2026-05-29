@@ -22,26 +22,31 @@ echo "QEMU: $QEMU"
 echo "Timeout: ${TIMEOUT}s"
 echo ""
 
-# Step 1: Build with QEMU overrides
+# Step 1: Build with QEMU sdkconfig (BT=n, SPIRAM=n)
 echo "[1/4] Building firmware (SPIRAM=n, BT=n)..."
-rm -rf "$BUILD_DIR"
+if [ ! -d "$BUILD_DIR" ]; then
+    # Create a QEMU-specific sdkconfig by patching the production one
+    cp "$FIRMWARE_DIR/sdkconfig" "$FIRMWARE_DIR/sdkconfig.qemu"
+    sed -i 's/^CONFIG_SPIRAM=y/CONFIG_SPIRAM=n/' "$FIRMWARE_DIR/sdkconfig.qemu"
+    sed -i 's/^CONFIG_BT_ENABLED=y/CONFIG_BT_ENABLED=n/' "$FIRMWARE_DIR/sdkconfig.qemu"
+    sed -i 's/^CONFIG_BT_NIMBLE_ENABLED=y/# CONFIG_BT_NIMBLE_ENABLED is not set/' "$FIRMWARE_DIR/sdkconfig.qemu"
+    sed -i 's/^CONFIG_SPIRAM_MODE_OCT=y/# CONFIG_SPIRAM_MODE_OCT is not set/' "$FIRMWARE_DIR/sdkconfig.qemu"
+fi
 idf.py -C "$FIRMWARE_DIR" \
     -B "$BUILD_DIR" \
-    -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.qemu" \
-    set-target esp32s3 2>&1 | tail -1
-idf.py -C "$FIRMWARE_DIR" -B "$BUILD_DIR" build 2>&1 | tail -3
+    -D "SDKCONFIG=$FIRMWARE_DIR/sdkconfig.qemu" \
+    build 2>&1 | tail -3
 
 # Step 2: Merge flash image
 echo ""
 echo "[2/4] Creating 16MB flash image..."
 python3 -m esptool --chip esp32s3 merge_bin \
-    --flash_mode dio --flash_size 16MB --flash_freq 80m \
+    --fill-flash-size 16MB \
     -o "$BUILD_DIR/merged_qemu.bin" \
     0x0 "$BUILD_DIR/bootloader/bootloader.bin" \
     0x8000 "$BUILD_DIR/partition_table/partition-table.bin" \
     0xf000 "$BUILD_DIR/ota_data_initial.bin" \
     0x20000 "$BUILD_DIR/parakram_firmware.bin" 2>&1 | tail -1
-truncate -s $((16*1024*1024)) "$BUILD_DIR/merged_qemu.bin"
 
 # Step 3: Run QEMU
 echo ""
@@ -73,9 +78,11 @@ check() {
     fi
 }
 
-check "Boot banner"              "PARAKRAM FIRMWARE v1.0.0"
-check "Vidyuthlabs copyright"    "Vidyuthlabs (c) 2025"
+check "Boot banner"              "PARAKRAM UNIVERSAL FACTORY FIRMWARE v1.0.0"
+check "Vidyuthlabs"              "Vidyuthlabs"
 check "Zero-Code platform"       "Zero-Code Hardware Platform"
+check "NVS initialized"          "NVS initialized"
+check "Board auth"               "Board auth"
 check "Event bus initialized"    "Event bus initialized"
 check "Fault handler initialized" "Fault handler initialized"
 check "State store initialized"  "State store initialized"
@@ -87,12 +94,13 @@ check "Payload verifier"         "Payload verifier initialized"
 check "Scheduler initialized"    "Scheduler initialized"
 
 echo ""
-echo "=== Results: $PASS passed, $FAIL failed ==="
+TOTAL=$((PASS + FAIL))
+echo "=== Results: $PASS/$TOTAL passed ==="
 
 if [ "$FAIL" -gt 0 ]; then
-    echo "SIMULATION TEST FAILED"
+    echo "SIMULATION TEST FAILED ($FAIL assertions failed)"
     exit 1
 else
-    echo "SIMULATION TEST PASSED"
+    echo "SIMULATION TEST PASSED — all $PASS assertions verified"
     exit 0
 fi
