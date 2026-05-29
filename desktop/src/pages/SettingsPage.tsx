@@ -6,10 +6,11 @@ function SettingsPage() {
 
   useEffect(() => {
     try {
-      // @ts-expect-error Tauri API may not be available in browser dev
       import('@tauri-apps/api').then(api => {
-        api.invoke('get_backend_url').then((url: string) => setBackendUrl(url));
-      });
+        api.invoke('get_backend_url').then((url: unknown) => {
+          if (typeof url === 'string') setBackendUrl(url);
+        });
+      }).catch(() => { /* Running in browser mode */ });
     } catch {
       // Running in browser mode
     }
