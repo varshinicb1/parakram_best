@@ -103,7 +103,7 @@ jobs:
                 line=$(echo "$line" | sed 's/#.*//' | xargs)
                 [ -z "$line" ] && continue
                 [ "$line" = "---" ] && continue
-                if ! echo "$line" | grep -qE '^[a-zA-Z_][a-zA-Z0-9_/\[\]]*\s+[a-z_][a-z0-9_]*(\s*=\s*.*)?$'; then
+                if ! echo "$line" | grep -qP '^[a-zA-Z_][\w/\[\]]*\s+[a-z_]\w*(\s*=\s*.*)?$'; then
                   echo "ERROR: $f: invalid line: $line"
                   errors=$((errors + 1))
                 fi
