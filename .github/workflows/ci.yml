@@ -1,0 +1,142 @@
+name: Parakram CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ── Backend (Rust) ──────────────────────────────────────────────────────────
+  backend:
+    name: Backend (Rust)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      - name: Check
+        run: cargo check --all-targets
+      - name: Build (release)
+        run: cargo build --release
+      - name: Test
+        run: cargo test
+
+  # ── Firmware VM (host test harness) ─────────────────────────────────────────
+  firmware-vm-test:
+    name: Firmware VM Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build VM test harness
+        run: |
+          cd firmware/test_harness
+          gcc -o vm_test vm_test.c mock_subsystems.c ../main/runtime/vm.c \
+            -I../main/include -I. \
+            -DPARAKRAM_TARGET_MCU=0 \
+            -DPAL_ESP32S3=1 \
+            -DCONFIGURATION_TEST_HOST=1 \
+            -lm 2>&1
+      - name: Run VM tests
+        run: |
+          cd firmware/test_harness
+          ./vm_test
+
+  # ── CodeLM (Python) ────────────────────────────────────────────────────────
+  codelm:
+    name: CodeLM Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install pytest numpy sqlalchemy
+      - name: Run tests
+        run: |
+          cd ai/codelm
+          PYTHONPATH=. python -m pytest tests/ -v
+
+  # ── Desktop IDE (TypeScript) ────────────────────────────────────────────────
+  desktop:
+    name: Desktop IDE
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install & typecheck
+        run: |
+          cd desktop
+          npm install --no-fund --no-audit
+          npx tsc --noEmit
+
+  # ── ROS 2 messages ─────────────────────────────────────────────────────────
+  ros2-msgs:
+    name: ROS 2 Message Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate .msg and .srv files
+        run: |
+          echo "Checking ROS 2 message/service file syntax..."
+          errors=0
+          for f in ros2_ws/src/parakram_msgs/msg/*.msg ros2_ws/src/parakram_msgs/srv/*.srv; do
+            if [ -f "$f" ]; then
+              while IFS= read -r line; do
+                line=$(echo "$line" | sed 's/#.*//' | xargs)
+                [ -z "$line" ] && continue
+                [ "$line" = "---" ] && continue
+                if ! echo "$line" | grep -qE '^[a-zA-Z_][a-zA-Z0-9_/\[\]]*\s+[a-z_][a-z0-9_]*(\s*=\s*.*)?$'; then
+                  echo "ERROR: $f: invalid line: $line"
+                  errors=$((errors + 1))
+                fi
+              done < "$f"
+            fi
+          done
+          if [ $errors -gt 0 ]; then
+            echo "$errors syntax error(s) found"
+            exit 1
+          fi
+          echo "All ROS 2 message files valid"
+
+  # ── Golden Blocks validation ────────────────────────────────────────────────
+  golden-blocks:
+    name: Golden Blocks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JSON schemas
+        run: |
+          echo "Validating golden block JSON files..."
+          errors=0
+          count=0
+          for f in $(find desktop/services/hardware_library -name '*.json' -type f); do
+            count=$((count + 1))
+            if ! python3 -c "import json; json.load(open('$f'))" 2>/dev/null; then
+              echo "ERROR: Invalid JSON: $f"
+              errors=$((errors + 1))
+            fi
+          done
+          echo "Validated $count golden block files"
+          if [ $errors -gt 0 ]; then
+            echo "$errors invalid file(s) found"
+            exit 1
+          fi
+          echo "All golden blocks valid"
