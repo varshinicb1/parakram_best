@@ -1,0 +1,11 @@
+# Query available drivers from the registry
+string filter_type          # "sensor", "actuator", "display", "combo", "" (all)
+string filter_capability    # specific capability string, "" (all)
+string filter_bus           # "i2c", "spi", "uart", "gpio", "" (all)
+---
+bool success
+uint32 total_count
+string[] driver_names
+string[] driver_types
+string[] driver_versions
+string drivers_json         # full driver specs as JSON array

@@ -15,29 +15,31 @@ This is the **unified monorepo** combining all Parakram projects.
 | Rust backend (axum) | **Compiles + runs** (port 8400) | `backend/` |
 | IR validation (8-step) | **Working** | `backend/src/ir/validator.rs` |
 | Bytecode compiler | **Working** | `backend/src/compiler/` |
-| Driver registry (59 specs) | **Working** | `backend/src/drivers/registry.rs` |
+| Driver registry (67 specs) | **Working** | `backend/src/drivers/registry.rs` |
 | LLM pipeline | **Working** | `backend/src/llm/` |
 | JWT auth | **Working** | `backend/src/api/auth.rs` |
 | Stripe billing | **Working** | `backend/src/billing/` |
 | Driver marketplace | **Working** | `backend/src/marketplace/` |
 | ROS 2 graph engine | **Working** | `backend/src/ros_graph/` |
+| parakram_msgs ROS 2 package | **Complete** | `ros2_ws/src/parakram_msgs/` (7 msg + 3 srv) |
 | SQLite DB (9 tables, WAL) | **Working** | `backend/src/db/` |
 | Web playground | **Working** | `playground/` |
 | Admin panel | **Working** | `admin/` |
 | Android app (BLE + AI) | **Working** | `android/` |
-| Android app (billing/fleet) | **Working** | `android/vidyuthlabs-app/` |
+| Android DumbDisplay server | **Working** | `android/.../display/` (TCP port 10201) |
+| Android Vosk offline STT | **Working** | `android/.../ai/VoskSpeechService.kt` |
 | iOS app (SwiftUI) | **Working** | `ios/` |
-| ESP32-S3 firmware (59 drivers) | **Builds** (needs idf.py) | `firmware/` |
+| ESP32-S3 firmware (67 drivers) | **Builds** (needs idf.py) | `firmware/` |
 | Multi-MCU HAL | **Complete** | `firmware/hal/` |
-| Tauri desktop IDE (16 spaces) | **Working** | `desktop/app/` |
-| Python FastAPI services | **Working** | `desktop/services/` |
-| 202 golden blocks | **Working** | `desktop/services/agents/` |
-| 150+ hardware lib JSONs | **Working** | `desktop/services/hardware_library/` |
+| Desktop Tauri IDE | **Working** | `desktop/` (React + Tauri) |
+| Python sidecar services | **Working** | `desktop/services/` |
+| 248 golden blocks | **Working** | `desktop/services/hardware_library/` |
 | OTA firmware updates | **Working** | `firmware/main/ota_manager.c` |
+| Secure provisioning (X25519) | **Working** | `backend/src/api/provisioning.rs` |
 | Cloud deployment | **Ready** | `deploy/` |
-| CI/CD | **Ready** | `.github/workflows/` |
+| CI/CD | **Ready** | `.github/workflows/ci.yml` |
+| CodeLM model | **Working** | `ai/codelm/` (block-token transformer) |
 | RTOS kernel (experimental) | **Compiles** | `rtos/` |
-| CodeLM spec | **Spec only** | `ai/codelm/` |
 
 ---
 
@@ -52,13 +54,22 @@ cargo run
 
 ### Desktop IDE
 ```bash
-cd desktop/services && pip install -r requirements.txt && python main.py
-cd desktop/app && npm install && npm run dev
+cd desktop && npm install && npm run dev          # React frontend
+cd desktop/src-tauri && cargo build               # Tauri shell
+```
+
+### CodeLM
+```bash
+cd ai/codelm
+python main.py ingest --validate    # Download & validate corpus
+python main.py train --epochs 20   # Train block-token model
+python main.py serve --port 8401   # Start bridge API
 ```
 
 ### Tests
 ```bash
 cd tests && bash integration_test.sh
+cd firmware/test_harness && make test
 ```
 
 ### Docker
@@ -75,12 +86,13 @@ docker-compose up --build
 | LLM → IR pipeline | `backend/src/llm/` |
 | IR schema & validator | `backend/src/ir/` |
 | Bytecode compiler | `backend/src/compiler/` |
-| Driver registry (59 specs) | `backend/src/drivers/registry.rs` |
+| Driver registry (67 specs) | `backend/src/drivers/registry.rs` |
 | All backend API endpoints | `backend/src/api/` |
+| Secure provisioning API | `backend/src/api/provisioning.rs` |
 | Database schema | `backend/src/db/mod.rs` |
 | Firmware boot sequence | `firmware/main/app_main.c` |
 | Bytecode VM | `firmware/main/runtime/vm.c` |
-| Firmware drivers (59) | `firmware/main/drivers/` |
+| Firmware drivers (67) | `firmware/main/drivers/` |
 | Multi-MCU PAL header | `firmware/hal/include/parakram_pal.h` |
 | ESP32-S3 PAL impl | `firmware/hal/esp32s3/pal_impl.c` |
 | RP2040 PAL impl | `firmware/hal/rp2040/pal_impl.c` |
@@ -88,18 +100,27 @@ docker-compose up --build
 | Arduino PAL impl | `firmware/hal/arduino/pal_impl.cpp` |
 | Android BLE manager | `android/app/src/.../hardware/TinkrBleManager.kt` |
 | Android AI agent | `android/app/src/.../ai/TinkrAIService.kt` |
+| Android DumbDisplay server | `android/app/src/.../display/DumbDisplayServer.kt` |
+| Android DumbDisplay renderer | `android/app/src/.../display/DumbDisplayRenderer.kt` |
+| Android Vosk STT | `android/app/src/.../ai/VoskSpeechService.kt` |
 | Android protocol | `android/app/src/.../protocol/TinkrProtocol.kt` |
 | iOS BLE manager | `ios/Parakram/BLE/BLEManager.swift` |
-| Desktop Tauri app | `desktop/app/` |
+| Desktop Tauri config | `desktop/src-tauri/tauri.conf.json` |
+| Desktop React frontend | `desktop/src/` |
 | Desktop Python services | `desktop/services/` |
-| Golden blocks (202) | `desktop/services/agents/golden_blocks*.py` |
-| Hardware library (150+) | `desktop/services/hardware_library/` |
+| Golden blocks (248) | `desktop/services/hardware_library/` |
+| ROS 2 messages | `ros2_ws/src/parakram_msgs/msg/` |
+| ROS 2 services | `ros2_ws/src/parakram_msgs/srv/` |
 | Web playground | `playground/` |
 | Admin panel | `admin/` |
+| CI/CD workflows | `.github/workflows/ci.yml` |
 | Kubernetes manifests | `deploy/kubernetes/` |
-| OpenAPI spec | `shared/protocols/openapi.yaml` |
+| OpenAPI spec | `docs/openapi.yaml` |
+| CodeLM model | `ai/codelm/model/architecture.py` |
+| CodeLM tokenizer | `ai/codelm/model/tokenizer.py` |
+| CodeLM corpus ingestion | `ai/codelm/corpus/ingest/` |
+| CodeLM bridge API | `ai/codelm/parakram/codelm_bridge.py` |
 | RTOS kernel | `rtos/src/` |
-| CodeLM spec | `ai/codelm/README.md` |
 
 ---
 

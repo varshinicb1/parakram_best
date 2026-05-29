@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicegui/nicegui/main/tauri.schema.json",
+  "build": {
+    "devPath": "http://localhost:5173",
+    "distDir": "../dist",
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev"
+  },
+  "package": {
+    "productName": "Parakram Studio",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "bundle": {
+      "active": true,
+      "identifier": "com.vidyuthlabs.parakram-studio",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ]
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "Parakram Studio",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "allowlist": {
+      "all": false,
+      "fs": {
+        "all": true,
+        "scope": ["$APPDATA/**", "$RESOURCE/**"]
+      },
+      "path": { "all": true },
+      "dialog": { "all": true },
+      "shell": { "open": true },
+      "http": {
+        "all": true,
+        "scope": ["http://localhost:8400/**", "https://*.vidyuthlabs.co.in/**"]
+      },
+      "notification": { "all": true }
+    }
+  }
+}

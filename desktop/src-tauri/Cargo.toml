@@ -1,0 +1,19 @@
+[package]
+name = "parakram-studio"
+version = "1.0.0"
+description = "Parakram Studio — Zero-Code IoT IDE"
+authors = ["Vidyuthlabs <engineering@vidyuthlabs.com>"]
+license = "LicenseRef-PolyForm-Noncommercial-1.0.0"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "1", features = [] }
+
+[dependencies]
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+tauri = { version = "1", features = ["dialog-all", "fs-all", "http-all", "notification-all", "path-all", "shell-open"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

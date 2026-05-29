@@ -1,0 +1,11 @@
+# Compile an IR document into signed bytecode
+string ir_json              # IR document as JSON string
+string target_mcu           # e.g. "esp32s3", "rp2040"
+string device_id            # target board UUID
+---
+bool success
+string error_message        # empty on success
+uint8[] bytecode            # compiled bytecode binary
+string signature_hex        # Ed25519 signature
+uint32 instruction_count
+uint32 constant_pool_size
