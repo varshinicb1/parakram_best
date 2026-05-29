@@ -4,6 +4,8 @@ import android.content.Context
 import android.util.Log
 import com.example.BuildConfig
 import com.example.data.AIChatEntity
+import com.example.data.IntentRequest
+import com.example.data.ParakramApiClient
 import com.example.data.ProjectEntity
 import com.example.data.TinkrDatabase
 import com.example.hardware.TinkrBleManager
@@ -164,8 +166,24 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
     // --- Recursive autonomous agent loop ---
     suspend fun runPrompt(prompt: String, mode: String = "Builder"): AIResponse = withContext(Dispatchers.IO) {
         bleManager.addLog("AI Thinking... Routing: \"$prompt\"")
-        delay(2000)
 
+        // Priority 1: Route through Parakram backend (IR pipeline)
+        val backendResponse = callParakramBackend(prompt, mode)
+        if (backendResponse != null) {
+            val aiResponse = backendResponse
+            aiResponse.actions.forEach { action ->
+                bleManager.addLog("Agent executing: `${action.toolName}` - ${action.description}")
+                executeToolReflective(action.toolName, action.payloadJson)
+                delay(800)
+            }
+            recordToDatabase(prompt, mode, aiResponse)
+            _aiUpdates.emit(aiResponse)
+            bleManager.addLog("AI Task Completed via Parakram Backend.")
+            return@withContext aiResponse
+        }
+
+        // Fallback: Direct Gemini or local response
+        delay(2000)
         val apiKey = BuildConfig.GEMINI_API_KEY
         val hasCloudApiKey = apiKey.isNotEmpty() && apiKey != "MY_GEMINI_API_KEY"
 
@@ -182,23 +200,110 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
             delay(800)
         }
 
-        // Record transaction to database
-        try {
-            database.aiChatDao().insertChat(
-                AIChatEntity(
-                    sessionId = "default_session",
-                    role = "user",
-                    mode = mode,
-                    messageText = prompt
-                )
+        recordToDatabase(prompt, mode, aiResponse)
+
+        _aiUpdates.emit(aiResponse)
+        bleManager.addLog("AI Task Completed: Response generated.")
+        aiResponse
+    }
+
+    /**
+     * Route prompt through the Parakram Rust backend:
+     * POST /api/llm/intent → IR JSON → preview
+     */
+    private fun callParakramBackend(prompt: String, mode: String): AIResponse? {
+        return try {
+            val authHeader = ParakramApiClient.getAuthHeader()
+
+            val client = OkHttpClient.Builder()
+                .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+
+            val baseUrl = "http://10.0.2.2:8400"
+            val jsonBody = JSONObject().apply {
+                put("description", prompt)
+                put("board_id", "VDYT-S3-R1")
+                put("context", "mode=$mode")
+            }
+
+            val httpRequest = okhttp3.Request.Builder()
+                .url("$baseUrl/api/llm/intent")
+                .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
+                .addHeader("Authorization", authHeader)
+                .build()
+
+            val httpResponse = client.newCall(httpRequest).execute()
+            if (!httpResponse.isSuccessful) {
+                Log.d(TAG, "Backend returned ${httpResponse.code}")
+                return null
+            }
+
+            val body = httpResponse.body?.string() ?: return null
+            val json = JSONObject(body)
+
+            val actions = mutableListOf<AgentAction>()
+            val preview = json.optJSONObject("ir_preview")
+            val summary = preview?.optString("summary", "Backend processed your request.") ?: "Processed."
+
+            // Convert IR preview actions into tool calls
+            val previewActions = preview?.optJSONArray("actions")
+            if (previewActions != null) {
+                for (i in 0 until previewActions.length()) {
+                    val act = previewActions.getJSONObject(i)
+                    val condition = act.optString("condition", "")
+                    val action = act.optString("action", "")
+                    if (action.lowercase().contains("relay") || action.lowercase().contains("pump")) {
+                        actions.add(AgentAction("triggerWatering", action, "{}"))
+                    } else if (action.lowercase().contains("display") || action.lowercase().contains("text")) {
+                        actions.add(AgentAction("updateDisplay", action, "{\"text\":\"$action\"}"))
+                    }
+                }
+            }
+
+            // Always show status on display
+            actions.add(AgentAction("updateDisplay", "IR compiled", "{\"text\":\"$summary\"}"))
+
+            val sensorsUsed = preview?.optJSONArray("sensors_used")
+            val actuatorsUsed = preview?.optJSONArray("actuators_used")
+            val explanation = buildString {
+                append("Compiled via Parakram backend (${json.optString("llm_model", "unknown")}).\n")
+                append("Generation: ${json.optLong("generation_time_ms", 0)}ms.\n")
+                if (sensorsUsed != null) append("Sensors: ${sensorsUsed}\n")
+                if (actuatorsUsed != null) append("Actuators: ${actuatorsUsed}")
+            }
+
+            AIResponse(
+                message = summary,
+                explanation = explanation,
+                actions = actions,
+                codePreview = json.optJSONObject("ir")?.toString(2) ?: "",
+                modelSource = "Parakram Backend (${json.optString("llm_model", "IR Pipeline")})"
             )
-            database.aiChatDao().insertChat(
-                AIChatEntity(
-                    sessionId = "default_session",
-                    role = "assistant",
-                    mode = mode,
-                    messageText = "${aiResponse.message}\n\n${aiResponse.explanation}",
-                    codeBlob = aiResponse.codePreview,
+        } catch (e: Exception) {
+            Log.d(TAG, "Backend unavailable: ${e.message}")
+            null
+        }
+    }
+
+    private fun recordToDatabase(prompt: String, mode: String, aiResponse: AIResponse) {
+        try {
+            scope.launch {
+                database.aiChatDao().insertChat(
+                    AIChatEntity(
+                        sessionId = "default_session",
+                        role = "user",
+                        mode = mode,
+                        messageText = prompt
+                    )
+                )
+                database.aiChatDao().insertChat(
+                    AIChatEntity(
+                        sessionId = "default_session",
+                        role = "assistant",
+                        mode = mode,
+                        messageText = "${aiResponse.message}\n\n${aiResponse.explanation}",
+                        codeBlob = aiResponse.codePreview,
                     actionsJson = JSONArray(aiResponse.actions.map {
                         JSONObject().apply {
                             put("toolName", it.toolName)
@@ -208,11 +313,8 @@ class TinkrAIService private constructor(private val context: Context) : Hardwar
                     }).toString()
                 )
             )
+            }
         } catch (_: Exception) {}
-
-        _aiUpdates.emit(aiResponse)
-        bleManager.addLog("AI Task Completed: Response generated.")
-        aiResponse
     }
 
     private fun executeToolReflective(toolName: String, payloadJson: String) {

@@ -105,20 +105,20 @@ fun TinkrMainApp(
                         // Placeholder for Center Orb
                         Spacer(modifier = Modifier.width(56.dp))
 
+                        // Drivers Tab
+                        BottomBarItem(
+                            icon = Icons.Default.Memory,
+                            label = TinkrTranslations.getString("drivers_tab", currentLang),
+                            isActive = currentSelectedTab == "drivers",
+                            onClick = { currentSelectedTab = "drivers" }
+                        )
+
                         // Projects Tab
                         BottomBarItem(
                             icon = Icons.Default.FolderOpen,
                             label = TinkrTranslations.getString("projects_tab", currentLang),
                             isActive = currentSelectedTab == "projects",
                             onClick = { currentSelectedTab = "projects" }
-                        )
-
-                        // Boards Tab
-                        BottomBarItem(
-                            icon = Icons.Default.DeveloperBoard,
-                            label = TinkrTranslations.getString("boards_tab", currentLang),
-                            isActive = currentSelectedTab == "boards",
-                            onClick = { currentSelectedTab = "boards" }
                         )
                     }
                 }
@@ -191,8 +191,8 @@ fun TinkrMainApp(
                     when (targetTab) {
                         "home" -> HomeScreen(settingsRepository = settingsRepository, onNavigateToTab = { currentSelectedTab = it })
                         "build" -> BuildScreen(settingsRepository = settingsRepository)
+                        "drivers" -> DriversScreen(lang = currentLang)
                         "projects" -> ProjectsScreen(settingsRepository = settingsRepository)
-                        "boards" -> BoardsScreen(settingsRepository = settingsRepository)
                     }
                 }
 

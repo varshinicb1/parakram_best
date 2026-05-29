@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.*
+import com.example.data.GoldenBlocksRepository
 import com.example.hardware.*
 import com.example.protocol.*
 import com.example.ui.theme.*
@@ -57,6 +58,14 @@ fun HomeScreen(
     val bleManager = remember { TinkrBleManager.getInstance(context) }
     val connectionState by bleManager.connectionState.collectAsState()
     val activityLogs by bleManager.activityLogs.collectAsState()
+
+    // Backend connection
+    val goldenBlocksRepo = remember { GoldenBlocksRepository.getInstance() }
+    val backendStatus by goldenBlocksRepo.backendStatus.collectAsState()
+
+    LaunchedEffect(Unit) {
+        goldenBlocksRepo.checkBackendHealth()
+    }
 
     // Interactive Pin states
     val pin13Led by bleManager.pin13LedState.collectAsState()

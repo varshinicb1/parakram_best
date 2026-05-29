@@ -66,3 +66,5 @@ node_modules/
 
 # OS
 Thumbs.db
+firmware/test_harness/vm_test
+firmware/test_harness/e2e_test
