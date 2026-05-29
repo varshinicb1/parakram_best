@@ -19,6 +19,8 @@ mod ros_graph;
 use std::sync::Arc;
 use axum::Router;
 use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::ConnectOptions;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::EnvFilter;
@@ -70,7 +72,14 @@ async fn main() -> anyhow::Result<()> {
         .or_else(|_| std::env::var("DATABASE_URL"))
         .expect("SUPABASE_DB_URL or DATABASE_URL must be set");
 
-    let db = PgPool::connect(&database_url).await?;
+    let connect_options: sqlx::postgres::PgConnectOptions = database_url
+        .parse::<sqlx::postgres::PgConnectOptions>()?
+        .statement_cache_capacity(0);
+
+    let db = PgPoolOptions::new()
+        .max_connections(5)
+        .connect_with(connect_options)
+        .await?;
     db::check_connection(&db).await?;
     tracing::info!("Database connected");
 
