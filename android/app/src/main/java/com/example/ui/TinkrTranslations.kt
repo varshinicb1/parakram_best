@@ -68,7 +68,10 @@ object TinkrTranslations {
             "simulator_mode" to "Simulator Mode",
             "ai_mode_builder" to "Builder",
             "ai_mode_analyst" to "Analyst",
-            "ai_mode_teacher" to "Teacher"
+            "ai_mode_teacher" to "Teacher",
+            "drivers_tab" to "Drivers",
+            "drivers_title" to "Driver Registry",
+            "drivers_subtitle" to "59 pre-compiled, zero-code firmware drivers"
         ),
         "es" to mapOf(
             "welcome" to "Bienvenido a Parakram OS",
