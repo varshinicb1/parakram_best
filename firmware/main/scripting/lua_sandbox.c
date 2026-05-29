@@ -16,6 +16,7 @@
  */
 
 #include "lua_sandbox.h"
+#include <string.h>
 #include "esp_log.h"
 #include "esp_heap_caps.h"
 #include "esp_timer.h"

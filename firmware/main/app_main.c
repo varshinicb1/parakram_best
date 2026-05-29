@@ -43,6 +43,7 @@
 
 #include "esp_log.h"
 #include "esp_system.h"
+#include "esp_heap_caps.h"
 #include "nvs_flash.h"
 #include "esp_partition.h"
 #include "esp_heap_caps.h"
@@ -166,11 +167,19 @@ static void try_load_from_flash(void) {
         return;
     }
 
-    static EXT_RAM_BSS_ATTR uint8_t flash_buf[SYS_PROGRAM_MAX_SIZE];
+    uint8_t *flash_buf = heap_caps_malloc(stored_len, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (!flash_buf) {
+        flash_buf = malloc(stored_len);
+    }
+    if (!flash_buf) {
+        ESP_LOGE(TAG, "Failed to allocate %lu bytes for program", (unsigned long)stored_len);
+        return;
+    }
     esp_partition_read(part, sizeof(stored_len), flash_buf, stored_len);
 
     ESP_LOGI(TAG, "Found stored program: %lu bytes, loading...", (unsigned long)stored_len);
     on_payload_received(flash_buf, stored_len);
+    heap_caps_free(flash_buf);
 }
 
 /**

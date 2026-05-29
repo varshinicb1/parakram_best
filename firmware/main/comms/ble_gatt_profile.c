@@ -3,7 +3,17 @@
  * @brief NimBLE GATT server for Parakram — device info, deployment, and telemetry.
  */
 
+#include "sdkconfig.h"
 #include "comms.h"
+
+#if !CONFIG_BT_ENABLED
+/* Stubs when Bluetooth is disabled (e.g. QEMU simulation build) */
+esp_err_t ble_gatt_init(const char *name) { (void)name; return ESP_FAIL; }
+esp_err_t ble_gatt_start_advertising(void) { return ESP_FAIL; }
+esp_err_t ble_gatt_notify(uint16_t h, const uint8_t *d, uint16_t l) { (void)h; (void)d; (void)l; return ESP_ERR_NOT_SUPPORTED; }
+bool ble_gatt_is_connected(void) { return false; }
+void ble_gatt_set_payload_callback(ble_payload_rx_cb_t cb) { (void)cb; }
+#else
 #include "event_bus.h"
 #include "system_config.h"
 #include "esp_log.h"
@@ -205,3 +215,4 @@ esp_err_t ble_gatt_notify(uint16_t char_handle, const uint8_t *data, uint16_t le
 
 bool ble_gatt_is_connected(void) { return s_connected; }
 void ble_gatt_set_payload_callback(ble_payload_rx_cb_t cb) { s_payload_cb = cb; }
+#endif /* CONFIG_BT_ENABLED */

@@ -1,3 +1,4 @@
+## IDF Component Manager — Parakram firmware dependencies
 dependencies:
   lvgl/lvgl:
     version: "~8.3.0"

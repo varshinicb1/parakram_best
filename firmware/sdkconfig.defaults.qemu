@@ -1,0 +1,9 @@
+# QEMU Simulation Build Defaults
+# Usage: idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.qemu" build
+#
+# Disables PSRAM (not emulated in QEMU) and BT (causes assertion in QEMU).
+# Core firmware (VM, drivers, scheduler, event bus) works fully.
+# WiFi init starts but stalls at PHY calibration (expected — no radio in QEMU).
+
+CONFIG_SPIRAM=n
+CONFIG_BT_ENABLED=n

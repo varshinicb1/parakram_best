@@ -96,6 +96,7 @@ idf_component_register(
 
         # ── Camera ────────────────────────────────────────────────────────
         "drivers/drv_ov2640.c"
+        "drivers/drv_uvc_camera.c"
 
         # ── System / OTA / Provisioning ──────────────────────────────────
         "drivers/drv_ble_ota.c"
@@ -112,9 +113,13 @@ idf_component_register(
         "comms/mqtt_client.c"
         "comms/dumbdisplay_srv.c"
 
+        # ── Scripting ────────────────────────────────────────────────────────
+        "scripting/lua_sandbox.c"
+
         # ── Security ──────────────────────────────────────────────────────
         "security/payload_verify.c"
         "security/device_identity.c"
+        "security/ble_crypto.c"
         "security/board_auth.c"
 
         # ── Safety ────────────────────────────────────────────────────────
@@ -129,5 +134,5 @@ idf_component_register(
     REQUIRES
         driver esp_wifi esp_event nvs_flash esp_timer lvgl
         bt mbedtls mqtt esp_adc fatfs
-        esp_http_client app_update efuse spi_flash
+        esp_http_client app_update efuse spi_flash lua
 )
