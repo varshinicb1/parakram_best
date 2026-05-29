@@ -5,13 +5,14 @@ use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use crate::AppState;
 use crate::api::auth::{extract_bearer_token, validate_token, ErrorBody, ErrorDetail};
-use crate::ir::validator;
+use crate::ir::{builder, validator};
 use crate::llm::client::LLMClient;
 use crate::llm::prompt::build_system_prompt;
 
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/intent", post(process_intent))
+        .route("/intent/v2", post(process_intent_v2))
 }
 
 #[derive(Debug, Deserialize)]
@@ -194,6 +195,225 @@ async fn process_intent(
                 error: ErrorDetail { code: "LLM_ERROR".into(), message: e },
             })))
         }
+    }
+}
+
+// ── V2 types ────────────────────────────────────────────────────────────────
+
+#[derive(Debug, Serialize)]
+pub struct IntentV2Response {
+    pub feasible: bool,
+    pub pipeline: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub intent: Option<builder::StructuredIntent>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ir: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub validation: Option<validator::ValidationResult>,
+    pub build_errors: Vec<builder::BuildError>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub build_summary: Option<builder::BuildSummary>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
+    pub llm_model: String,
+    pub generation_time_ms: u64,
+}
+
+// ── V2 handler ──────────────────────────────────────────────────────────────
+
+async fn process_intent_v2(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+    Json(req): Json<IntentRequest>,
+) -> Result<Json<IntentV2Response>, (StatusCode, Json<ErrorBody>)> {
+    let token = extract_bearer_token(&headers)?;
+    let claims = validate_token(&token, &state)?;
+
+    if let Err(e) = crate::billing::check_quota(
+        &state.db, &claims.sub, crate::billing::QuotaKind::LlmIntent,
+    ).await {
+        let (code, msg) = crate::billing::quota::quota_error_response(e);
+        return Err((code, Json(ErrorBody {
+            error: ErrorDetail { code: "QUOTA_EXCEEDED".into(), message: msg },
+        })));
+    }
+
+    let user_key: Option<String> = sqlx::query_scalar(
+        "SELECT llm_api_key FROM users WHERE user_id::text = $1"
+    )
+    .bind(&claims.sub)
+    .fetch_optional(&state.db).await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorBody {
+        error: ErrorDetail { code: "DB_ERROR".into(), message: e.to_string() },
+    })))?
+    .flatten();
+
+    let client = match user_key.filter(|k| !k.is_empty()) {
+        Some(key) => LLMClient::for_user_key(key),
+        None if state.llm_api_key != "not-configured" => {
+            LLMClient::new(state.llm_api_key.clone(), state.llm_model.clone())
+        }
+        None => return Err((StatusCode::PAYMENT_REQUIRED, Json(ErrorBody {
+            error: ErrorDetail {
+                code: "NO_LLM_KEY".into(),
+                message: "Add your LLM API key in Settings to use AI features.".into(),
+            },
+        }))),
+    };
+
+    let driver_list = build_driver_list_for_intent(&state.driver_registry);
+    let system_prompt = build_intent_extraction_prompt(&driver_list);
+
+    let start = Instant::now();
+
+    let user_prompt = format!(
+        "Extract a StructuredIntent JSON for: {}. Board: {}. Reply with ONLY valid JSON.",
+        req.description, req.board_id
+    );
+
+    let (raw_response, model) = client.raw_completion(&system_prompt, &user_prompt)
+        .await
+        .map_err(|e| (StatusCode::UNPROCESSABLE_ENTITY, Json(ErrorBody {
+            error: ErrorDetail { code: "LLM_ERROR".into(), message: e },
+        })))?;
+
+    let generation_time = start.elapsed().as_millis() as u64;
+    let cleaned = clean_json_response(&raw_response);
+
+    let intent: builder::StructuredIntent = match serde_json::from_str(&cleaned) {
+        Ok(i) => i,
+        Err(e) => {
+            return Ok(Json(IntentV2Response {
+                feasible: false,
+                pipeline: "v2-deterministic".into(),
+                intent: None,
+                ir: None,
+                validation: None,
+                build_errors: vec![builder::BuildError {
+                    field: "llm_response".into(),
+                    code: "PARSE_ERROR".into(),
+                    message: format!("Failed to parse StructuredIntent: {}", e),
+                    valid_options: None,
+                }],
+                build_summary: None,
+                reason: Some(format!("LLM response was not valid StructuredIntent JSON: {}", e)),
+                llm_model: model,
+                generation_time_ms: generation_time,
+            }));
+        }
+    };
+
+    let build_result = builder::build_ir(&intent, &state.driver_registry, &req.board_id);
+
+    if !build_result.success {
+        return Ok(Json(IntentV2Response {
+            feasible: false,
+            pipeline: "v2-deterministic".into(),
+            intent: Some(intent),
+            ir: None,
+            validation: None,
+            build_errors: build_result.errors,
+            build_summary: None,
+            reason: Some("Intent validation failed against driver registry".into()),
+            llm_model: model,
+            generation_time_ms: generation_time,
+        }));
+    }
+
+    let ir = build_result.ir.unwrap();
+    let validation = validator::validate_ir(&ir, &state.driver_registry);
+    let ir_value = serde_json::to_value(&ir).unwrap_or_default();
+
+    let _ = crate::billing::increment_usage(
+        &state.db, &claims.sub, crate::billing::QuotaKind::LlmIntent,
+    ).await;
+    crate::metrics::LLM_INTENTS_TOTAL.inc();
+
+    Ok(Json(IntentV2Response {
+        feasible: true,
+        pipeline: "v2-deterministic".into(),
+        intent: Some(intent),
+        ir: Some(ir_value),
+        validation: Some(validation),
+        build_errors: Vec::new(),
+        build_summary: build_result.summary,
+        reason: None,
+        llm_model: model,
+        generation_time_ms: generation_time,
+    }))
+}
+
+// ── V2 helpers ──────────────────────────────────────────────────────────────
+
+fn build_driver_list_for_intent(registry: &crate::drivers::registry::DriverRegistry) -> String {
+    let mut lines = Vec::new();
+    for spec in registry.list_all() {
+        lines.push(format!(
+            "- {} (type: {}, capabilities: [{}], bus: [{}])",
+            spec.name,
+            spec.driver_type,
+            spec.capabilities.join(", "),
+            spec.bus_types.join(", "),
+        ));
+    }
+    lines.sort();
+    lines.join("\n")
+}
+
+fn build_intent_extraction_prompt(driver_list: &str) -> String {
+    format!(
+        r#"You are a hardware intent extractor for the Parakram IoT platform.
+
+Your ONLY job is to extract a StructuredIntent JSON from the user's natural language description.
+Do NOT generate raw IR. Do NOT add explanations. Output ONLY valid JSON.
+
+StructuredIntent schema:
+{{
+  "project_name": "<string>",
+  "devices": [
+    {{ "id": "<unique_name>", "driver": "<driver_name>", "use_capabilities": ["<cap1>", ...] }}
+  ],
+  "poll_interval_ms": <100-60000>,
+  "rules": [
+    {{
+      "sensor_device": "<device_id>",
+      "sensor_field": "<capability>",
+      "op": "<gt|lt|eq|gte|lte|ne>",
+      "threshold": <number>,
+      "action": {{ "device": "<device_id>", "field": "<capability>", "value": "<string>" }}
+    }}
+  ],
+  "show_on_display": <true|false>
+}}
+
+RULES:
+1. Only use drivers from the registry below.
+2. Only use capabilities listed for each driver.
+3. Device IDs must be unique, descriptive, lowercase with underscores.
+4. poll_interval_ms must be between 100 and 60000.
+5. Rule operators must be one of: gt, lt, eq, gte, lte, ne.
+
+DRIVER REGISTRY:
+{driver_list}
+"#
+    )
+}
+
+fn clean_json_response(raw: &str) -> String {
+    let trimmed = raw.trim();
+    if trimmed.starts_with("```") {
+        let without_opening = if let Some(pos) = trimmed.find('\n') {
+            &trimmed[pos + 1..]
+        } else {
+            trimmed
+        };
+        let without_closing = without_opening
+            .trim_end()
+            .trim_end_matches("```")
+            .trim();
+        without_closing.to_string()
+    } else {
+        trimmed.to_string()
     }
 }
 
