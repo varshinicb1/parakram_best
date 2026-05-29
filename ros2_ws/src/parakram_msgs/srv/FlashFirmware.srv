@@ -1,0 +1,11 @@
+# Flash firmware or bytecode to a connected device
+string device_id            # target board UUID
+uint8 method                # 0=ble_ota, 1=http_ota, 2=usb_serial, 3=wifi_tcp
+uint8[] payload             # firmware or bytecode binary
+string sha256_hex           # SHA-256 hash for verification
+---
+bool success
+string error_message        # empty on success
+uint8 progress_percent      # final progress (should be 100 on success)
+uint32 bytes_transferred
+float32 duration_seconds

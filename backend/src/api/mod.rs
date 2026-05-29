@@ -18,6 +18,7 @@ pub mod ros;
 pub mod system;
 pub mod telemetry_ws;
 pub mod templates;
+pub mod provisioning;
 pub mod users;
 
 use axum::{Router, middleware::{self, Next}};
@@ -89,7 +90,16 @@ pub fn router() -> Router<AppState> {
         .nest("/fleet", fleet::router())
         .nest("/users", users::router())
         .nest("/issues", issues::router())
+        .nest("/provisioning", provisioning_router())
         .route("/templates", get(list_templates))
+}
+
+fn provisioning_router() -> Router<AppState> {
+    use axum::routing::{post, get, delete};
+    Router::new()
+        .route("/key-exchange", post(provisioning::key_exchange))
+        .route("/session/:device_id", get(provisioning::get_session))
+        .route("/session/:device_id", delete(provisioning::delete_session))
 }
 
 async fn list_templates() -> Json<Vec<templates::Template>> {
