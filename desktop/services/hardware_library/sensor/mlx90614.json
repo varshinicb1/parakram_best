@@ -1,0 +1,27 @@
+{
+  "id": "mlx90614",
+  "name": "MLX90614 IR Thermometer",
+  "category": "sensor",
+  "description": "MLX90614 IR Thermometer firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_MLX90614.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x5A",
+  "platformio_deps": [
+    "adafruit/Adafruit MLX90614 Library@^2.1.5"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MLX90614_H\n#define MLX90614_H\nvoid mlx90614_setup();\nvoid mlx90614_loop();\nfloat mlx90614_get_object_temp();\nfloat mlx90614_get_ambient_temp();\n#endif",
+    "source": "#include \"mlx90614.h\"\n#include <Wire.h>\n#include <Adafruit_MLX90614.h>\nstatic Adafruit_MLX90614 mlx;\nstatic float _obj=0,_amb=0;\nstatic unsigned long _last=0;\nvoid mlx90614_setup(){Wire.begin();if(!mlx.begin()){Serial.println(\"[mlx90614] Fail!\");return;}Serial.println(\"[mlx90614] OK\");}\nvoid mlx90614_loop(){if(millis()-_last<500)return;_last=millis();_obj=mlx.readObjectTempC();_amb=mlx.readAmbientTempC();}\nfloat mlx90614_get_object_temp(){return _obj;}\nfloat mlx90614_get_ambient_temp(){return _amb;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

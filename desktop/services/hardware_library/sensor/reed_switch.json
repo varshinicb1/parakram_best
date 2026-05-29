@@ -1,0 +1,21 @@
+{
+  "id": "reed_switch",
+  "name": "Reed Switch (Magnetic)",
+  "category": "sensor",
+  "description": "Reed Switch (Magnetic) firmware block",
+  "libraries": [],
+  "pins": {
+    "signal": 13
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef REED_H\n#define REED_H\nvoid reed_setup();\nvoid reed_loop();\nbool reed_is_closed();\nuint32_t reed_get_count();\nvoid reed_reset_count();\n#endif",
+    "source": "#include \"reed_switch.h\"\n#include <Arduino.h>\n#define REED_PIN 13\nstatic volatile uint32_t _cnt=0;static bool _closed=false;static unsigned long _l=0;\nvoid IRAM_ATTR _reed_isr(){_cnt++;}\nvoid reed_setup(){pinMode(REED_PIN,INPUT_PULLUP);attachInterrupt(REED_PIN,_reed_isr,FALLING);Serial.println(\"[reed] OK\");}\nvoid reed_loop(){if(millis()-_l<50)return;_l=millis();_closed=!digitalRead(REED_PIN);}\nbool reed_is_closed(){return _closed;}\nuint32_t reed_get_count(){return _cnt;}\nvoid reed_reset_count(){_cnt=0;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

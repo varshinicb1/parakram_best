@@ -1,0 +1,22 @@
+{
+  "id": "ota_updater",
+  "name": "OTA Firmware Update",
+  "category": "power",
+  "description": "OTA Firmware Update firmware block",
+  "libraries": [
+    "WiFi.h",
+    "ArduinoOTA.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef OTA_H\n#define OTA_H\nvoid ota_setup(const char* hostname);\nvoid ota_loop();\n#endif",
+    "source": "#include \"ota_updater.h\"\n#include <WiFi.h>\n#include <ArduinoOTA.h>\nvoid ota_setup(const char*host){\n  ArduinoOTA.setHostname(host);\n  ArduinoOTA.onStart([](){Serial.println(\"[ota] Start\");});\n  ArduinoOTA.onEnd([](){Serial.println(\"[ota] Done\");});\n  ArduinoOTA.onProgress([](uint p,uint t){Serial.printf(\"[ota] %u%%\\r\",p*100/t);});\n  ArduinoOTA.onError([](ota_error_t e){Serial.printf(\"[ota] Error %u\\n\",e);});\n  ArduinoOTA.begin();\n  Serial.printf(\"[ota] Ready: %s\\n\",host);\n}\nvoid ota_loop(){ArduinoOTA.handle();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

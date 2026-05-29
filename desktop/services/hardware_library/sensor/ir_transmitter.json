@@ -1,0 +1,26 @@
+{
+  "id": "ir_transmitter",
+  "name": "IR Transmitter",
+  "category": "sensor",
+  "description": "IR Transmitter firmware block",
+  "libraries": [
+    "IRremoteESP8266.h",
+    "IRsend.h"
+  ],
+  "pins": {
+    "signal": 4
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "crankyoldgit/IRremoteESP8266@^2.8.6"
+  ],
+  "firmware_template": {
+    "header": "#ifndef IR_TX_H\n#define IR_TX_H\nvoid ir_tx_setup();\nvoid ir_tx_send_nec(uint32_t code);\nvoid ir_tx_send_raw(const uint16_t* data, uint16_t len, uint16_t freq);\n#endif",
+    "source": "#include \"ir_transmitter.h\"\n#include <IRsend.h>\n#define IR_TX_PIN 4\nstatic IRsend irsend(IR_TX_PIN);\nvoid ir_tx_setup(){irsend.begin();Serial.println(\"[ir_tx] OK\");}\nvoid ir_tx_send_nec(uint32_t code){irsend.sendNEC(code);}\nvoid ir_tx_send_raw(const uint16_t*d,uint16_t l,uint16_t f){irsend.sendRaw(d,l,f);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

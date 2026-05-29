@@ -1,0 +1,19 @@
+{
+  "id": "light_sleep",
+  "name": "ESP32 Light Sleep",
+  "category": "power",
+  "description": "ESP32 Light Sleep firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef LIGHT_SLEEP_H\n#define LIGHT_SLEEP_H\n#include <Arduino.h>\nvoid light_sleep_setup();\nvoid light_sleep_for(uint32_t ms);\nvoid light_sleep_until_pin(uint8_t pin,bool level);\nuint32_t light_sleep_wakeup_cause();\n#endif",
+    "source": "#include \"light_sleep.h\"\n#include <esp_sleep.h>\nvoid light_sleep_setup(){Serial.println(\"[lsleep] OK\");}\nvoid light_sleep_for(uint32_t ms){esp_sleep_enable_timer_wakeup(ms*1000ULL);esp_light_sleep_start();Serial.printf(\"[lsleep] Woke after %ldms\\n\",(long)ms);}\nvoid light_sleep_until_pin(uint8_t pin,bool level){gpio_wakeup_enable((gpio_num_t)pin,level?GPIO_INTR_HIGH_LEVEL:GPIO_INTR_LOW_LEVEL);esp_sleep_enable_gpio_wakeup();esp_light_sleep_start();}\nuint32_t light_sleep_wakeup_cause(){return esp_sleep_get_wakeup_cause();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

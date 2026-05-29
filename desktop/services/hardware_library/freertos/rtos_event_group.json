@@ -1,0 +1,39 @@
+{
+    "id": "rtos_event_group",
+    "name": "FreeRTOS EventGroup",
+    "category": "freertos",
+    "description": "Multi-task synchronization using event flags. Wait for multiple conditions.",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "flags",
+            "data_type": "int",
+            "description": "Current event flags bitmask"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "group_name",
+            "label": "Group Name",
+            "value_type": "string",
+            "default": "system_events"
+        },
+        {
+            "key": "event_names",
+            "label": "Event Names",
+            "value_type": "string",
+            "default": "WIFI_READY,SENSOR_INIT,MQTT_CONNECTED"
+        }
+    ],
+    "libraries": [],
+    "firmware_template": {
+        "header": "#ifndef RTOS_EVENT_GROUP_H\n#define RTOS_EVENT_GROUP_H\n#include <Arduino.h>\n#include <freertos/FreeRTOS.h>\n#include <freertos/event_groups.h>\n\n// Define event bits\n#define EVT_WIFI_READY    (1 << 0)\n#define EVT_SENSOR_INIT   (1 << 1)\n#define EVT_MQTT_CONN     (1 << 2)\n#define EVT_BLE_CONN      (1 << 3)\n#define EVT_OTA_START     (1 << 4)\n#define EVT_ERROR         (1 << 7)\n\nEventGroupHandle_t rtos_event_group_create();\nvoid rtos_event_set(EventGroupHandle_t eg, EventBits_t bits);\nvoid rtos_event_clear(EventGroupHandle_t eg, EventBits_t bits);\nEventBits_t rtos_event_wait(EventGroupHandle_t eg, EventBits_t bits, bool waitAll, uint32_t timeoutMs);\nEventBits_t rtos_event_get(EventGroupHandle_t eg);\n\n#endif",
+        "source": "#include \"rtos_event_group.h\"\n\nEventGroupHandle_t rtos_event_group_create() {\n    EventGroupHandle_t eg = xEventGroupCreate();\n    if (eg) Serial.println(\"[rtos-evt] Event group created\");\n    return eg;\n}\n\nvoid rtos_event_set(EventGroupHandle_t eg, EventBits_t bits) {\n    if (eg) xEventGroupSetBits(eg, bits);\n}\n\nvoid rtos_event_clear(EventGroupHandle_t eg, EventBits_t bits) {\n    if (eg) xEventGroupClearBits(eg, bits);\n}\n\nEventBits_t rtos_event_wait(EventGroupHandle_t eg, EventBits_t bits, bool waitAll, uint32_t timeoutMs) {\n    if (!eg) return 0;\n    return xEventGroupWaitBits(eg, bits, pdTRUE, waitAll ? pdTRUE : pdFALSE, pdMS_TO_TICKS(timeoutMs));\n}\n\nEventBits_t rtos_event_get(EventGroupHandle_t eg) {\n    return eg ? xEventGroupGetBits(eg) : 0;\n}"
+    },
+    "icon": "🚩",
+    "color": "#f43f5e",
+    "memory_estimate": {
+        "flash": 1200,
+        "sram": 200
+    }
+}

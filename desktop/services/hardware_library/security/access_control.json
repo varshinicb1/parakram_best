@@ -1,0 +1,28 @@
+{
+  "id": "access_control",
+  "name": "RFID Access Control",
+  "category": "security",
+  "description": "RFID Access Control firmware block",
+  "libraries": [
+    "SPI.h",
+    "MFRC522.h"
+  ],
+  "pins": {
+    "sda": 5,
+    "rst": 22,
+    "relay": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "miguelbalboa/MFRC522@^1.4.10"
+  ],
+  "firmware_template": {
+    "header": "#ifndef ACCESS_CTRL_H\n#define ACCESS_CTRL_H\nvoid access_setup();\nvoid access_loop();\nbool access_add_card(uint32_t uid);\nbool access_remove_card(uint32_t uid);\nbool access_is_unlocked();\nuint32_t access_last_uid();\n#endif",
+    "source": "#include \"access_control.h\"\n#include <SPI.h>\n#include <MFRC522.h>\n#define MAX_CARDS 32\n#define RELAY_PIN 25\nstatic MFRC522 rfid(5,22);\nstatic uint32_t _cards[MAX_CARDS];\nstatic uint8_t _cnt=0;\nstatic bool _unlocked=false;\nstatic uint32_t _lastUid=0;\nstatic unsigned long _unlockTime=0;\nstatic uint32_t _getUid(){uint32_t u=0;for(byte i=0;i<rfid.uid.size;i++)u=(u<<8)|rfid.uid.uidByte[i];return u;}\nvoid access_setup(){SPI.begin();rfid.PCD_Init();pinMode(RELAY_PIN,OUTPUT);digitalWrite(RELAY_PIN,HIGH);Serial.println(\"[access] OK\");}\nvoid access_loop(){if(_unlocked&&millis()-_unlockTime>5000){digitalWrite(RELAY_PIN,HIGH);_unlocked=false;}if(!rfid.PICC_IsNewCardPresent()||!rfid.PICC_ReadCardSerial())return;_lastUid=_getUid();for(uint8_t i=0;i<_cnt;i++){if(_cards[i]==_lastUid){digitalWrite(RELAY_PIN,LOW);_unlocked=true;_unlockTime=millis();Serial.printf(\"[access] OK uid=%08lX\\n\",(unsigned long)_lastUid);break;}}rfid.PICC_HaltA();}\nbool access_add_card(uint32_t u){if(_cnt>=MAX_CARDS)return false;_cards[_cnt++]=u;return true;}\nbool access_remove_card(uint32_t u){for(uint8_t i=0;i<_cnt;i++){if(_cards[i]==u){_cards[i]=_cards[--_cnt];return true;}}return false;}\nbool access_is_unlocked(){return _unlocked;}\nuint32_t access_last_uid(){return _lastUid;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

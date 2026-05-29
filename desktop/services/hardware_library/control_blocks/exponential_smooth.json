@@ -1,0 +1,19 @@
+{
+  "id": "exponential_smooth",
+  "name": "Exponential Smoothing",
+  "category": "control_blocks",
+  "description": "Exponential Smoothing firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef EXP_SMOOTH_H\n#define EXP_SMOOTH_H\nvoid ema_setup(float alpha);\nfloat ema_add(float value);\nfloat ema_get();\nvoid ema_reset();\n#endif",
+    "source": "#include \"exponential_smooth.h\"\nstatic float _alpha=0.1,_val=0;static bool _first=true;\nvoid ema_setup(float a){_alpha=a;_first=true;}\nfloat ema_add(float v){if(_first){_val=v;_first=false;}else _val=_alpha*v+(1-_alpha)*_val;return _val;}\nfloat ema_get(){return _val;}\nvoid ema_reset(){_first=true;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

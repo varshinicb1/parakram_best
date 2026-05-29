@@ -1,0 +1,25 @@
+{
+  "id": "dht22",
+  "name": "DHT22 Temp/Humidity",
+  "category": "sensor",
+  "description": "DHT22 Temp/Humidity firmware block",
+  "libraries": [
+    "DHT.h"
+  ],
+  "pins": {
+    "data": 4
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/DHT sensor library@^1.4.6"
+  ],
+  "firmware_template": {
+    "header": "#ifndef DHT22_H\n#define DHT22_H\nvoid dht22_setup();\nvoid dht22_loop();\nfloat dht22_get_temperature();\nfloat dht22_get_humidity();\nfloat dht22_get_heat_index();\n#endif",
+    "source": "#include \"dht22.h\"\n#include <DHT.h>\n#define DHT_PIN 4\nstatic DHT dht(DHT_PIN,DHT22);\nstatic float _t=0,_h=0,_hi=0;\nstatic unsigned long _last=0;\nvoid dht22_setup(){dht.begin();Serial.println(\"[dht22] OK\");}\nvoid dht22_loop(){if(millis()-_last<2000)return;_last=millis();_t=dht.readTemperature();_h=dht.readHumidity();if(!isnan(_t)&&!isnan(_h))_hi=dht.computeHeatIndex(_t,_h,false);}\nfloat dht22_get_temperature(){return _t;}\nfloat dht22_get_humidity(){return _h;}\nfloat dht22_get_heat_index(){return _hi;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

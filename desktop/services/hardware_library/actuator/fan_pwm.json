@@ -1,0 +1,22 @@
+{
+  "id": "fan_pwm",
+  "name": "PWM Fan Controller",
+  "category": "actuator",
+  "description": "PWM Fan Controller firmware block",
+  "libraries": [],
+  "pins": {
+    "pwm": 25,
+    "tach": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef FAN_PWM_H\n#define FAN_PWM_H\nvoid fan_setup();\nvoid fan_set_speed(uint8_t pct);\nuint8_t fan_get_speed();\nuint16_t fan_get_rpm();\n#endif",
+    "source": "#include \"fan_pwm.h\"\n#include <Arduino.h>\n#define FAN_PWM 25\n#define FAN_TACH 34\nstatic uint8_t _speed=0;static volatile uint16_t _pulses=0;static uint16_t _rpm=0;static unsigned long _last=0;\nvoid IRAM_ATTR _fan_isr(){_pulses++;}\nvoid fan_setup(){ledcAttach(FAN_PWM,25000,8);pinMode(FAN_TACH,INPUT_PULLUP);attachInterrupt(FAN_TACH,_fan_isr,FALLING);Serial.println(\"[fan] OK\");}\nvoid fan_set_speed(uint8_t p){_speed=constrain(p,0,100);ledcWrite(FAN_PWM,map(_speed,0,100,0,255));}\nuint8_t fan_get_speed(){return _speed;}\nuint16_t fan_get_rpm(){if(millis()-_last>=1000){_rpm=_pulses*30;_pulses=0;_last=millis();}return _rpm;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

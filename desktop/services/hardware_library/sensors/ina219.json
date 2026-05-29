@@ -1,0 +1,68 @@
+{
+    "id": "ina219",
+    "name": "INA219 Power Monitor",
+    "category": "sensor",
+    "description": "High-side current, voltage, and power measurement sensor.",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "bus_voltage",
+            "data_type": "float",
+            "description": "Bus voltage (V)"
+        },
+        {
+            "name": "current_ma",
+            "data_type": "float",
+            "description": "Current (mA)"
+        },
+        {
+            "name": "power_mw",
+            "data_type": "float",
+            "description": "Power (mW)"
+        },
+        {
+            "name": "shunt_voltage",
+            "data_type": "float",
+            "description": "Shunt voltage (mV)"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "i2c_address",
+            "label": "I2C Address",
+            "value_type": "string",
+            "default": "0x40"
+        },
+        {
+            "key": "shunt_resistance",
+            "label": "Shunt (ohms)",
+            "value_type": "float",
+            "default": "0.1"
+        },
+        {
+            "key": "max_current",
+            "label": "Max Current (A)",
+            "value_type": "float",
+            "default": "3.2"
+        },
+        {
+            "key": "read_interval",
+            "label": "Read Interval (ms)",
+            "value_type": "int",
+            "default": "1000"
+        }
+    ],
+    "libraries": [
+        "adafruit/Adafruit INA219@^1.2.0"
+    ],
+    "firmware_template": {
+        "header": "#ifndef INA219_SENSOR_H\n#define INA219_SENSOR_H\n#include <Arduino.h>\n\nvoid ina219_setup();\nvoid ina219_loop();\nfloat ina219_bus_voltage();\nfloat ina219_current_ma();\nfloat ina219_power_mw();\nfloat ina219_shunt_voltage();\nbool ina219_ready();\n\n#endif",
+        "source": "#include \"ina219_sensor.h\"\n#include <Wire.h>\n#include <Adafruit_INA219.h>\n#include \"config.h\"\n\nstatic Adafruit_INA219 _ina(0x40);\nstatic bool _inaReady = false;\nstatic float _busV = 0, _currentMa = 0, _powerMw = 0, _shuntMv = 0;\n\nvoid ina219_setup() {\n    Wire.begin(21, 22);\n    if (_ina.begin(&Wire)) {\n        _inaReady = true;\n        _ina.setCalibration_32V_2A();\n        Serial.println(\"[ina219] Power monitor ready\");\n    } else {\n        Serial.println(\"[ina219] FAILED\");\n    }\n}\n\nvoid ina219_loop() {\n    if (!_inaReady) return;\n    _busV = _ina.getBusVoltage_V();\n    _shuntMv = _ina.getShuntVoltage_mV();\n    _currentMa = _ina.getCurrent_mA();\n    _powerMw = _ina.getPower_mW();\n}\n\nfloat ina219_bus_voltage() { return _busV; }\nfloat ina219_current_ma() { return _currentMa; }\nfloat ina219_power_mw() { return _powerMw; }\nfloat ina219_shunt_voltage() { return _shuntMv; }\nbool ina219_ready() { return _inaReady; }"
+    },
+    "icon": "⚡",
+    "color": "#ef4444",
+    "memory_estimate": {
+        "flash": 5000,
+        "sram": 800
+    }
+}

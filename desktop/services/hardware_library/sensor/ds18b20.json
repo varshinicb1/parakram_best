@@ -1,0 +1,27 @@
+{
+  "id": "ds18b20",
+  "name": "DS18B20 Waterproof Temp",
+  "category": "sensor",
+  "description": "DS18B20 Waterproof Temp firmware block",
+  "libraries": [
+    "OneWire.h",
+    "DallasTemperature.h"
+  ],
+  "pins": {
+    "data": 4
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "paulstoffregen/OneWire@^2.3.8",
+    "milesburton/DallasTemperature@^3.11.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef DS18B20_H\n#define DS18B20_H\nvoid ds18b20_setup();\nvoid ds18b20_loop();\nfloat ds18b20_get_temperature();\nint ds18b20_get_count();\n#endif",
+    "source": "#include \"ds18b20.h\"\n#include <OneWire.h>\n#include <DallasTemperature.h>\n#define OW_PIN 4\nstatic OneWire ow(OW_PIN);\nstatic DallasTemperature dt(&ow);\nstatic float _t=0;static int _cnt=0;\nstatic unsigned long _last=0;\nvoid ds18b20_setup(){dt.begin();_cnt=dt.getDeviceCount();Serial.printf(\"[ds18b20] OK %d sensors\\n\",_cnt);}\nvoid ds18b20_loop(){if(millis()-_last<1000)return;_last=millis();dt.requestTemperatures();_t=dt.getTempCByIndex(0);}\nfloat ds18b20_get_temperature(){return _t;}\nint ds18b20_get_count(){return _cnt;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

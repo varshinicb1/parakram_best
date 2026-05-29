@@ -1,0 +1,81 @@
+{
+    "id": "bme280",
+    "name": "BME280",
+    "category": "sensor",
+    "description": "Temperature, humidity, and pressure sensor with proper I2C initialization.",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "temperature",
+            "data_type": "float",
+            "description": "Celsius"
+        },
+        {
+            "name": "humidity",
+            "data_type": "float",
+            "description": "% RH"
+        },
+        {
+            "name": "pressure",
+            "data_type": "float",
+            "description": "hPa"
+        },
+        {
+            "name": "altitude",
+            "data_type": "float",
+            "description": "meters"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "i2c_address",
+            "label": "I2C Address",
+            "value_type": "string",
+            "default": "0x76"
+        },
+        {
+            "key": "sda_pin",
+            "label": "SDA Pin",
+            "value_type": "int",
+            "default": "21"
+        },
+        {
+            "key": "scl_pin",
+            "label": "SCL Pin",
+            "value_type": "int",
+            "default": "22"
+        },
+        {
+            "key": "sea_level_hpa",
+            "label": "Sea Level hPa",
+            "value_type": "float",
+            "default": "1013.25"
+        },
+        {
+            "key": "read_interval",
+            "label": "Read Interval (ms)",
+            "value_type": "int",
+            "default": "2000"
+        },
+        {
+            "key": "output_unit",
+            "label": "Temp Unit",
+            "value_type": "string",
+            "default": "celsius"
+        }
+    ],
+    "libraries": [
+        "adafruit/Adafruit BME280 Library@^2.2.0",
+        "adafruit/Adafruit Unified Sensor@^1.1.9"
+    ],
+    "firmware_template": {
+        "header": "#ifndef BME280_SENSOR_H\n#define BME280_SENSOR_H\n#include <Arduino.h>\n\nvoid bme280_setup();\nvoid bme280_loop();\nfloat bme280_temperature();\nfloat bme280_humidity();\nfloat bme280_pressure();\nfloat bme280_altitude();\nbool bme280_ready();\n\n#endif",
+        "source": "#include \"bme280_sensor.h\"\n#include <Wire.h>\n#include <Adafruit_BME280.h>\n#include \"config.h\"\n\nstatic Adafruit_BME280 _bme;\nstatic bool _bmeReady = false;\nstatic float _temp = 0, _hum = 0, _press = 0, _alt = 0;\nstatic const float SEA_LEVEL_HPA = 1013.25f;\n\nvoid bme280_setup() {\n    Wire.begin(21, 22);\n    Wire.setClock(100000); // 100kHz for reliability\n    \n    // Retry initialization up to 5 times\n    for (int i = 0; i < 5; i++) {\n        if (_bme.begin(0x76, &Wire)) {\n            _bmeReady = true;\n            break;\n        }\n        Serial.printf(\"[bme280] Init attempt %d failed\\n\", i + 1);\n        delay(100);\n    }\n    \n    if (_bmeReady) {\n        // Set oversampling for best accuracy\n        _bme.setSampling(\n            Adafruit_BME280::MODE_NORMAL,\n            Adafruit_BME280::SAMPLING_X16,  // temp\n            Adafruit_BME280::SAMPLING_X16,  // pressure\n            Adafruit_BME280::SAMPLING_X16,  // humidity\n            Adafruit_BME280::FILTER_X16,\n            Adafruit_BME280::STANDBY_MS_500\n        );\n        Serial.println(\"[bme280] Initialized with x16 oversampling\");\n    } else {\n        Serial.println(\"[bme280] FAILED - check wiring!\");\n    }\n}\n\nvoid bme280_loop() {\n    if (!_bmeReady) return;\n    _temp = _bme.readTemperature();\n    _hum = _bme.readHumidity();\n    _press = _bme.readPressure() / 100.0f;\n    _alt = _bme.readAltitude(SEA_LEVEL_HPA);\n    \n    // Sanity check for anomalous readings\n    if (_temp < -40.0f || _temp > 85.0f) {\n        Serial.println(\"[bme280] WARNING: Temperature out of range, re-initializing...\");\n        _bmeReady = false;\n        bme280_setup();\n    }\n}\n\nfloat bme280_temperature() { return _temp; }\nfloat bme280_humidity() { return _hum; }\nfloat bme280_pressure() { return _press; }\nfloat bme280_altitude() { return _alt; }\nbool bme280_ready() { return _bmeReady; }"
+    },
+    "icon": "🌤️",
+    "color": "#0ea5e9",
+    "memory_estimate": {
+        "flash": 12000,
+        "sram": 2000
+    }
+}

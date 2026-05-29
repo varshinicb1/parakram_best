@@ -1,0 +1,27 @@
+{
+  "id": "bh1750",
+  "name": "BH1750 Light Sensor",
+  "category": "sensor",
+  "description": "BH1750 Light Sensor firmware block",
+  "libraries": [
+    "Wire.h",
+    "BH1750.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x23",
+  "platformio_deps": [
+    "claws/BH1750@^1.3.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef BH1750_H\n#define BH1750_H\nvoid bh1750_setup();\nvoid bh1750_loop();\nfloat bh1750_get_lux();\n#endif",
+    "source": "#include \"bh1750.h\"\n#include <Wire.h>\n#include <BH1750.h>\nstatic BH1750 lm;\nstatic float _lux=0;\nstatic unsigned long _last=0;\nvoid bh1750_setup(){Wire.begin();if(!lm.begin(BH1750::CONTINUOUS_HIGH_RES_MODE)){Serial.println(\"[bh1750] Fail!\");return;}Serial.println(\"[bh1750] OK\");}\nvoid bh1750_loop(){if(millis()-_last<500)return;_last=millis();if(lm.measurementReady())_lux=lm.readLightLevel();}\nfloat bh1750_get_lux(){return _lux;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

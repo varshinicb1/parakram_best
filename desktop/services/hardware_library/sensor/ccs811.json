@@ -1,0 +1,27 @@
+{
+  "id": "ccs811",
+  "name": "CCS811 eCO2/TVOC",
+  "category": "sensor",
+  "description": "CCS811 eCO2/TVOC firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_CCS811.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x5A",
+  "platformio_deps": [
+    "adafruit/Adafruit CCS811 Library@^1.1.3"
+  ],
+  "firmware_template": {
+    "header": "#ifndef CCS811_H\n#define CCS811_H\nvoid ccs811_setup();\nvoid ccs811_loop();\nuint16_t ccs811_get_eco2();\nuint16_t ccs811_get_tvoc();\n#endif",
+    "source": "#include \"ccs811.h\"\n#include <Wire.h>\n#include <Adafruit_CCS811.h>\nstatic Adafruit_CCS811 ccs;\nstatic uint16_t _eco2=0,_tvoc=0;static unsigned long _l=0;\nvoid ccs811_setup(){Wire.begin();if(!ccs.begin()){Serial.println(\"[ccs811] Fail!\");return;}while(!ccs.available());Serial.println(\"[ccs811] OK\");}\nvoid ccs811_loop(){if(millis()-_l<1000)return;_l=millis();if(ccs.available()&&!ccs.readData()){_eco2=ccs.geteCO2();_tvoc=ccs.getTVOC();}}\nuint16_t ccs811_get_eco2(){return _eco2;}\nuint16_t ccs811_get_tvoc(){return _tvoc;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

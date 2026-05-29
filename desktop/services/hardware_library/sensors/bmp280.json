@@ -1,0 +1,60 @@
+{
+  "id": "bmp280_pressure",
+  "name": "BMP280 Barometric Pressure",
+  "category": "sensor",
+  "description": "I2C barometric pressure and temperature sensor. Measures atmospheric pressure and altitude.",
+  "inputs": [],
+  "outputs": [
+    {
+      "name": "pressure",
+      "data_type": "float",
+      "description": "Atmospheric pressure in hPa"
+    },
+    {
+      "name": "temperature",
+      "data_type": "float",
+      "description": "Temperature in Celsius"
+    },
+    {
+      "name": "altitude",
+      "data_type": "float",
+      "description": "Estimated altitude in meters"
+    }
+  ],
+  "configuration": [
+    {
+      "key": "i2c_address",
+      "label": "I2C Address",
+      "value_type": "string",
+      "default": "0x76",
+      "description": "I2C address (0x76 or 0x77)"
+    },
+    {
+      "key": "sda_pin",
+      "label": "SDA Pin",
+      "value_type": "int",
+      "default": "21",
+      "description": "I2C SDA GPIO pin"
+    },
+    {
+      "key": "scl_pin",
+      "label": "SCL Pin",
+      "value_type": "int",
+      "default": "22",
+      "description": "I2C SCL GPIO pin"
+    }
+  ],
+  "code_template": "bmp280_template",
+  "icon": "gauge",
+  "color": "#3b82f6",
+  "libraries": [
+    "adafruit/Adafruit BMP280 Library@^2.6.8"
+  ],
+  "pins_required": {
+    "i2c": 1
+  },
+  "firmware_template": {
+    "header": "#ifndef BMP280_PRESSURE_H\n#define BMP280_PRESSURE_H\n\n#include <Adafruit_BMP280.h>\n\nclass BMP280Pressure {\npublic:\n    void setup(uint8_t i2c_address, int sda_pin, int scl_pin);\n    float getPressure();\n    float getTemperature();\n    float getAltitude();\n\nprivate:\n    Adafruit_BMP280 bmp;\n    uint8_t _i2c_address;\n    int _sda_pin;\n    int _scl_pin;\n};\n\n#endif // BMP280_PRESSURE_H",
+    "source": "#include \"bmp280_pressure.h\"\n\nvoid BMP280Pressure::setup(uint8_t i2c_address, int sda_pin, int scl_pin) {\n    _i2c_address = i2c_address;\n    _sda_pin = sda_pin;\n    _scl_pin = scl_pin;\n\n    Wire.begin(_sda_pin, _scl_pin);\n\n    uint8_t retries = 5;\n    while (retries--) {\n        if (bmp.begin(_i2c_address)) {\n            Serial.println(\"[bmp280_pressure] BMP280 initialized successfully\");\n            return;\n        }\n        delay(100);\n    }\n\n    Serial.println(\"[bmp280_pressure] Failed to initialize BMP280, retrying...\");\n}\n\nfloat BMP280Pressure::getPressure() {\n    if (bmp.readPressure()) {\n        return bmp.seaLevelForAltitude(0); // Assuming sea level pressure is 1013.25 hPa\n    } else {\n        Serial.println(\"[bmp280_pressure] Failed to read pressure\");\n        return -1;\n    }\n}\n\nfloat BMP280Pressure::getTemperature() {\n    if (bmp.readTemperature()) {\n        return bmp.temperature;\n    } else {\n        Serial.println(\"[bmp280_pressure] Failed to read temperature\");\n        return -1;\n    }\n}\n\nfloat BMP280Pressure::getAltitude() {\n    float pressure = getPressure();\n    if (pressure != -1) {\n        return bmp.readAltitude(1013.25); // Assuming sea level pressure is 1013.25 hPa\n    } else {\n        Serial.println(\"[bmp280_pressure] Failed to read altitude\");\n        return -1;\n    }\n}"
+  }
+}

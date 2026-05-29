@@ -1,0 +1,27 @@
+{
+  "id": "max17048",
+  "name": "MAX17048 LiPo Fuel Gauge",
+  "category": "sensor",
+  "description": "MAX17048 LiPo Fuel Gauge firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_MAX1704X.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x36",
+  "platformio_deps": [
+    "adafruit/Adafruit MAX1704X@^1.0.2"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MAX17048_H\n#define MAX17048_H\nvoid max17048_setup();\nvoid max17048_loop();\nfloat max17048_voltage();\nfloat max17048_percent();\nfloat max17048_charge_rate();\n#endif",
+    "source": "#include \"max17048.h\"\n#include <Wire.h>\n#include <Adafruit_MAX1704X.h>\nstatic Adafruit_MAX17048 fg;\nstatic float _v=0,_pct=0,_rate=0;static unsigned long _l=0;\nvoid max17048_setup(){Wire.begin();if(!fg.begin()){Serial.println(\"[max17048] Fail!\");return;}Serial.println(\"[max17048] OK\");}\nvoid max17048_loop(){if(millis()-_l<5000)return;_l=millis();_v=fg.cellVoltage();_pct=fg.cellPercent();_rate=fg.chargeRate();}\nfloat max17048_voltage(){return _v;}\nfloat max17048_percent(){return _pct;}\nfloat max17048_charge_rate(){return _rate;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

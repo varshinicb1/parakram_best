@@ -1,0 +1,27 @@
+{
+  "id": "lcd_i2c",
+  "name": "LCD 16x2 (I2C)",
+  "category": "display",
+  "description": "LCD 16x2 (I2C) firmware block",
+  "libraries": [
+    "Wire.h",
+    "LiquidCrystal_I2C.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x27",
+  "platformio_deps": [
+    "marcoschwartz/LiquidCrystal_I2C@^1.1.4"
+  ],
+  "firmware_template": {
+    "header": "#ifndef LCD_I2C_H\n#define LCD_I2C_H\n#include <LiquidCrystal_I2C.h>\nvoid lcd_setup();\nvoid lcd_clear();\nvoid lcd_print(int row, const char* text);\nvoid lcd_print_at(int col, int row, const char* text);\nvoid lcd_backlight(bool on);\n#endif",
+    "source": "#include \"lcd_i2c.h\"\n#include <Wire.h>\nstatic LiquidCrystal_I2C lcd(0x27, 16, 2);\nvoid lcd_setup() {\n  Wire.begin();\n  lcd.init();\n  lcd.backlight();\n  lcd.clear();\n  Serial.println(\"[lcd] OK 16x2\");\n}\nvoid lcd_clear() { lcd.clear(); }\nvoid lcd_print(int row, const char* t) {\n  lcd.setCursor(0, constrain(row, 0, 1));\n  lcd.print(t);\n}\nvoid lcd_print_at(int col, int row, const char* t) {\n  lcd.setCursor(col, row); lcd.print(t);\n}\nvoid lcd_backlight(bool on) { if (on) lcd.backlight(); else lcd.noBacklight(); }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

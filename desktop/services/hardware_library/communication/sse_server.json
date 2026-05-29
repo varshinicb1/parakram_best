@@ -1,0 +1,25 @@
+{
+  "id": "sse_server",
+  "name": "Server-Sent Events",
+  "category": "communication",
+  "description": "Server-Sent Events firmware block",
+  "libraries": [
+    "WiFi.h",
+    "ESPAsyncWebServer.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "me-no-dev/ESP Async WebServer@^1.2.4",
+    "me-no-dev/AsyncTCP@^1.1.4"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SSE_H\n#define SSE_H\nvoid sse_setup(uint16_t port,const char*path);\nvoid sse_send(const char*event,const char*data);\n#endif",
+    "source": "#include \"sse_server.h\"\n#include <WiFi.h>\n#include <ESPAsyncWebServer.h>\nstatic AsyncWebServer*_srv=nullptr;\nstatic AsyncEventSource*_events=nullptr;\nvoid sse_setup(uint16_t port,const char*path){_srv=new AsyncWebServer(port);_events=new AsyncEventSource(path);_srv->addHandler(_events);_srv->begin();Serial.printf(\"[sse] OK port=%d path=%s\\n\",port,path);}\nvoid sse_send(const char*ev,const char*d){if(_events)_events->send(d,ev,millis());}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "touch_capacitive",
+  "name": "ESP32 Touch Sensor",
+  "category": "sensor",
+  "description": "ESP32 Touch Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "touch": 4
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef TOUCH_CAP_H\n#define TOUCH_CAP_H\nvoid touch_setup(uint8_t pin, uint16_t threshold);\nvoid touch_loop();\nbool touch_pressed();\nuint16_t touch_get_value();\n#endif",
+    "source": "#include \"touch_capacitive.h\"\n#include <Arduino.h>\nstatic uint8_t _pin=4;static uint16_t _thresh=40;static uint16_t _val=0;static bool _pressed=false;static unsigned long _l=0;\nvoid touch_setup(uint8_t p,uint16_t t){_pin=p;_thresh=t;Serial.printf(\"[touch] OK pin=%d thresh=%d\\n\",p,t);}\nvoid touch_loop(){if(millis()-_l<50)return;_l=millis();_val=touchRead(_pin);_pressed=(_val<_thresh);}\nbool touch_pressed(){return _pressed;}\nuint16_t touch_get_value(){return _val;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

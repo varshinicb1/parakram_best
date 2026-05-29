@@ -1,0 +1,21 @@
+{
+  "id": "max9814",
+  "name": "MAX9814 Microphone (Analog)",
+  "category": "sensor",
+  "description": "MAX9814 Microphone (Analog) firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 36
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef MAX9814_H\n#define MAX9814_H\nvoid max9814_setup();\nvoid max9814_loop();\nint max9814_get_raw();\nfloat max9814_get_db();\nint max9814_get_peak();\n#endif",
+    "source": "#include \"max9814.h\"\n#include <Arduino.h>\n#define MIC_PIN 36\nstatic int _raw=0,_peak=0;static float _db=0;static unsigned long _l=0;\nvoid max9814_setup(){analogReadResolution(12);Serial.println(\"[mic] OK\");}\nvoid max9814_loop(){if(millis()-_l<50)return;_l=millis();int mn=4095,mx=0;for(int i=0;i<64;i++){int s=analogRead(MIC_PIN);if(s<mn)mn=s;if(s>mx)mx=s;}_raw=(mn+mx)/2;_peak=mx-mn;_db=20.0*log10((float)_peak/4095.0)+94.0;}\nint max9814_get_raw(){return _raw;}\nfloat max9814_get_db(){return _db;}\nint max9814_get_peak(){return _peak;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

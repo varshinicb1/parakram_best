@@ -1,0 +1,26 @@
+{
+  "id": "stepper_28byj",
+  "name": "28BYJ-48 Stepper + ULN2003",
+  "category": "actuator",
+  "description": "28BYJ-48 Stepper + ULN2003 firmware block",
+  "libraries": [
+    "Stepper.h"
+  ],
+  "pins": {
+    "in1": 25,
+    "in2": 26,
+    "in3": 27,
+    "in4": 14
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef STEPPER_28BYJ_H\n#define STEPPER_28BYJ_H\nvoid stepper_28byj_setup();\nvoid stepper_28byj_step(int steps);\nvoid stepper_28byj_set_speed(int rpm);\n#endif",
+    "source": "#include \"stepper_28byj.h\"\n#include <Stepper.h>\n#define STEPS_PER_REV 2048\nstatic Stepper motor(STEPS_PER_REV,25,27,26,14);\nvoid stepper_28byj_setup(){motor.setSpeed(15);Serial.println(\"[28byj] OK\");}\nvoid stepper_28byj_step(int s){motor.step(s);}\nvoid stepper_28byj_set_speed(int rpm){motor.setSpeed(rpm);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

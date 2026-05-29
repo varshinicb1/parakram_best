@@ -1,0 +1,23 @@
+{
+  "id": "stepper_a4988",
+  "name": "Stepper Motor (A4988)",
+  "category": "actuator",
+  "description": "Stepper Motor (A4988) firmware block",
+  "libraries": [],
+  "pins": {
+    "step": 25,
+    "dir": 26,
+    "enable": 27
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef STEPPER_A4988_H\n#define STEPPER_A4988_H\nvoid stepper_setup();\nvoid stepper_loop();\nvoid stepper_move(int steps, bool clockwise);\nvoid stepper_set_speed(int rpm);\nvoid stepper_enable(bool en);\n#endif",
+    "source": "#include \"stepper_a4988.h\"\n#include <Arduino.h>\n#define STEP_PIN 25\n#define DIR_PIN 26\n#define EN_PIN 27\nstatic int _stepsLeft=0;static bool _cw=true;\nstatic unsigned long _stepDelay=1000;static unsigned long _lastStep=0;\nvoid stepper_setup(){pinMode(STEP_PIN,OUTPUT);pinMode(DIR_PIN,OUTPUT);pinMode(EN_PIN,OUTPUT);digitalWrite(EN_PIN,LOW);Serial.println(\"[stepper] OK\");}\nvoid stepper_loop(){\n  if(_stepsLeft<=0)return;\n  if(micros()-_lastStep<_stepDelay)return;\n  _lastStep=micros();\n  digitalWrite(STEP_PIN,HIGH);delayMicroseconds(2);digitalWrite(STEP_PIN,LOW);\n  _stepsLeft--;\n}\nvoid stepper_move(int s,bool cw){_stepsLeft=abs(s);_cw=cw;digitalWrite(DIR_PIN,cw?HIGH:LOW);}\nvoid stepper_set_speed(int rpm){_stepDelay=60000000UL/(200*rpm);}\nvoid stepper_enable(bool en){digitalWrite(EN_PIN,en?LOW:HIGH);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,27 @@
+{
+  "id": "mpu6050",
+  "name": "MPU6050 IMU 6-Axis",
+  "category": "sensor",
+  "description": "MPU6050 IMU 6-Axis firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_MPU6050.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x68",
+  "platformio_deps": [
+    "adafruit/Adafruit MPU6050@^2.2.6"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MPU6050_H\n#define MPU6050_H\n#include <Adafruit_MPU6050.h>\nvoid mpu6050_setup();\nvoid mpu6050_loop();\nfloat mpu6050_get_accel_x();\nfloat mpu6050_get_accel_y();\nfloat mpu6050_get_accel_z();\nfloat mpu6050_get_gyro_x();\nfloat mpu6050_get_gyro_y();\nfloat mpu6050_get_gyro_z();\nfloat mpu6050_get_temperature();\n#endif",
+    "source": "#include \"mpu6050.h\"\n#include <Wire.h>\n#include <Adafruit_Sensor.h>\nstatic Adafruit_MPU6050 mpu;\nstatic float _ax=0,_ay=0,_az=0,_gx=0,_gy=0,_gz=0,_t=0;\nstatic unsigned long _last=0;\nvoid mpu6050_setup() {\n  Wire.begin();\n  if (!mpu.begin()) { Serial.println(\"[mpu6050] Init failed!\"); return; }\n  mpu.setAccelerometerRange(MPU6050_RANGE_8_G);\n  mpu.setGyroRange(MPU6050_RANGE_500_DEG);\n  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);\n  Serial.println(\"[mpu6050] OK\");\n}\nvoid mpu6050_loop() {\n  if (millis()-_last < 50) return;\n  _last = millis();\n  sensors_event_t a, g, temp;\n  mpu.getEvent(&a, &g, &temp);\n  _ax=a.acceleration.x; _ay=a.acceleration.y; _az=a.acceleration.z;\n  _gx=g.gyro.x; _gy=g.gyro.y; _gz=g.gyro.z;\n  _t=temp.temperature;\n}\nfloat mpu6050_get_accel_x(){return _ax;}\nfloat mpu6050_get_accel_y(){return _ay;}\nfloat mpu6050_get_accel_z(){return _az;}\nfloat mpu6050_get_gyro_x(){return _gx;}\nfloat mpu6050_get_gyro_y(){return _gy;}\nfloat mpu6050_get_gyro_z(){return _gz;}\nfloat mpu6050_get_temperature(){return _t;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

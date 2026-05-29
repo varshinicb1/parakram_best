@@ -1,0 +1,21 @@
+{
+  "id": "nvs_preferences",
+  "name": "NVS Preferences",
+  "category": "storage",
+  "description": "NVS Preferences firmware block",
+  "libraries": [
+    "Preferences.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef NVS_PREFS_H\n#define NVS_PREFS_H\n#include <Preferences.h>\nvoid nvs_setup();\nvoid nvs_put_int(const char* key, int val);\nint nvs_get_int(const char* key, int def);\nvoid nvs_put_float(const char* key, float val);\nfloat nvs_get_float(const char* key, float def);\nvoid nvs_put_string(const char* key, const char* val);\nString nvs_get_string(const char* key, const char* def);\n#endif",
+    "source": "#include \"nvs_prefs.h\"\nstatic Preferences prefs;\nvoid nvs_setup(){prefs.begin(\"parakram\",false);Serial.println(\"[nvs] OK\");}\nvoid nvs_put_int(const char*k,int v){prefs.putInt(k,v);}\nint nvs_get_int(const char*k,int d){return prefs.getInt(k,d);}\nvoid nvs_put_float(const char*k,float v){prefs.putFloat(k,v);}\nfloat nvs_get_float(const char*k,float d){return prefs.getFloat(k,d);}\nvoid nvs_put_string(const char*k,const char*v){prefs.putString(k,v);}\nString nvs_get_string(const char*k,const char*d){return prefs.getString(k,d);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

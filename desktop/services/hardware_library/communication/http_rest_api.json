@@ -1,0 +1,25 @@
+{
+  "id": "http_rest_api",
+  "name": "REST API Client",
+  "category": "communication",
+  "description": "REST API Client firmware block",
+  "libraries": [
+    "WiFi.h",
+    "HTTPClient.h",
+    "ArduinoJson.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "bblanchon/ArduinoJson@^7.0.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef REST_API_H\n#define REST_API_H\n#include <Arduino.h>\nvoid rest_setup();\nString rest_get(const char*url);\nString rest_post(const char*url,const char*json);\nint rest_last_code();\n#endif",
+    "source": "#include \"http_rest_api.h\"\n#include <WiFi.h>\n#include <HTTPClient.h>\nstatic int _code=0;\nvoid rest_setup(){Serial.println(\"[rest] OK\");}\nString rest_get(const char*url){HTTPClient http;http.begin(url);_code=http.GET();String r=http.getString();http.end();return r;}\nString rest_post(const char*url,const char*json){HTTPClient http;http.begin(url);http.addHeader(\"Content-Type\",\"application/json\");_code=http.POST(json);String r=http.getString();http.end();return r;}\nint rest_last_code(){return _code;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

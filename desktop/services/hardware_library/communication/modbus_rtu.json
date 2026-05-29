@@ -1,0 +1,27 @@
+{
+  "id": "modbus_rtu",
+  "name": "Modbus RTU Master",
+  "category": "communication",
+  "description": "Modbus RTU Master firmware block",
+  "libraries": [
+    "ModbusMaster.h"
+  ],
+  "pins": {
+    "rx": 16,
+    "tx": 17,
+    "de": 4
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "4-20ma/ModbusMaster@^2.0.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MODBUS_RTU_H\n#define MODBUS_RTU_H\nvoid modbus_setup();\nuint16_t modbus_read_register(uint8_t slave, uint16_t reg);\nbool modbus_write_register(uint8_t slave, uint16_t reg, uint16_t val);\n#endif",
+    "source": "#include \"modbus_rtu.h\"\n#include <HardwareSerial.h>\n#include <ModbusMaster.h>\n#define DE_PIN 4\nstatic HardwareSerial mbSerial(1);\nstatic ModbusMaster node;\nvoid _pre(){digitalWrite(DE_PIN,HIGH);}\nvoid _post(){digitalWrite(DE_PIN,LOW);}\nvoid modbus_setup(){pinMode(DE_PIN,OUTPUT);mbSerial.begin(9600,SERIAL_8N1,16,17);node.begin(1,mbSerial);node.preTransmission(_pre);node.postTransmission(_post);Serial.println(\"[modbus] OK\");}\nuint16_t modbus_read_register(uint8_t s,uint16_t r){node.begin(s,mbSerial);uint8_t res=node.readHoldingRegisters(r,1);return res==node.ku8MBSuccess?node.getResponseBuffer(0):0xFFFF;}\nbool modbus_write_register(uint8_t s,uint16_t r,uint16_t v){node.begin(s,mbSerial);return node.writeSingleRegister(r,v)==node.ku8MBSuccess;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

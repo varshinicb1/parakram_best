@@ -1,0 +1,19 @@
+{
+  "id": "deep_sleep",
+  "name": "Deep Sleep Manager",
+  "category": "power",
+  "description": "Deep Sleep Manager firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef DEEP_SLEEP_H\n#define DEEP_SLEEP_H\n#include <Arduino.h>\nvoid sleep_setup();\nvoid sleep_for(uint64_t seconds);\nvoid sleep_until_pin(uint8_t pin, bool level);\nbool sleep_was_wakeup();\n#endif",
+    "source": "#include \"deep_sleep.h\"\n#include <esp_sleep.h>\nvoid sleep_setup(){\n  if(esp_sleep_get_wakeup_cause()!=ESP_SLEEP_WAKEUP_UNDEFINED)\n    Serial.println(\"[sleep] Woke up!\");\n  else Serial.println(\"[sleep] First boot\");\n}\nvoid sleep_for(uint64_t s){\n  esp_sleep_enable_timer_wakeup(s*1000000ULL);\n  Serial.printf(\"[sleep] Sleeping %llus\\n\",s);Serial.flush();\n  esp_deep_sleep_start();\n}\nvoid sleep_until_pin(uint8_t p,bool lvl){\n  esp_sleep_enable_ext0_wakeup((gpio_num_t)p,lvl?1:0);\n  Serial.printf(\"[sleep] Waiting GPIO%d\\n\",p);Serial.flush();\n  esp_deep_sleep_start();\n}\nbool sleep_was_wakeup(){return esp_sleep_get_wakeup_cause()!=ESP_SLEEP_WAKEUP_UNDEFINED;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

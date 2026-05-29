@@ -1,0 +1,26 @@
+{
+  "id": "pmsa003",
+  "name": "PMSA003 PM2.5 Air Quality",
+  "category": "sensor",
+  "description": "PMSA003 PM2.5 Air Quality firmware block",
+  "libraries": [
+    "Adafruit_PM25AQI.h"
+  ],
+  "pins": {
+    "rx": 16,
+    "tx": 17
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit PM25 AQI Sensor@^1.1.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef PMSA003_H\n#define PMSA003_H\nvoid pmsa003_setup();\nvoid pmsa003_loop();\nuint16_t pmsa003_get_pm10();\nuint16_t pmsa003_get_pm25();\nuint16_t pmsa003_get_pm100();\n#endif",
+    "source": "#include \"pmsa003.h\"\n#include <HardwareSerial.h>\n#include <Adafruit_PM25AQI.h>\nstatic HardwareSerial pmSerial(1);\nstatic Adafruit_PM25AQI aqi;\nstatic uint16_t _pm10=0,_pm25=0,_pm100=0;\nstatic unsigned long _last=0;\nvoid pmsa003_setup(){pmSerial.begin(9600,SERIAL_8N1,16,17);if(!aqi.begin_UART(&pmSerial)){Serial.println(\"[pm] Fail!\");return;}Serial.println(\"[pm] OK\");}\nvoid pmsa003_loop(){if(millis()-_last<2000)return;_last=millis();PM25_AQI_Data d;if(aqi.read(&d)){_pm10=d.pm10_standard;_pm25=d.pm25_standard;_pm100=d.pm100_standard;}}\nuint16_t pmsa003_get_pm10(){return _pm10;}\nuint16_t pmsa003_get_pm25(){return _pm25;}\nuint16_t pmsa003_get_pm100(){return _pm100;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

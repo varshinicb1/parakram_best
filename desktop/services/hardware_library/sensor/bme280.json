@@ -1,0 +1,27 @@
+{
+  "id": "bme280",
+  "name": "BME280 Temp/Hum/Pressure",
+  "category": "sensor",
+  "description": "BME280 Temp/Hum/Pressure firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_BME280.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x76",
+  "platformio_deps": [
+    "adafruit/Adafruit BME280 Library@^2.2.4"
+  ],
+  "firmware_template": {
+    "header": "#ifndef BME280_H\n#define BME280_H\n#include <Adafruit_BME280.h>\nvoid bme280_setup();\nvoid bme280_loop();\nfloat bme280_get_temperature();\nfloat bme280_get_humidity();\nfloat bme280_get_pressure();\nfloat bme280_get_altitude();\n#endif",
+    "source": "#include \"bme280.h\"\n#include <Wire.h>\nstatic Adafruit_BME280 bme;\nstatic float _t=0,_h=0,_p=0,_a=0;\nstatic unsigned long _last=0;\nvoid bme280_setup(){Wire.begin();if(!bme.begin(0x76)){Serial.println(\"[bme280] Fail!\");return;}Serial.println(\"[bme280] OK\");}\nvoid bme280_loop(){if(millis()-_last<2000)return;_last=millis();_t=bme.readTemperature();_h=bme.readHumidity();_p=bme.readPressure()/100.0F;_a=bme.readAltitude(1013.25);}\nfloat bme280_get_temperature(){return _t;}\nfloat bme280_get_humidity(){return _h;}\nfloat bme280_get_pressure(){return _p;}\nfloat bme280_get_altitude(){return _a;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,89 @@
+{
+    "nodes": [
+        {
+            "id": "sensor_1",
+            "block_id": "dht22_temperature_humidity",
+            "name": "Temperature Sensor",
+            "category": "sensor",
+            "description": "DHT22 reading temperature and humidity",
+            "position": {
+                "x": 100,
+                "y": 200
+            },
+            "configuration": {
+                "pin": 4,
+                "read_interval": 2000
+            },
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "temperature",
+                    "data_type": "float"
+                },
+                {
+                    "name": "humidity",
+                    "data_type": "float"
+                }
+            ]
+        },
+        {
+            "id": "logic_1",
+            "block_id": "threshold_logic",
+            "name": "Threshold Logic",
+            "category": "logic",
+            "description": "Checks if temperature exceeds threshold",
+            "position": {
+                "x": 400,
+                "y": 200
+            },
+            "configuration": {
+                "threshold": 30.0,
+                "comparison": "greater_than"
+            },
+            "inputs": [
+                {
+                    "name": "value",
+                    "data_type": "float"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "triggered",
+                    "data_type": "bool"
+                }
+            ]
+        },
+        {
+            "id": "wifi_1",
+            "block_id": "wifi_station",
+            "name": "WiFi",
+            "category": "communication",
+            "description": "WiFi connectivity",
+            "position": {
+                "x": 700,
+                "y": 100
+            },
+            "configuration": {
+                "ssid": "MyNetwork",
+                "password": "MyPassword"
+            },
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "connected",
+                    "data_type": "bool"
+                }
+            ]
+        }
+    ],
+    "edges": [
+        {
+            "id": "edge_1",
+            "source": "sensor_1",
+            "source_handle": "temperature",
+            "target": "logic_1",
+            "target_handle": "value",
+            "data_type": "float"
+        }
+    ]
+}

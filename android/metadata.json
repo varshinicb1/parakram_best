@@ -1,0 +1,6 @@
+{
+  "name": "Parakram",
+  "description": "An AI-native operating layer and peer-to-peer real-time dashboard for high-performance hardware orchestration and embedded diagnostics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

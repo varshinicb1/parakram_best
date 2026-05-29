@@ -1,0 +1,27 @@
+{
+  "id": "dac_mcp4725",
+  "name": "MCP4725 12-bit DAC",
+  "category": "actuator",
+  "description": "MCP4725 12-bit DAC firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_MCP4725.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x60",
+  "platformio_deps": [
+    "adafruit/Adafruit MCP4725@^2.0.2"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MCP4725_H\n#define MCP4725_H\nvoid mcp4725_setup();\nvoid mcp4725_set_voltage(float volts);\nvoid mcp4725_set_raw(uint16_t val);\n#endif",
+    "source": "#include \"dac_mcp4725.h\"\n#include <Wire.h>\n#include <Adafruit_MCP4725.h>\nstatic Adafruit_MCP4725 dac;\nvoid mcp4725_setup(){Wire.begin();dac.begin(0x60);Serial.println(\"[dac] OK 12-bit\");}\nvoid mcp4725_set_voltage(float v){uint16_t raw=(uint16_t)(v/3.3*4095);dac.setVoltage(raw,false);}\nvoid mcp4725_set_raw(uint16_t v){dac.setVoltage(v,false);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

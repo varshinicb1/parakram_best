@@ -1,0 +1,27 @@
+{
+  "id": "pcf8574",
+  "name": "PCF8574 I/O Expander",
+  "category": "sensor",
+  "description": "PCF8574 I/O Expander firmware block",
+  "libraries": [
+    "Wire.h",
+    "PCF8574.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x20",
+  "platformio_deps": [
+    "robtillaart/PCF8574@^0.4.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef PCF8574_H\n#define PCF8574_H\nvoid pcf8574_setup();\nvoid pcf8574_write(uint8_t pin, bool val);\nbool pcf8574_read(uint8_t pin);\nvoid pcf8574_write_byte(uint8_t val);\nuint8_t pcf8574_read_byte();\n#endif",
+    "source": "#include \"pcf8574.h\"\n#include <Wire.h>\n#include <PCF8574.h>\nstatic PCF8574 pcf(0x20);\nvoid pcf8574_setup(){Wire.begin();if(!pcf.begin()){Serial.println(\"[pcf8574] Fail!\");return;}Serial.println(\"[pcf8574] OK\");}\nvoid pcf8574_write(uint8_t p,bool v){pcf.write(p,v?HIGH:LOW);}\nbool pcf8574_read(uint8_t p){return pcf.read(p)==HIGH;}\nvoid pcf8574_write_byte(uint8_t v){pcf.write8(v);}\nuint8_t pcf8574_read_byte(){return pcf.read8();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

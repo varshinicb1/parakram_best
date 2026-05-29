@@ -1,0 +1,21 @@
+{
+  "id": "button_debounce",
+  "name": "Button Debounce",
+  "category": "control_blocks",
+  "description": "Button Debounce firmware block",
+  "libraries": [],
+  "pins": {
+    "button": 0
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef BTN_DEBOUNCE_H\n#define BTN_DEBOUNCE_H\nvoid btn_setup(uint8_t pin);\nvoid btn_loop();\nbool btn_pressed();\nbool btn_released();\nbool btn_held(uint16_t ms);\nuint32_t btn_press_count();\n#endif",
+    "source": "#include \"button_debounce.h\"\n#include <Arduino.h>\nstatic uint8_t _pin=0;static bool _state=false,_lastState=false,_pressed=false,_released=false;\nstatic unsigned long _lastDebounce=0,_pressStart=0;static uint32_t _cnt=0;\nvoid btn_setup(uint8_t p){_pin=p;pinMode(p,INPUT_PULLUP);Serial.printf(\"[btn] OK pin=%d\\n\",p);}\nvoid btn_loop(){bool r=!digitalRead(_pin);_pressed=false;_released=false;if(r!=_lastState)_lastDebounce=millis();if(millis()-_lastDebounce>50){if(r!=_state){_state=r;if(_state){_pressed=true;_pressStart=millis();_cnt++;}else{_released=true;}}}_lastState=r;}\nbool btn_pressed(){return _pressed;}\nbool btn_released(){return _released;}\nbool btn_held(uint16_t ms){return _state&&(millis()-_pressStart>=ms);}\nuint32_t btn_press_count(){return _cnt;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

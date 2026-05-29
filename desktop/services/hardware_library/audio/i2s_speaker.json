@@ -1,0 +1,25 @@
+{
+  "id": "i2s_speaker",
+  "name": "I2S Speaker (MAX98357)",
+  "category": "audio",
+  "description": "I2S Speaker (MAX98357) firmware block",
+  "libraries": [
+    "driver/i2s.h"
+  ],
+  "pins": {
+    "bclk": 26,
+    "lrc": 25,
+    "din": 22
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef I2S_SPEAKER_H\n#define I2S_SPEAKER_H\n#include <Arduino.h>\nvoid i2s_spk_setup();\nvoid i2s_spk_write(const int16_t* samples, size_t count);\nvoid i2s_spk_tone(uint16_t freq, uint16_t duration_ms);\nvoid i2s_spk_stop();\n#endif",
+    "source": "#include \"i2s_speaker.h\"\n#include <driver/i2s.h>\n#include <math.h>\n#define SPK_BCLK 26\n#define SPK_LRC 25\n#define SPK_DIN 22\n#define SPK_RATE 44100\nvoid i2s_spk_setup() {\n  i2s_config_t cfg = {};\n  cfg.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX);\n  cfg.sample_rate = SPK_RATE;\n  cfg.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;\n  cfg.channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT;\n  cfg.communication_format = I2S_COMM_FORMAT_STAND_I2S;\n  cfg.dma_buf_count = 8;\n  cfg.dma_buf_len = 1024;\n  i2s_driver_install(I2S_NUM_1, &cfg, 0, NULL);\n  i2s_pin_config_t pins = { .bck_io_num = SPK_BCLK, .ws_io_num = SPK_LRC, .data_out_num = SPK_DIN, .data_in_num = -1 };\n  i2s_set_pin(I2S_NUM_1, &pins);\n  Serial.println(\"[i2s_spk] OK 44.1kHz\");\n}\nvoid i2s_spk_write(const int16_t* s, size_t n) {\n  size_t written = 0;\n  i2s_write(I2S_NUM_1, s, n * 2, &written, portMAX_DELAY);\n}\nvoid i2s_spk_tone(uint16_t freq, uint16_t dur) {\n  int samples = SPK_RATE * dur / 1000;\n  int16_t buf[256];\n  for (int i = 0; i < samples; i += 256) {\n    int chunk = (samples - i < 256) ? samples - i : 256;\n    for (int j = 0; j < chunk; j++) {\n      buf[j] = (int16_t)(sinf(2.0f * 3.14159f * freq * (i+j) / SPK_RATE) * 16000);\n    }\n    i2s_spk_write(buf, chunk);\n  }\n}\nvoid i2s_spk_stop() {\n  int16_t silence[64] = {0};\n  i2s_spk_write(silence, 64);\n}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

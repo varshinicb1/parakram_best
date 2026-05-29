@@ -1,0 +1,27 @@
+{
+  "id": "vl53l1x",
+  "name": "VL53L1X ToF 4m Range",
+  "category": "sensor",
+  "description": "VL53L1X ToF 4m Range firmware block",
+  "libraries": [
+    "Wire.h",
+    "VL53L1X.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x29",
+  "platformio_deps": [
+    "pololu/VL53L1X@^1.3.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef VL53L1X_H\n#define VL53L1X_H\nvoid vl53l1x_setup();\nvoid vl53l1x_loop();\nuint16_t vl53l1x_get_distance_mm();\nbool vl53l1x_timed_out();\n#endif",
+    "source": "#include \"vl53l1x.h\"\n#include <Wire.h>\n#include <VL53L1X.h>\nstatic VL53L1X sensor;\nstatic uint16_t _mm=0;static bool _timeout=false;static unsigned long _l=0;\nvoid vl53l1x_setup(){Wire.begin();sensor.setTimeout(500);if(!sensor.init()){Serial.println(\"[vl53l1x] Fail!\");return;}sensor.setDistanceMode(VL53L1X::Long);sensor.setMeasurementTimingBudget(50000);sensor.startContinuous(50);Serial.println(\"[vl53l1x] OK\");}\nvoid vl53l1x_loop(){if(millis()-_l<100)return;_l=millis();_mm=sensor.read();_timeout=sensor.timeoutOccurred();}\nuint16_t vl53l1x_get_distance_mm(){return _mm;}\nbool vl53l1x_timed_out(){return _timeout;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

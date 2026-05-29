@@ -1,0 +1,50 @@
+{
+    "id": "tls_config",
+    "name": "TLS Configuration",
+    "category": "security",
+    "description": "Root CA certificates and TLS client configuration for secure MQTT/HTTPS.",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "configured",
+            "data_type": "bool"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "root_ca",
+            "label": "Root CA (PEM)",
+            "value_type": "string",
+            "default": ""
+        },
+        {
+            "key": "client_cert",
+            "label": "Client Cert (PEM)",
+            "value_type": "string",
+            "default": ""
+        },
+        {
+            "key": "client_key",
+            "label": "Client Key (PEM)",
+            "value_type": "string",
+            "default": ""
+        },
+        {
+            "key": "verify_server",
+            "label": "Verify Server",
+            "value_type": "bool",
+            "default": "true"
+        }
+    ],
+    "libraries": [],
+    "firmware_template": {
+        "header": "#ifndef TLS_CONFIG_H\n#define TLS_CONFIG_H\n#include <Arduino.h>\n#include <WiFiClientSecure.h>\n\nvoid tls_config_setup();\nWiFiClientSecure& tls_get_client();\n\n#endif",
+        "source": "#include \"tls_config.h\"\n#include \"config.h\"\n\nWiFiClientSecure _secureClient;\n\n// Embed your root CA here or load from SPIFFS\nconst char* _rootCA = R\"EOF(\n-----BEGIN CERTIFICATE-----\nMIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw\n... (paste your CA cert)\n-----END CERTIFICATE-----\n)EOF\";\n\nvoid tls_config_setup() {\n    _secureClient.setCACert(_rootCA);\n    // Uncomment for mutual TLS:\n    // _secureClient.setCertificate(clientCert);\n    // _secureClient.setPrivateKey(clientKey);\n    Serial.println(\"[tls] Secure client configured\");\n}\n\nWiFiClientSecure& tls_get_client() { return _secureClient; }"
+    },
+    "icon": "🔒",
+    "color": "#dc2626",
+    "memory_estimate": {
+        "flash": 40000,
+        "sram": 16000
+    }
+}

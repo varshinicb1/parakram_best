@@ -1,0 +1,26 @@
+{
+  "id": "gps_neo6m",
+  "name": "GPS NEO-6M",
+  "category": "sensor",
+  "description": "GPS NEO-6M firmware block",
+  "libraries": [
+    "TinyGPSPlus.h"
+  ],
+  "pins": {
+    "rx": 16,
+    "tx": 17
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "mikalhart/TinyGPSPlus@^1.0.3"
+  ],
+  "firmware_template": {
+    "header": "#ifndef GPS_NEO6M_H\n#define GPS_NEO6M_H\nvoid gps_setup();\nvoid gps_loop();\ndouble gps_get_lat();\ndouble gps_get_lng();\nfloat gps_get_altitude();\nfloat gps_get_speed();\nint gps_get_satellites();\n#endif",
+    "source": "#include \"gps_neo6m.h\"\n#include <TinyGPSPlus.h>\n#include <HardwareSerial.h>\nstatic TinyGPSPlus gps;\nstatic HardwareSerial gpsSerial(1);\nstatic double _lat=0,_lng=0;static float _alt=0,_spd=0;static int _sat=0;\nvoid gps_setup(){gpsSerial.begin(9600,SERIAL_8N1,16,17);Serial.println(\"[gps] OK\");}\nvoid gps_loop(){\n  while(gpsSerial.available())gps.encode(gpsSerial.read());\n  if(gps.location.isUpdated()){_lat=gps.location.lat();_lng=gps.location.lng();}\n  if(gps.altitude.isUpdated())_alt=gps.altitude.meters();\n  if(gps.speed.isUpdated())_spd=gps.speed.kmph();\n  if(gps.satellites.isUpdated())_sat=gps.satellites.value();\n}\ndouble gps_get_lat(){return _lat;}\ndouble gps_get_lng(){return _lng;}\nfloat gps_get_altitude(){return _alt;}\nfloat gps_get_speed(){return _spd;}\nint gps_get_satellites(){return _sat;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

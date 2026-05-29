@@ -1,0 +1,23 @@
+{
+  "id": "pump_peristaltic",
+  "name": "Peristaltic Pump",
+  "category": "actuator",
+  "description": "Peristaltic Pump firmware block",
+  "libraries": [],
+  "pins": {
+    "in1": 25,
+    "in2": 26,
+    "en": 27
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef PUMP_H\n#define PUMP_H\nvoid pump_setup();\nvoid pump_on(uint8_t speed_pct);\nvoid pump_off();\nvoid pump_dispense_ml(float ml, float ml_per_min);\n#endif",
+    "source": "#include \"pump_peristaltic.h\"\n#include <Arduino.h>\n#define PUMP_IN1 25\n#define PUMP_IN2 26\n#define PUMP_EN 27\nvoid pump_setup(){pinMode(PUMP_IN1,OUTPUT);pinMode(PUMP_IN2,OUTPUT);ledcAttach(PUMP_EN,5000,8);Serial.println(\"[pump] OK\");}\nvoid pump_on(uint8_t p){digitalWrite(PUMP_IN1,HIGH);digitalWrite(PUMP_IN2,LOW);ledcWrite(PUMP_EN,map(p,0,100,0,255));}\nvoid pump_off(){digitalWrite(PUMP_IN1,LOW);digitalWrite(PUMP_IN2,LOW);ledcWrite(PUMP_EN,0);}\nvoid pump_dispense_ml(float ml,float rate){pump_on(100);delay((unsigned long)(ml/rate*60000));pump_off();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

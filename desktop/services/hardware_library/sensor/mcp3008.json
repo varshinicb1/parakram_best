@@ -1,0 +1,26 @@
+{
+  "id": "mcp3008",
+  "name": "MCP3008 8-Ch SPI ADC",
+  "category": "sensor",
+  "description": "MCP3008 8-Ch SPI ADC firmware block",
+  "libraries": [
+    "SPI.h",
+    "Adafruit_MCP3008.h"
+  ],
+  "pins": {
+    "cs": 5
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit MCP3008@^1.1.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MCP3008_H\n#define MCP3008_H\nvoid mcp3008_setup();\nint mcp3008_read(uint8_t channel);\nfloat mcp3008_read_voltage(uint8_t channel);\n#endif",
+    "source": "#include \"mcp3008.h\"\n#include <SPI.h>\n#include <Adafruit_MCP3008.h>\nstatic Adafruit_MCP3008 adc;\nvoid mcp3008_setup(){adc.begin(5);Serial.println(\"[mcp3008] OK 8ch 10bit\");}\nint mcp3008_read(uint8_t c){return adc.readADC(c);}\nfloat mcp3008_read_voltage(uint8_t c){return adc.readADC(c)*3.3/1023.0;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

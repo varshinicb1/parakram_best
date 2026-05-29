@@ -1,0 +1,27 @@
+{
+  "id": "ina219",
+  "name": "INA219 Current/Power Monitor",
+  "category": "sensor",
+  "description": "INA219 Current/Power Monitor firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_INA219.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x40",
+  "platformio_deps": [
+    "adafruit/Adafruit INA219@^1.2.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef INA219_H\n#define INA219_H\n#include <Adafruit_INA219.h>\nvoid ina219_setup();\nvoid ina219_loop();\nfloat ina219_get_bus_voltage();\nfloat ina219_get_shunt_voltage();\nfloat ina219_get_current_mA();\nfloat ina219_get_power_mW();\n#endif",
+    "source": "#include \"ina219.h\"\n#include <Wire.h>\nstatic Adafruit_INA219 ina;\nstatic float _busV=0,_shuntV=0,_mA=0,_mW=0;\nstatic unsigned long _last=0;\nvoid ina219_setup() {\n  Wire.begin();\n  if (!ina.begin()) { Serial.println(\"[ina219] Init failed!\"); return; }\n  ina.setCalibration_32V_2A();\n  Serial.println(\"[ina219] OK\");\n}\nvoid ina219_loop() {\n  if (millis()-_last < 500) return;\n  _last = millis();\n  _busV = ina.getBusVoltage_V();\n  _shuntV = ina.getShuntVoltage_mV();\n  _mA = ina.getCurrent_mA();\n  _mW = ina.getPower_mW();\n  Serial.printf(\"[ina219] %.2fV %.1fmA %.1fmW\\n\",_busV,_mA,_mW);\n}\nfloat ina219_get_bus_voltage(){return _busV;}\nfloat ina219_get_shunt_voltage(){return _shuntV;}\nfloat ina219_get_current_mA(){return _mA;}\nfloat ina219_get_power_mW(){return _mW;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,19 @@
+{
+  "id": "event_group",
+  "name": "FreeRTOS Event Group",
+  "category": "freertos",
+  "description": "FreeRTOS Event Group firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef EVENT_GROUP_H\n#define EVENT_GROUP_H\n#include <Arduino.h>\nvoid event_group_setup();\nvoid event_set_bits(uint32_t bits);\nvoid event_clear_bits(uint32_t bits);\nuint32_t event_wait_bits(uint32_t bits,bool all,uint32_t timeout_ms);\nuint32_t event_get_bits();\n#endif",
+    "source": "#include \"event_group.h\"\nstatic EventGroupHandle_t _eg=NULL;\nvoid event_group_setup(){_eg=xEventGroupCreate();Serial.println(\"[events] OK\");}\nvoid event_set_bits(uint32_t b){xEventGroupSetBits(_eg,b);}\nvoid event_clear_bits(uint32_t b){xEventGroupClearBits(_eg,b);}\nuint32_t event_wait_bits(uint32_t b,bool all,uint32_t ms){return xEventGroupWaitBits(_eg,b,pdTRUE,all?pdTRUE:pdFALSE,ms/portTICK_PERIOD_MS);}\nuint32_t event_get_bits(){return xEventGroupGetBits(_eg);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,19 @@
+{
+  "id": "queue_ipc",
+  "name": "FreeRTOS Queue IPC",
+  "category": "freertos",
+  "description": "FreeRTOS Queue IPC firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef QUEUE_IPC_H\n#define QUEUE_IPC_H\n#include <Arduino.h>\nvoid queue_setup(uint8_t length, uint8_t item_size);\nbool queue_send(const void*item, uint32_t timeout_ms);\nbool queue_receive(void*item, uint32_t timeout_ms);\nuint8_t queue_count();\n#endif",
+    "source": "#include \"queue_ipc.h\"\nstatic QueueHandle_t _q=NULL;\nvoid queue_setup(uint8_t len,uint8_t sz){_q=xQueueCreate(len,sz);Serial.printf(\"[queue] OK len=%d sz=%d\\n\",len,sz);}\nbool queue_send(const void*i,uint32_t ms){return xQueueSend(_q,i,ms/portTICK_PERIOD_MS)==pdTRUE;}\nbool queue_receive(void*i,uint32_t ms){return xQueueReceive(_q,i,ms/portTICK_PERIOD_MS)==pdTRUE;}\nuint8_t queue_count(){return uxQueueMessagesWaiting(_q);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

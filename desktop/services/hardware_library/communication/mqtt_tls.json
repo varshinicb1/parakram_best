@@ -1,0 +1,24 @@
+{
+  "id": "mqtt_tls",
+  "name": "MQTT over TLS",
+  "category": "communication",
+  "description": "MQTT over TLS firmware block",
+  "libraries": [
+    "WiFiClientSecure.h",
+    "PubSubClient.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "knolleary/PubSubClient@^2.8"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MQTT_TLS_H\n#define MQTT_TLS_H\nvoid mqtt_tls_setup(const char*server,uint16_t port,const char*ca_cert);\nvoid mqtt_tls_loop();\nbool mqtt_tls_publish(const char*topic,const char*payload);\nvoid mqtt_tls_subscribe(const char*topic);\n#endif",
+    "source": "#include \"mqtt_tls.h\"\n#include <WiFiClientSecure.h>\n#include <PubSubClient.h>\nstatic WiFiClientSecure _sc;\nstatic PubSubClient _mq(_sc);\nvoid mqtt_tls_setup(const char*s,uint16_t p,const char*ca){_sc.setCACert(ca);_mq.setServer(s,p);Serial.printf(\"[mqtt_tls] %s:%d\\n\",s,p);}\nvoid mqtt_tls_loop(){if(!_mq.connected())_mq.connect(\"parakram-tls\");_mq.loop();}\nbool mqtt_tls_publish(const char*t,const char*p){return _mq.publish(t,p);}\nvoid mqtt_tls_subscribe(const char*t){_mq.subscribe(t);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

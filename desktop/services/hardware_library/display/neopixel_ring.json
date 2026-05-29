@@ -1,0 +1,25 @@
+{
+  "id": "neopixel_ring",
+  "name": "NeoPixel Ring",
+  "category": "display",
+  "description": "NeoPixel Ring firmware block",
+  "libraries": [
+    "Adafruit_NeoPixel.h"
+  ],
+  "pins": {
+    "data": 16
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit NeoPixel@^1.12.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef NEOPIXEL_RING_H\n#define NEOPIXEL_RING_H\nvoid neo_ring_setup(uint16_t num);\nvoid neo_ring_set(uint16_t i,uint8_t r,uint8_t g,uint8_t b);\nvoid neo_ring_fill(uint8_t r,uint8_t g,uint8_t b);\nvoid neo_ring_rainbow();\nvoid neo_ring_progress(uint8_t pct,uint8_t r,uint8_t g,uint8_t b);\nvoid neo_ring_clear();\n#endif",
+    "source": "#include \"neopixel_ring.h\"\n#include <Adafruit_NeoPixel.h>\n#define RING_PIN 16\nstatic Adafruit_NeoPixel*_ring=nullptr;static uint16_t _num=0;\nvoid neo_ring_setup(uint16_t n){_num=n;_ring=new Adafruit_NeoPixel(n,RING_PIN,NEO_GRB+NEO_KHZ800);_ring->begin();_ring->setBrightness(50);_ring->show();Serial.printf(\"[ring] OK %d LEDs\\n\",n);}\nvoid neo_ring_set(uint16_t i,uint8_t r,uint8_t g,uint8_t b){if(_ring&&i<_num){_ring->setPixelColor(i,_ring->Color(r,g,b));_ring->show();}}\nvoid neo_ring_fill(uint8_t r,uint8_t g,uint8_t b){if(_ring){_ring->fill(_ring->Color(r,g,b));_ring->show();}}\nvoid neo_ring_rainbow(){if(!_ring)return;for(uint16_t i=0;i<_num;i++){uint16_t h=(i*65535/_num+millis()*50)&0xFFFF;_ring->setPixelColor(i,_ring->gamma32(_ring->ColorHSV(h)));}_ring->show();}\nvoid neo_ring_progress(uint8_t pct,uint8_t r,uint8_t g,uint8_t b){if(!_ring)return;uint16_t on=_num*pct/100;for(uint16_t i=0;i<_num;i++)_ring->setPixelColor(i,i<on?_ring->Color(r,g,b):0);_ring->show();}\nvoid neo_ring_clear(){if(_ring){_ring->clear();_ring->show();}}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

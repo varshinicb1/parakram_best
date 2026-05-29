@@ -1,0 +1,67 @@
+{
+    "id": "rtos_task",
+    "name": "FreeRTOS Task",
+    "category": "freertos",
+    "description": "Create a pinned FreeRTOS task with configurable stack, priority, and core affinity.",
+    "inputs": [
+        {
+            "name": "data",
+            "data_type": "any",
+            "description": "Data processed in the task"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "running",
+            "data_type": "bool"
+        },
+        {
+            "name": "stack_watermark",
+            "data_type": "int",
+            "description": "Remaining stack (bytes)"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "task_name",
+            "label": "Task Name",
+            "value_type": "string",
+            "default": "app_task"
+        },
+        {
+            "key": "stack_size",
+            "label": "Stack Size",
+            "value_type": "int",
+            "default": "4096"
+        },
+        {
+            "key": "priority",
+            "label": "Priority (0-25)",
+            "value_type": "int",
+            "default": "5"
+        },
+        {
+            "key": "core_id",
+            "label": "Core (0/1/-1=any)",
+            "value_type": "int",
+            "default": "1"
+        },
+        {
+            "key": "interval_ms",
+            "label": "Loop Interval (ms)",
+            "value_type": "int",
+            "default": "100"
+        }
+    ],
+    "libraries": [],
+    "firmware_template": {
+        "header": "#ifndef RTOS_TASK_H\n#define RTOS_TASK_H\n#include <Arduino.h>\n#include <freertos/FreeRTOS.h>\n#include <freertos/task.h>\n\ntypedef void (*TaskFunction)(void);\n\nTaskHandle_t rtos_create_task(const char* name, TaskFunction fn, uint32_t stackSize = 4096, \n                              UBaseType_t priority = 5, BaseType_t core = 1);\nvoid rtos_delete_task(TaskHandle_t handle);\nUBaseType_t rtos_stack_watermark(TaskHandle_t handle);\nvoid rtos_task_delay(uint32_t ms);\n\n#endif",
+        "source": "#include \"rtos_task.h\"\n\nstruct TaskParams {\n    TaskFunction fn;\n    uint32_t intervalMs;\n};\n\nstatic void _taskWrapper(void* params) {\n    TaskParams* tp = (TaskParams*)params;\n    for (;;) {\n        tp->fn();\n        vTaskDelay(pdMS_TO_TICKS(tp->intervalMs));\n    }\n}\n\nTaskHandle_t rtos_create_task(const char* name, TaskFunction fn, uint32_t stackSize, \n                              UBaseType_t priority, BaseType_t core) {\n    TaskHandle_t handle = NULL;\n    static TaskParams params; // static so it persists\n    params.fn = fn;\n    params.intervalMs = 100;\n    \n    BaseType_t result;\n    if (core >= 0) {\n        result = xTaskCreatePinnedToCore(_taskWrapper, name, stackSize, &params, priority, &handle, core);\n    } else {\n        result = xTaskCreate(_taskWrapper, name, stackSize, &params, priority, &handle);\n    }\n    \n    if (result == pdPASS) {\n        Serial.printf(\"[rtos] Task '%s' created (stack=%lu, pri=%d, core=%d)\\n\", name, stackSize, priority, core);\n    } else {\n        Serial.printf(\"[rtos] FAILED to create task '%s'\\n\", name);\n    }\n    return handle;\n}\n\nvoid rtos_delete_task(TaskHandle_t handle) {\n    if (handle) vTaskDelete(handle);\n}\n\nUBaseType_t rtos_stack_watermark(TaskHandle_t handle) {\n    return uxTaskGetStackHighWaterMark(handle);\n}\n\nvoid rtos_task_delay(uint32_t ms) {\n    vTaskDelay(pdMS_TO_TICKS(ms));\n}"
+    },
+    "icon": "🧵",
+    "color": "#ec4899",
+    "memory_estimate": {
+        "flash": 2000,
+        "sram": 4096
+    }
+}

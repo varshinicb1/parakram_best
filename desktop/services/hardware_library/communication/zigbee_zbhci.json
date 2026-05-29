@@ -1,0 +1,22 @@
+{
+  "id": "zigbee_zbhci",
+  "name": "Zigbee Coordinator",
+  "category": "communication",
+  "description": "Zigbee Coordinator firmware block",
+  "libraries": [],
+  "pins": {
+    "rx": 16,
+    "tx": 17
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef ZIGBEE_H\n#define ZIGBEE_H\nvoid zigbee_setup();\nvoid zigbee_loop();\nvoid zigbee_send(const char* cmd);\nString zigbee_receive();\n#endif",
+    "source": "#include \"zigbee_zbhci.h\"\n#include <HardwareSerial.h>\nstatic HardwareSerial zbSerial(2);\nvoid zigbee_setup(){zbSerial.begin(115200,SERIAL_8N1,16,17);Serial.println(\"[zigbee] OK\");}\nvoid zigbee_loop(){}\nvoid zigbee_send(const char*c){zbSerial.println(c);}\nString zigbee_receive(){String s=\"\";while(zbSerial.available())s+=(char)zbSerial.read();return s;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

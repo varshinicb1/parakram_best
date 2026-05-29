@@ -1,0 +1,21 @@
+{
+  "id": "valve_proportional",
+  "name": "Proportional Valve (PWM)",
+  "category": "actuator",
+  "description": "Proportional Valve (PWM) firmware block",
+  "libraries": [],
+  "pins": {
+    "pwm": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef PROP_VALVE_H\n#define PROP_VALVE_H\nvoid valve_setup();\nvoid valve_set_opening(uint8_t pct);\nuint8_t valve_get_opening();\nvoid valve_close();\nvoid valve_full_open();\n#endif",
+    "source": "#include \"valve_proportional.h\"\n#include <Arduino.h>\n#define VALVE_PIN 25\nstatic uint8_t _opening=0;\nvoid valve_setup(){ledcAttach(VALVE_PIN,1000,8);Serial.println(\"[valve] OK\");}\nvoid valve_set_opening(uint8_t p){_opening=constrain(p,0,100);ledcWrite(VALVE_PIN,map(_opening,0,100,0,255));}\nuint8_t valve_get_opening(){return _opening;}\nvoid valve_close(){valve_set_opening(0);}\nvoid valve_full_open(){valve_set_opening(100);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

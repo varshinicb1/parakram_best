@@ -1,0 +1,24 @@
+{
+  "id": "blynk_iot",
+  "name": "Blynk IoT Cloud",
+  "category": "communication",
+  "description": "Blynk IoT Cloud firmware block",
+  "libraries": [
+    "WiFi.h",
+    "BlynkSimpleEsp32.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "blynkkk/Blynk@^1.3.2"
+  ],
+  "firmware_template": {
+    "header": "#ifndef BLYNK_H\n#define BLYNK_H\nvoid blynk_setup(const char*auth,const char*ssid,const char*pass);\nvoid blynk_loop();\nvoid blynk_write_float(int pin,float value);\nvoid blynk_write_string(int pin,const char*value);\n#endif",
+    "source": "#include \"blynk_iot.h\"\n#define BLYNK_PRINT Serial\n#include <WiFi.h>\n#include <BlynkSimpleEsp32.h>\nvoid blynk_setup(const char*auth,const char*ssid,const char*pass){Blynk.begin(auth,ssid,pass);Serial.println(\"[blynk] OK\");}\nvoid blynk_loop(){Blynk.run();}\nvoid blynk_write_float(int p,float v){Blynk.virtualWrite(p,v);}\nvoid blynk_write_string(int p,const char*v){Blynk.virtualWrite(p,v);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

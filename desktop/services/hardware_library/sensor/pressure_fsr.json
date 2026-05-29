@@ -1,0 +1,21 @@
+{
+  "id": "pressure_fsr",
+  "name": "Force/Pressure Sensor (FSR)",
+  "category": "sensor",
+  "description": "Force/Pressure Sensor (FSR) firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef FSR_H\n#define FSR_H\nvoid fsr_setup();\nvoid fsr_loop();\nint fsr_get_raw();\nfloat fsr_get_force_n();\nbool fsr_pressed();\n#endif",
+    "source": "#include \"pressure_fsr.h\"\n#include <Arduino.h>\n#define FSR_PIN 34\nstatic int _raw=0;static float _force=0;static bool _pressed=false;static unsigned long _l=0;\nvoid fsr_setup(){pinMode(FSR_PIN,INPUT);Serial.println(\"[fsr] OK\");}\nvoid fsr_loop(){if(millis()-_l<100)return;_l=millis();_raw=analogRead(FSR_PIN);_force=_raw*10.0/4095.0;_pressed=_raw>200;}\nint fsr_get_raw(){return _raw;}\nfloat fsr_get_force_n(){return _force;}\nbool fsr_pressed(){return _pressed;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

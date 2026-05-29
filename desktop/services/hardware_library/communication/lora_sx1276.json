@@ -1,0 +1,28 @@
+{
+  "id": "lora_sx1276",
+  "name": "LoRa SX1276",
+  "category": "communication",
+  "description": "LoRa SX1276 firmware block",
+  "libraries": [
+    "SPI.h",
+    "LoRa.h"
+  ],
+  "pins": {
+    "cs": 5,
+    "rst": 14,
+    "irq": 2
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "sandeepmistry/LoRa@^0.8.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef LORA_H\n#define LORA_H\nvoid lora_setup();\nvoid lora_loop();\nbool lora_send(const uint8_t* data, size_t len);\ntypedef void (*lora_rx_cb)(const uint8_t* data, int len, int rssi);\nvoid lora_on_receive(lora_rx_cb cb);\n#endif",
+    "source": "#include \"lora_block.h\"\n#include <SPI.h>\n#include <LoRa.h>\nstatic lora_rx_cb _rx=nullptr;\nvoid lora_setup(){\n  LoRa.setPins(5,14,2);\n  if(!LoRa.begin(915E6)){Serial.println(\"[lora] Init failed!\");return;}\n  LoRa.setSpreadingFactor(7);LoRa.setSignalBandwidth(125E3);\n  Serial.println(\"[lora] OK 915MHz\");\n}\nvoid lora_loop(){\n  int sz=LoRa.parsePacket();\n  if(sz>0&&_rx){\n    uint8_t buf[256];int i=0;\n    while(LoRa.available()&&i<256)buf[i++]=LoRa.read();\n    _rx(buf,i,LoRa.packetRssi());\n  }\n}\nbool lora_send(const uint8_t*d,size_t l){LoRa.beginPacket();LoRa.write(d,l);return LoRa.endPacket();}\nvoid lora_on_receive(lora_rx_cb cb){_rx=cb;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "pir_sensor",
+  "name": "PIR Motion Sensor",
+  "category": "sensor",
+  "description": "PIR Motion Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "signal": 13
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef PIR_SENSOR_H\n#define PIR_SENSOR_H\nvoid pir_setup();\nvoid pir_loop();\nbool pir_motion_detected();\nunsigned long pir_last_motion_time();\n#endif",
+    "source": "#include \"pir_sensor.h\"\n#include <Arduino.h>\n#define PIR_PIN 13\nstatic volatile bool _motion=false;\nstatic unsigned long _lastMotion=0;\nvoid IRAM_ATTR _pir_isr(){_motion=true;}\nvoid pir_setup(){pinMode(PIR_PIN,INPUT);attachInterrupt(PIR_PIN,_pir_isr,RISING);Serial.println(\"[pir] OK\");}\nvoid pir_loop(){\n  if(_motion){_motion=false;_lastMotion=millis();Serial.println(\"[pir] Motion!\");}\n}\nbool pir_motion_detected(){return millis()-_lastMotion<5000;}\nunsigned long pir_last_motion_time(){return _lastMotion;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

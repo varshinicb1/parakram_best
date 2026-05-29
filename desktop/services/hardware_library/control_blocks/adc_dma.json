@@ -1,0 +1,21 @@
+{
+  "id": "adc_dma",
+  "name": "ADC with DMA (Fast Sampling)",
+  "category": "control_blocks",
+  "description": "ADC with DMA (Fast Sampling) firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 36
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef ADC_DMA_H\n#define ADC_DMA_H\n#include <Arduino.h>\nvoid adc_dma_setup(uint8_t pin,uint32_t sample_rate);\nvoid adc_dma_read(int16_t*buffer,size_t count);\nfloat adc_dma_get_max();\nfloat adc_dma_get_rms();\n#endif",
+    "source": "#include \"adc_dma.h\"\n#include <driver/adc.h>\nstatic uint8_t _pin=36;\nvoid adc_dma_setup(uint8_t p,uint32_t sr){_pin=p;analogReadResolution(12);Serial.printf(\"[adc_dma] OK pin=%d rate=%lu\\n\",p,(unsigned long)sr);}\nvoid adc_dma_read(int16_t*buf,size_t n){for(size_t i=0;i<n;i++)buf[i]=analogRead(_pin);}\nfloat adc_dma_get_max(){float mx=0;for(int i=0;i<64;i++){float v=analogRead(_pin);if(v>mx)mx=v;}return mx*3.3/4095.0;}\nfloat adc_dma_get_rms(){float sum=0;for(int i=0;i<64;i++){float v=analogRead(_pin);sum+=v*v;}return sqrt(sum/64)*3.3/4095.0;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

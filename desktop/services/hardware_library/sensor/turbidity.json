@@ -1,0 +1,21 @@
+{
+  "id": "turbidity",
+  "name": "Turbidity Sensor",
+  "category": "sensor",
+  "description": "Turbidity Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef TURBIDITY_H\n#define TURBIDITY_H\nvoid turbidity_setup();\nvoid turbidity_loop();\nfloat turbidity_get_ntu();\nfloat turbidity_get_voltage();\n#endif",
+    "source": "#include \"turbidity.h\"\n#include <Arduino.h>\n#define TURB_PIN 34\nstatic float _ntu=0,_v=0;static unsigned long _l=0;\nvoid turbidity_setup(){Serial.println(\"[turb] OK\");}\nvoid turbidity_loop(){if(millis()-_l<500)return;_l=millis();int r=0;for(int i=0;i<10;i++)r+=analogRead(TURB_PIN);_v=r/10.0*3.3/4095.0;_ntu=-1120.4*_v*_v+5742.3*_v-4353.8;if(_ntu<0)_ntu=0;}\nfloat turbidity_get_ntu(){return _ntu;}\nfloat turbidity_get_voltage(){return _v;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

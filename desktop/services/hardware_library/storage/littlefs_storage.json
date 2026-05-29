@@ -1,0 +1,21 @@
+{
+  "id": "littlefs_storage",
+  "name": "LittleFS File System",
+  "category": "storage",
+  "description": "LittleFS File System firmware block",
+  "libraries": [
+    "LittleFS.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef LITTLEFS_H\n#define LITTLEFS_H\nvoid littlefs_setup();\nbool littlefs_write(const char*path,const char*data);\nString littlefs_read(const char*path);\nbool littlefs_exists(const char*path);\nvoid littlefs_remove(const char*path);\n#endif",
+    "source": "#include \"littlefs_storage.h\"\n#include <LittleFS.h>\nvoid littlefs_setup(){if(!LittleFS.begin(true)){Serial.println(\"[lfs] Fail!\");return;}Serial.printf(\"[lfs] OK %luKB\\n\",(unsigned long)LittleFS.totalBytes()/1024);}\nbool littlefs_write(const char*p,const char*d){File f=LittleFS.open(p,\"w\");if(!f)return false;f.print(d);f.close();return true;}\nString littlefs_read(const char*p){File f=LittleFS.open(p,\"r\");if(!f)return\"\";String s=f.readString();f.close();return s;}\nbool littlefs_exists(const char*p){return LittleFS.exists(p);}\nvoid littlefs_remove(const char*p){LittleFS.remove(p);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

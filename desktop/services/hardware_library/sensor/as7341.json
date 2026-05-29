@@ -1,0 +1,27 @@
+{
+  "id": "as7341",
+  "name": "AS7341 Spectral Sensor",
+  "category": "sensor",
+  "description": "AS7341 Spectral Sensor firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_AS7341.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x39",
+  "platformio_deps": [
+    "adafruit/Adafruit AS7341@^1.3.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef AS7341_H\n#define AS7341_H\n#include <Adafruit_AS7341.h>\nvoid as7341_setup();\nvoid as7341_loop();\nuint16_t as7341_get_channel(uint8_t ch);\n#endif",
+    "source": "#include \"as7341.h\"\nstatic Adafruit_AS7341 as;\nstatic uint16_t _ch[12]={0};\nstatic unsigned long _last=0;\nvoid as7341_setup(){\n  Wire.begin();\n  if(!as.begin()){Serial.println(\"[as7341] Init failed!\");return;}\n  as.setATIME(100);as.setASTEP(999);as.setGain(AS7341_GAIN_256X);\n  Serial.println(\"[as7341] OK\");\n}\nvoid as7341_loop(){\n  if(millis()-_last<1000)return;\n  _last=millis();\n  if(as.readAllChannels()){for(int i=0;i<12;i++)_ch[i]=as.getChannel((as7341_color_channel_t)i);}\n}\nuint16_t as7341_get_channel(uint8_t ch){return ch<12?_ch[ch]:0;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

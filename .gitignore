@@ -1,0 +1,68 @@
+# Rust
+backend/target/
+rtos/target/
+
+# Android build artifacts
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/keystore.properties
+android/*.jks
+android/*.keystore
+android/vidyuthlabs-app/.gradle/
+android/vidyuthlabs-app/app/build/
+android/vidyuthlabs-app/build/
+
+# iOS build artifacts
+ios/build/
+ios/DerivedData/
+ios/*.xcworkspace/xcuserdata/
+ios/Pods/
+ios/.build/
+
+# Firmware build output
+firmware/build/
+firmware/components/lvgl/
+
+# Desktop
+desktop/app/node_modules/
+desktop/app/dist/
+desktop/app/src-tauri/target/
+desktop/frontend/node_modules/
+desktop/frontend/dist/
+desktop/services/__pycache__/
+desktop/services/.cache/
+desktop/services/firmware_output/
+
+# Secrets & env files
+.env
+backend/.env
+**/.env.local
+**/.env.production
+
+# External tools (SDKs, toolchains)
+external_tools/
+firmware/deps/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# OS
+Thumbs.db

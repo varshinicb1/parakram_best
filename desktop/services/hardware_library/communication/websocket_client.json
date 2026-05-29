@@ -1,0 +1,24 @@
+{
+  "id": "websocket_client",
+  "name": "WebSocket Client",
+  "category": "communication",
+  "description": "WebSocket Client firmware block",
+  "libraries": [
+    "WiFi.h",
+    "WebSocketsClient.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "links2004/WebSockets@^2.4.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef WS_CLIENT_H\n#define WS_CLIENT_H\n#include <WebSocketsClient.h>\nvoid ws_setup(const char* host, uint16_t port, const char* path);\nvoid ws_loop();\nvoid ws_send(const char* msg);\ntypedef void (*ws_msg_cb)(const char* msg);\nvoid ws_on_message(ws_msg_cb cb);\n#endif",
+    "source": "#include \"ws_client.h\"\nstatic WebSocketsClient ws;\nstatic ws_msg_cb _cb=nullptr;\nvoid _ws_event(WStype_t t,uint8_t*p,size_t l){\n  if(t==WStype_TEXT&&_cb)_cb((char*)p);\n  if(t==WStype_CONNECTED)Serial.println(\"[ws] Connected\");\n  if(t==WStype_DISCONNECTED)Serial.println(\"[ws] Disconnected\");\n}\nvoid ws_setup(const char*h,uint16_t p,const char*path){ws.begin(h,p,path);ws.onEvent(_ws_event);Serial.println(\"[ws] OK\");}\nvoid ws_loop(){ws.loop();}\nvoid ws_send(const char*msg){ws.sendTXT(msg);}\nvoid ws_on_message(ws_msg_cb cb){_cb=cb;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

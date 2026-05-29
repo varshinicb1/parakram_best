@@ -1,0 +1,27 @@
+{
+  "id": "max30105",
+  "name": "MAX30105 Particle Sensor",
+  "category": "sensor",
+  "description": "MAX30105 Particle Sensor firmware block",
+  "libraries": [
+    "Wire.h",
+    "MAX30105.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x57",
+  "platformio_deps": [
+    "sparkfun/SparkFun MAX3010x Pulse and Proximity Sensor Library@^1.1.2"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MAX30105_H\n#define MAX30105_H\nvoid max30105_setup();\nvoid max30105_loop();\nuint32_t max30105_get_red();\nuint32_t max30105_get_ir();\nuint32_t max30105_get_green();\nfloat max30105_get_temperature();\n#endif",
+    "source": "#include \"max30105.h\"\n#include <Wire.h>\n#include <MAX30105.h>\nstatic MAX30105 pox;\nstatic uint32_t _red=0,_ir=0,_green=0;static float _t=0;static unsigned long _l=0;\nvoid max30105_setup(){Wire.begin();if(!pox.begin(Wire,I2C_SPEED_FAST)){Serial.println(\"[max30105] Fail!\");return;}pox.setup();pox.setPulseAmplitudeRed(0x0A);pox.setPulseAmplitudeGreen(0);Serial.println(\"[max30105] OK\");}\nvoid max30105_loop(){if(millis()-_l<50)return;_l=millis();_red=pox.getRed();_ir=pox.getIR();_green=pox.getGreen();_t=pox.readTemperature();}\nuint32_t max30105_get_red(){return _red;}\nuint32_t max30105_get_ir(){return _ir;}\nuint32_t max30105_get_green(){return _green;}\nfloat max30105_get_temperature(){return _t;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

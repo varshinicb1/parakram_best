@@ -1,0 +1,27 @@
+{
+  "id": "haptic_drv2605",
+  "name": "DRV2605 Haptic Driver",
+  "category": "actuator",
+  "description": "DRV2605 Haptic Driver firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_DRV2605.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit DRV2605 Library@^1.2.4"
+  ],
+  "firmware_template": {
+    "header": "#ifndef HAPTIC_H\n#define HAPTIC_H\nvoid haptic_setup();\nvoid haptic_play(uint8_t effect);\nvoid haptic_buzz(uint16_t ms);\n#endif",
+    "source": "#include \"haptic_drv2605.h\"\n#include <Wire.h>\n#include <Adafruit_DRV2605.h>\nstatic Adafruit_DRV2605 drv;\nvoid haptic_setup(){Wire.begin();drv.begin();drv.selectLibrary(1);drv.setMode(DRV2605_MODE_INTTRIG);Serial.println(\"[haptic] OK\");}\nvoid haptic_play(uint8_t e){drv.setWaveform(0,e);drv.setWaveform(1,0);drv.go();}\nvoid haptic_buzz(uint16_t ms){haptic_play(47);delay(ms);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

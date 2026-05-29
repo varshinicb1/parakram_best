@@ -1,0 +1,23 @@
+{
+  "id": "json_builder",
+  "name": "JSON Builder",
+  "category": "control_blocks",
+  "description": "JSON Builder firmware block",
+  "libraries": [
+    "ArduinoJson.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "bblanchon/ArduinoJson@^7.0.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef JSON_BUILDER_H\n#define JSON_BUILDER_H\n#include <ArduinoJson.h>\nvoid json_begin();\nvoid json_add_string(const char*key,const char*val);\nvoid json_add_float(const char*key,float val);\nvoid json_add_int(const char*key,int val);\nvoid json_add_bool(const char*key,bool val);\nString json_serialize();\n#endif",
+    "source": "#include \"json_builder.h\"\nstatic JsonDocument _doc;\nvoid json_begin(){_doc.clear();}\nvoid json_add_string(const char*k,const char*v){_doc[k]=v;}\nvoid json_add_float(const char*k,float v){_doc[k]=v;}\nvoid json_add_int(const char*k,int v){_doc[k]=v;}\nvoid json_add_bool(const char*k,bool v){_doc[k]=v;}\nString json_serialize(){String s;serializeJson(_doc,s);return s;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

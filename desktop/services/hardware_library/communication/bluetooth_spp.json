@@ -1,0 +1,21 @@
+{
+  "id": "bluetooth_spp",
+  "name": "Bluetooth Serial (SPP)",
+  "category": "communication",
+  "description": "Bluetooth Serial (SPP) firmware block",
+  "libraries": [
+    "BluetoothSerial.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef BT_SPP_H\n#define BT_SPP_H\nvoid bt_spp_setup(const char* name);\nvoid bt_spp_send(const char* data);\nString bt_spp_receive();\nbool bt_spp_connected();\n#endif",
+    "source": "#include \"bluetooth_spp.h\"\n#include <BluetoothSerial.h>\nstatic BluetoothSerial bt;\nvoid bt_spp_setup(const char*n){bt.begin(n);Serial.printf(\"[bt] OK: %s\\n\",n);}\nvoid bt_spp_send(const char*d){bt.println(d);}\nString bt_spp_receive(){String s=\"\";while(bt.available())s+=(char)bt.read();return s;}\nbool bt_spp_connected(){return bt.connected();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

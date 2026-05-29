@@ -1,0 +1,27 @@
+{
+  "id": "shtc3",
+  "name": "SHTC3 Temp/Humidity",
+  "category": "sensor",
+  "description": "SHTC3 Temp/Humidity firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_SHTC3.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x70",
+  "platformio_deps": [
+    "adafruit/Adafruit SHTC3 Library@^1.0.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SHTC3_H\n#define SHTC3_H\nvoid shtc3_setup();\nvoid shtc3_loop();\nfloat shtc3_get_temperature();\nfloat shtc3_get_humidity();\n#endif",
+    "source": "#include \"shtc3.h\"\n#include <Wire.h>\n#include <Adafruit_SHTC3.h>\nstatic Adafruit_SHTC3 shtc;\nstatic float _t=0,_h=0;\nstatic unsigned long _last=0;\nvoid shtc3_setup(){Wire.begin();if(!shtc.begin()){Serial.println(\"[shtc3] Fail!\");return;}Serial.println(\"[shtc3] OK\");}\nvoid shtc3_loop(){if(millis()-_last<2000)return;_last=millis();sensors_event_t h,t;shtc.getEvent(&h,&t);_t=t.temperature;_h=h.relative_humidity;}\nfloat shtc3_get_temperature(){return _t;}\nfloat shtc3_get_humidity(){return _h;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

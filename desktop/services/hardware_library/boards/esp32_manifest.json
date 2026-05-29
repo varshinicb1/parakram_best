@@ -1,0 +1,247 @@
+{
+  "board_id": "esp32dev",
+  "name": "ESP32 DevKit V1",
+  "mcu": "ESP32-WROOM-32",
+  "framework": "arduino",
+  "memory": {
+    "flash_bytes": 4194304,
+    "sram_bytes": 520192,
+    "flash_label": "4MB Flash",
+    "sram_label": "520KB SRAM"
+  },
+  "gpio": {
+    "total": 34,
+    "safe_pins": [
+      4,
+      13,
+      14,
+      16,
+      17,
+      18,
+      19,
+      21,
+      22,
+      23,
+      25,
+      26,
+      27,
+      32,
+      33
+    ],
+    "input_only_pins": [
+      34,
+      35,
+      36,
+      39
+    ],
+    "strapping_pins": [
+      0,
+      2,
+      5,
+      12,
+      15
+    ],
+    "adc_pins": [
+      32,
+      33,
+      34,
+      35,
+      36,
+      39,
+      25,
+      26,
+      27,
+      14,
+      12,
+      13,
+      4,
+      2,
+      15
+    ],
+    "dac_pins": [
+      25,
+      26
+    ],
+    "touch_pins": [
+      4,
+      13,
+      14,
+      15,
+      27,
+      32,
+      33,
+      2,
+      12
+    ],
+    "pwm_capable_pins": [
+      2,
+      4,
+      5,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      21,
+      22,
+      23,
+      25,
+      26,
+      27,
+      32,
+      33
+    ],
+    "interrupt_capable_pins": [
+      2,
+      4,
+      5,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      21,
+      22,
+      23,
+      25,
+      26,
+      27,
+      32,
+      33,
+      34,
+      35,
+      36,
+      39
+    ],
+    "reserved_pins": {
+      "1": "TX0 (Serial0 TX — avoid)",
+      "3": "RX0 (Serial0 RX — avoid)",
+      "6": "Flash SPI CLK",
+      "7": "Flash SPI D0",
+      "8": "Flash SPI D1",
+      "9": "Flash SPI D2",
+      "10": "Flash SPI D3",
+      "11": "Flash SPI CMD"
+    },
+    "pin_notes": {
+      "0": "Strapping pin, boot button, pull-up needed",
+      "2": "Strapping pin, on-board LED on some boards",
+      "5": "Strapping pin, VSPI CS0",
+      "12": "Strapping pin, must be LOW at boot for flash voltage",
+      "15": "Strapping pin, must be HIGH at boot for debug output",
+      "34": "Input only, no pull-up/pull-down",
+      "35": "Input only, no pull-up/pull-down",
+      "36": "Input only (VP), no pull-up/pull-down",
+      "39": "Input only (VN), no pull-up/pull-down"
+    }
+  },
+  "i2c": [
+    {
+      "bus_id": 0,
+      "name": "Wire (default)",
+      "default_sda": 21,
+      "default_scl": 22,
+      "max_speed_hz": 400000,
+      "max_devices": 127
+    },
+    {
+      "bus_id": 1,
+      "name": "Wire1 (alternate)",
+      "default_sda": 25,
+      "default_scl": 26,
+      "max_speed_hz": 400000,
+      "max_devices": 127
+    }
+  ],
+  "spi": [
+    {
+      "bus_id": 0,
+      "name": "VSPI (default)",
+      "default_mosi": 23,
+      "default_miso": 19,
+      "default_sck": 18,
+      "default_cs": 5,
+      "max_speed_hz": 80000000
+    },
+    {
+      "bus_id": 1,
+      "name": "HSPI (alternate)",
+      "default_mosi": 13,
+      "default_miso": 12,
+      "default_sck": 14,
+      "default_cs": 15,
+      "max_speed_hz": 80000000
+    }
+  ],
+  "uart": [
+    {
+      "id": 0,
+      "tx": 1,
+      "rx": 3,
+      "name": "Serial (USB/Debug)"
+    },
+    {
+      "id": 1,
+      "tx": 17,
+      "rx": 16,
+      "name": "Serial1"
+    },
+    {
+      "id": 2,
+      "tx": 17,
+      "rx": 16,
+      "name": "Serial2"
+    }
+  ],
+  "pwm": {
+    "total_channels": 16,
+    "resolution_bits": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "default_resolution": 8,
+    "default_frequency_hz": 5000
+  },
+  "timers": {
+    "hardware_timers": 4,
+    "notes": "Timer 0 often used by WiFi, prefer timers 1-3"
+  },
+  "memory_estimates": {
+    "base_firmware_flash": 250000,
+    "base_firmware_sram": 40000,
+    "wifi_flash": 180000,
+    "wifi_sram": 60000,
+    "per_sensor_flash": 8000,
+    "per_sensor_sram": 2000,
+    "per_actuator_flash": 4000,
+    "per_actuator_sram": 1000,
+    "per_comms_module_flash": 20000,
+    "per_comms_module_sram": 8000,
+    "per_logic_block_flash": 2000,
+    "per_logic_block_sram": 500
+  },
+  "firmware_template": {
+    "header": "#ifndef ESP32_MANIFEST_H\n#define ESP32_MANIFEST_H\n\n#include <Arduino.h>\n\n// Function declarations\nvoid esp32_manifest_setup();\nvoid esp32_manifest_loop();\n\n#endif // ESP32_MANIFEST_H",
+    "source": "#include \"esp32_manifest.h\"\n\n// Static variables for module state\nstatic bool isInitialized = false;\n\n// Getter functions (example placeholders)\nint getSomeValue() {\n    if (!isInitialized) {\n        Serial.println(\"[esp32_manifest] Error: Module not initialized\");\n        return -1;\n    }\n    // Placeholder logic to return some value\n    return 42;\n}\n\nvoid esp32_manifest_setup() {\n    // Initialize hardware with retry logic (example)\n    int retries = 5;\n    while (!isInitialized && retries > 0) {\n        // Example initialization code\n        if (/* initialization successful */) {\n            isInitialized = true;\n            Serial.println(\"[esp32_manifest] Initialization successful\");\n        } else {\n            retries--;\n            delay(1000);\n            Serial.println(\"[esp32_manifest] Initialization failed, retrying...\");\n        }\n    }\n\n    if (!isInitialized) {\n        Serial.println(\"[esp32_manifest] Error: Initialization failed after multiple attempts\");\n    }\n}\n\nvoid esp32_manifest_loop() {\n    if (isInitialized) {\n        // Example loop logic\n        int value = getSomeValue();\n        Serial.print(\"[esp32_manifest] Value: \");\n        Serial.println(value);\n    } else {\n        Serial.println(\"[esp32_manifest] Error: Module not initialized\");\n    }\n}"
+  }
+}

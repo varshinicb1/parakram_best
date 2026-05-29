@@ -1,0 +1,27 @@
+{
+  "id": "lsm9ds1",
+  "name": "LSM9DS1 9-DOF IMU",
+  "category": "sensor",
+  "description": "LSM9DS1 9-DOF IMU firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_LSM9DS1.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit LSM9DS1 Library@^2.2.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef LSM9DS1_H\n#define LSM9DS1_H\nvoid lsm9ds1_setup();\nvoid lsm9ds1_loop();\nfloat lsm9ds1_accel_x();\nfloat lsm9ds1_accel_y();\nfloat lsm9ds1_accel_z();\nfloat lsm9ds1_gyro_x();\nfloat lsm9ds1_gyro_y();\nfloat lsm9ds1_gyro_z();\nfloat lsm9ds1_mag_x();\nfloat lsm9ds1_mag_y();\nfloat lsm9ds1_mag_z();\n#endif",
+    "source": "#include \"lsm9ds1.h\"\n#include <Wire.h>\n#include <Adafruit_LSM9DS1.h>\n#include <Adafruit_Sensor.h>\nstatic Adafruit_LSM9DS1 lsm;\nstatic float _ax=0,_ay=0,_az=0,_gx=0,_gy=0,_gz=0,_mx=0,_my=0,_mz=0;static unsigned long _l=0;\nvoid lsm9ds1_setup(){Wire.begin();if(!lsm.begin()){Serial.println(\"[lsm9ds1] Fail!\");return;}lsm.setupAccel(lsm.LSM9DS1_ACCELRANGE_2G);lsm.setupMag(lsm.LSM9DS1_MAGGAIN_4GAUSS);lsm.setupGyro(lsm.LSM9DS1_GYROSCALE_245DPS);Serial.println(\"[lsm9ds1] OK 9DOF\");}\nvoid lsm9ds1_loop(){if(millis()-_l<50)return;_l=millis();lsm.read();sensors_event_t a,m,g,t;lsm.getEvent(&a,&m,&g,&t);_ax=a.acceleration.x;_ay=a.acceleration.y;_az=a.acceleration.z;_gx=g.gyro.x;_gy=g.gyro.y;_gz=g.gyro.z;_mx=m.magnetic.x;_my=m.magnetic.y;_mz=m.magnetic.z;}\nfloat lsm9ds1_accel_x(){return _ax;}\nfloat lsm9ds1_accel_y(){return _ay;}\nfloat lsm9ds1_accel_z(){return _az;}\nfloat lsm9ds1_gyro_x(){return _gx;}\nfloat lsm9ds1_gyro_y(){return _gy;}\nfloat lsm9ds1_gyro_z(){return _gz;}\nfloat lsm9ds1_mag_x(){return _mx;}\nfloat lsm9ds1_mag_y(){return _my;}\nfloat lsm9ds1_mag_z(){return _mz;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

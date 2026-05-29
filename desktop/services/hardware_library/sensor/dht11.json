@@ -1,0 +1,25 @@
+{
+  "id": "dht11",
+  "name": "DHT11 Temp/Humidity",
+  "category": "sensor",
+  "description": "DHT11 Temp/Humidity firmware block",
+  "libraries": [
+    "DHT.h"
+  ],
+  "pins": {
+    "data": 4
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/DHT sensor library@^1.4.6"
+  ],
+  "firmware_template": {
+    "header": "#ifndef DHT11_H\n#define DHT11_H\nvoid dht11_setup();\nvoid dht11_loop();\nfloat dht11_get_temperature();\nfloat dht11_get_humidity();\n#endif",
+    "source": "#include \"dht11.h\"\n#include <DHT.h>\n#define DHT_PIN 4\nstatic DHT dht(DHT_PIN,DHT11);\nstatic float _t=0,_h=0;\nstatic unsigned long _last=0;\nvoid dht11_setup(){dht.begin();Serial.println(\"[dht11] OK\");}\nvoid dht11_loop(){if(millis()-_last<2000)return;_last=millis();_t=dht.readTemperature();_h=dht.readHumidity();}\nfloat dht11_get_temperature(){return _t;}\nfloat dht11_get_humidity(){return _h;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

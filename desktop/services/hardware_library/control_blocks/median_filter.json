@@ -1,0 +1,19 @@
+{
+  "id": "median_filter",
+  "name": "Median Filter",
+  "category": "control_blocks",
+  "description": "Median Filter firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef MEDIAN_H\n#define MEDIAN_H\nvoid median_setup(uint8_t window);\nfloat median_add(float value);\nfloat median_get();\n#endif",
+    "source": "#include \"median_filter.h\"\n#include <Arduino.h>\n#define MAX_W 32\nstatic float _buf[MAX_W],_sorted[MAX_W];\nstatic uint8_t _w=5,_idx=0,_cnt=0;\nvoid median_setup(uint8_t w){_w=min(w,(uint8_t)MAX_W);_idx=0;_cnt=0;}\nfloat median_add(float v){_buf[_idx]=v;_idx=(_idx+1)%_w;if(_cnt<_w)_cnt++;memcpy(_sorted,_buf,sizeof(float)*_cnt);for(int i=0;i<_cnt-1;i++)for(int j=i+1;j<_cnt;j++)if(_sorted[j]<_sorted[i]){float t=_sorted[i];_sorted[i]=_sorted[j];_sorted[j]=t;}return _sorted[_cnt/2];}\nfloat median_get(){return _sorted[_cnt/2];}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

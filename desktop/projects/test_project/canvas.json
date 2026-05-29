@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "block_id": "dht22",
+      "name": "Sensor",
+      "category": "sensor",
+      "description": "",
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "configuration": {},
+      "inputs": [],
+      "outputs": []
+    }
+  ],
+  "edges": []
+}

@@ -1,0 +1,19 @@
+{
+  "id": "kalman_filter",
+  "name": "Kalman Filter",
+  "category": "control_blocks",
+  "description": "Kalman Filter firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef KALMAN_H\n#define KALMAN_H\nvoid kalman_setup(float q,float r,float initial);\nfloat kalman_update(float measurement);\nfloat kalman_get_estimate();\n#endif",
+    "source": "#include \"kalman_filter.h\"\nstatic float _q=0.01,_r=0.1,_x=0,_p=1,_k=0;\nvoid kalman_setup(float q,float r,float init){_q=q;_r=r;_x=init;_p=1;}\nfloat kalman_update(float z){_p+=_q;_k=_p/(_p+_r);_x+=_k*(z-_x);_p*=(1-_k);return _x;}\nfloat kalman_get_estimate(){return _x;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

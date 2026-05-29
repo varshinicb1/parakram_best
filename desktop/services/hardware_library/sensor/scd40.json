@@ -1,0 +1,27 @@
+{
+  "id": "scd40",
+  "name": "SCD40 CO2 Sensor",
+  "category": "sensor",
+  "description": "SCD40 CO2 Sensor firmware block",
+  "libraries": [
+    "Wire.h",
+    "SensirionI2CScd4x.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x62",
+  "platformio_deps": [
+    "sensirion/Sensirion I2C SCD4x@^0.4.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SCD40_H\n#define SCD40_H\nvoid scd40_setup();\nvoid scd40_loop();\nuint16_t scd40_get_co2();\nfloat scd40_get_temperature();\nfloat scd40_get_humidity();\n#endif",
+    "source": "#include \"scd40.h\"\n#include <Wire.h>\n#include <SensirionI2CScd4x.h>\nstatic SensirionI2CScd4x scd;\nstatic uint16_t _co2=0;static float _t=0,_h=0;\nstatic unsigned long _last=0;\nvoid scd40_setup(){Wire.begin();scd.begin(Wire);scd.stopPeriodicMeasurement();scd.startPeriodicMeasurement();Serial.println(\"[scd40] OK\");}\nvoid scd40_loop(){if(millis()-_last<5000)return;_last=millis();bool ready=false;scd.getDataReadyFlag(ready);if(ready)scd.readMeasurement(_co2,_t,_h);}\nuint16_t scd40_get_co2(){return _co2;}\nfloat scd40_get_temperature(){return _t;}\nfloat scd40_get_humidity(){return _h;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

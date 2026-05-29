@@ -1,0 +1,23 @@
+{
+  "id": "smart_publisher",
+  "name": "Smart Data Publisher",
+  "category": "control_blocks",
+  "description": "Smart Data Publisher firmware block",
+  "libraries": [
+    "ArduinoJson.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "bblanchon/ArduinoJson@^7.0.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SMART_PUB_H\n#define SMART_PUB_H\n#include <Arduino.h>\nvoid publisher_setup(uint32_t interval_ms);\nvoid publisher_add(const char*key, float*value_ptr);\nvoid publisher_loop();\nString publisher_get_json();\ntypedef void(*publish_cb)(const char*json);\nvoid publisher_on_publish(publish_cb cb);\n#endif",
+    "source": "#include \"smart_publisher.h\"\n#include <ArduinoJson.h>\n#define MAX_FIELDS 32\ntypedef struct { const char* key; float* ptr; } field_t;\nstatic field_t _f[MAX_FIELDS];\nstatic uint8_t _cnt = 0;\nstatic uint32_t _interval = 5000;\nstatic unsigned long _last = 0;\nstatic publish_cb _cb = nullptr;\nvoid publisher_setup(uint32_t ms) { _interval = ms; Serial.println(\"[pub] OK\"); }\nvoid publisher_add(const char*k, float*p) { if (_cnt < MAX_FIELDS) _f[_cnt++] = {k, p}; }\nvoid publisher_loop() {\n  if (millis() - _last < _interval) return;\n  _last = millis();\n  String json = publisher_get_json();\n  Serial.println(json);\n  if (_cb) _cb(json.c_str());\n}\nString publisher_get_json() {\n  JsonDocument doc;\n  doc[\"ts\"] = millis();\n  for (int i = 0; i < _cnt; i++) doc[_f[i].key] = *_f[i].ptr;\n  String s; serializeJson(doc, s); return s;\n}\nvoid publisher_on_publish(publish_cb cb) { _cb = cb; }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

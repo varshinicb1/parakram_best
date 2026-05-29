@@ -1,0 +1,41 @@
+{
+  "id": "led_output",
+  "name": "LED Output",
+  "category": "actuator",
+  "description": "Controls an LED or digital output pin. Can be toggled based on input signals.",
+  "inputs": [
+    {
+      "name": "trigger",
+      "data_type": "bool",
+      "description": "Turn LED on/off"
+    }
+  ],
+  "outputs": [],
+  "configuration": [
+    {
+      "key": "pin",
+      "label": "GPIO Pin",
+      "value_type": "int",
+      "default": "2",
+      "description": "GPIO pin for LED"
+    },
+    {
+      "key": "inverted",
+      "label": "Inverted Logic",
+      "value_type": "bool",
+      "default": "false",
+      "description": "Invert output (active low)"
+    }
+  ],
+  "code_template": "led_template",
+  "icon": "lightbulb",
+  "color": "#f59e0b",
+  "libraries": [],
+  "pins_required": {
+    "digital": 1
+  },
+  "firmware_template": {
+    "header": "#ifndef LED_OUTPUT_H\n#define LED_OUTPUT_H\n\n#include <Arduino.h>\n\nclass LedOutput {\npublic:\n    static void setup();\n    static void loop(bool trigger);\n    static bool getPinState();\n\nprivate:\n    static int pin;\n    static bool inverted;\n};\n\n#endif // LED_OUTPUT_H",
+    "source": "#include \"led_output.h\"\n\nint LedOutput::pin = 2; // Default pin configuration\nbool LedOutput::inverted = false; // Default inversion configuration\n\nvoid LedOutput::setup() {\n    pinMode(pin, OUTPUT);\n    digitalWrite(pin, inverted ? HIGH : LOW); // Initialize to default state\n}\n\nvoid LedOutput::loop(bool trigger) {\n    if (trigger != digitalRead(pin)) {\n        digitalWrite(pin, inverted ? !trigger : trigger);\n        Serial.println(\"[led_output] LED toggled\");\n    }\n}\n\nbool LedOutput::getPinState() {\n    return digitalRead(pin);\n}"
+  }
+}

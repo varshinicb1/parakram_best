@@ -1,0 +1,27 @@
+{
+  "id": "hmc5883l",
+  "name": "HMC5883L Compass",
+  "category": "sensor",
+  "description": "HMC5883L Compass firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_HMC5883_U.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x1E",
+  "platformio_deps": [
+    "adafruit/Adafruit HMC5883 Unified@^1.2.3"
+  ],
+  "firmware_template": {
+    "header": "#ifndef HMC5883L_H\n#define HMC5883L_H\nvoid hmc5883l_setup();\nvoid hmc5883l_loop();\nfloat hmc5883l_get_heading();\nfloat hmc5883l_get_x();\nfloat hmc5883l_get_y();\nfloat hmc5883l_get_z();\n#endif",
+    "source": "#include \"hmc5883l.h\"\n#include <Wire.h>\n#include <Adafruit_HMC5883_U.h>\n#include <math.h>\nstatic Adafruit_HMC5883_Unified mag(12345);\nstatic float _x=0,_y=0,_z=0,_heading=0;static unsigned long _l=0;\nvoid hmc5883l_setup(){Wire.begin();if(!mag.begin()){Serial.println(\"[hmc5883l] Fail!\");return;}Serial.println(\"[hmc5883l] OK\");}\nvoid hmc5883l_loop(){if(millis()-_l<100)return;_l=millis();sensors_event_t e;mag.getEvent(&e);_x=e.magnetic.x;_y=e.magnetic.y;_z=e.magnetic.z;_heading=atan2(_y,_x)*180.0/M_PI;if(_heading<0)_heading+=360;}\nfloat hmc5883l_get_heading(){return _heading;}\nfloat hmc5883l_get_x(){return _x;}\nfloat hmc5883l_get_y(){return _y;}\nfloat hmc5883l_get_z(){return _z;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

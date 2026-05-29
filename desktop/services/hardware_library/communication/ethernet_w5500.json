@@ -1,0 +1,26 @@
+{
+  "id": "ethernet_w5500",
+  "name": "Ethernet (W5500)",
+  "category": "communication",
+  "description": "Ethernet (W5500) firmware block",
+  "libraries": [
+    "SPI.h",
+    "Ethernet.h"
+  ],
+  "pins": {
+    "cs": 5
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "arduino-libraries/Ethernet@^2.0.2"
+  ],
+  "firmware_template": {
+    "header": "#ifndef ETHERNET_H\n#define ETHERNET_H\nvoid ethernet_setup();\nbool ethernet_connected();\nString ethernet_get_ip();\n#endif",
+    "source": "#include \"ethernet_w5500.h\"\n#include <SPI.h>\n#include <Ethernet.h>\nstatic byte mac[]={0xDE,0xAD,0xBE,0xEF,0xFE,0xED};\nstatic bool _ok=false;\nvoid ethernet_setup(){Ethernet.init(5);if(Ethernet.begin(mac)==0){Serial.println(\"[eth] DHCP fail!\");if(Ethernet.hardwareStatus()==EthernetNoHardware){Serial.println(\"[eth] No W5500!\");}return;}_ok=true;Serial.printf(\"[eth] OK IP=%s\\n\",Ethernet.localIP().toString().c_str());}\nbool ethernet_connected(){return _ok&&Ethernet.linkStatus()==LinkON;}\nString ethernet_get_ip(){return Ethernet.localIP().toString();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

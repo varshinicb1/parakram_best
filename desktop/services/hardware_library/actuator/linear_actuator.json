@@ -1,0 +1,23 @@
+{
+  "id": "linear_actuator",
+  "name": "Linear Actuator",
+  "category": "actuator",
+  "description": "Linear Actuator firmware block",
+  "libraries": [],
+  "pins": {
+    "in1": 25,
+    "in2": 26,
+    "en": 27
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef LINEAR_ACT_H\n#define LINEAR_ACT_H\nvoid linear_setup();\nvoid linear_extend();\nvoid linear_retract();\nvoid linear_stop();\nvoid linear_set_speed(uint8_t pct);\n#endif",
+    "source": "#include \"linear_actuator.h\"\n#include <Arduino.h>\n#define LA_IN1 25\n#define LA_IN2 26\n#define LA_EN 27\nvoid linear_setup(){pinMode(LA_IN1,OUTPUT);pinMode(LA_IN2,OUTPUT);ledcAttach(LA_EN,5000,8);Serial.println(\"[linear] OK\");}\nvoid linear_extend(){digitalWrite(LA_IN1,HIGH);digitalWrite(LA_IN2,LOW);}\nvoid linear_retract(){digitalWrite(LA_IN1,LOW);digitalWrite(LA_IN2,HIGH);}\nvoid linear_stop(){digitalWrite(LA_IN1,LOW);digitalWrite(LA_IN2,LOW);}\nvoid linear_set_speed(uint8_t p){ledcWrite(LA_EN,map(constrain(p,0,100),0,100,0,255));}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

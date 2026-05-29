@@ -1,0 +1,11 @@
+[workspace]
+members = ["src"]
+
+[workspace.dependencies]
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+embedded-hal = "0.2"
+nb = "1.0"
+panic-halt = "0.2"
+xtensa-lx-rt = "0.5"
+EOF && cd src && cargo generate --git https://github.com/rust-embedded/cortex-m-quickstart && echo "Workspace fixed - Cargo.toml central."

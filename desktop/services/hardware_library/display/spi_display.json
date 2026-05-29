@@ -1,0 +1,29 @@
+{
+  "id": "spi_display",
+  "name": "ILI9341 TFT 2.4\" SPI",
+  "category": "display",
+  "description": "ILI9341 TFT 2.4\" SPI firmware block",
+  "libraries": [
+    "SPI.h",
+    "Adafruit_ILI9341.h"
+  ],
+  "pins": {
+    "cs": 15,
+    "dc": 2,
+    "rst": 4
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit ILI9341@^1.6.0",
+    "adafruit/Adafruit GFX Library@^1.11.9"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SPI_DISPLAY_H\n#define SPI_DISPLAY_H\n#include <Adafruit_ILI9341.h>\nvoid tft_setup();\nvoid tft_clear(uint16_t color);\nvoid tft_text(int x, int y, const char* text, uint16_t color, int size);\nvoid tft_rect(int x, int y, int w, int h, uint16_t color);\nvoid tft_fill_rect(int x, int y, int w, int h, uint16_t color);\nvoid tft_line(int x0, int y0, int x1, int y1, uint16_t color);\n#endif",
+    "source": "#include \"spi_display.h\"\n#include <SPI.h>\n#include <Adafruit_GFX.h>\nstatic Adafruit_ILI9341 tft(15, 2, 4);\nvoid tft_setup() {\n  tft.begin();\n  tft.setRotation(1);\n  tft.fillScreen(ILI9341_BLACK);\n  Serial.println(\"[tft] OK 320x240\");\n}\nvoid tft_clear(uint16_t c) { tft.fillScreen(c); }\nvoid tft_text(int x, int y, const char* t, uint16_t c, int s) {\n  tft.setCursor(x, y); tft.setTextColor(c); tft.setTextSize(s); tft.print(t);\n}\nvoid tft_rect(int x, int y, int w, int h, uint16_t c) { tft.drawRect(x,y,w,h,c); }\nvoid tft_fill_rect(int x, int y, int w, int h, uint16_t c) { tft.fillRect(x,y,w,h,c); }\nvoid tft_line(int x0, int y0, int x1, int y1, uint16_t c) { tft.drawLine(x0,y0,x1,y1,c); }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

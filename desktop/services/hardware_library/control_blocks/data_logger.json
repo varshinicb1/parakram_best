@@ -1,0 +1,19 @@
+{
+  "id": "data_logger",
+  "name": "CSV Data Logger",
+  "category": "control_blocks",
+  "description": "CSV Data Logger firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef DATA_LOGGER_H\n#define DATA_LOGGER_H\n#include <Arduino.h>\nvoid logger_setup(const char* filename);\nvoid logger_add_field(const char* name, float value);\nvoid logger_write_row();\nuint32_t logger_get_rows();\n#endif",
+    "source": "#include \"data_logger.h\"\n#include <SD.h>\nstatic String _filename;\nstatic String _row;\nstatic uint32_t _rows=0;\nstatic bool _first=true;\nvoid logger_setup(const char*fn){_filename=fn;_rows=0;Serial.printf(\"[logger] OK -> %s\\n\",fn);}\nvoid logger_add_field(const char*n,float v){if(!_row.isEmpty())_row+=\",\";if(_first)_row+=String(n)+\":\";_row+=String(v,2);}\nvoid logger_write_row(){File f=SD.open(_filename,FILE_APPEND);if(f){f.println(_row);f.close();_rows++;}_row=\"\";_first=false;}\nuint32_t logger_get_rows(){return _rows;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

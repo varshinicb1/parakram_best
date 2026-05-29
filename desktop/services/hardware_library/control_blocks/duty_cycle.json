@@ -1,0 +1,21 @@
+{
+  "id": "duty_cycle",
+  "name": "Duty Cycle Generator",
+  "category": "control_blocks",
+  "description": "Duty Cycle Generator firmware block",
+  "libraries": [],
+  "pins": {
+    "output": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef DUTY_CYCLE_H\n#define DUTY_CYCLE_H\nvoid duty_setup(uint8_t pin,uint32_t freq);\nvoid duty_set(float percent);\nvoid duty_set_raw(uint16_t value);\nfloat duty_get();\n#endif",
+    "source": "#include \"duty_cycle.h\"\n#include <Arduino.h>\nstatic uint8_t _pin=25;static float _duty=0;\nvoid duty_setup(uint8_t p,uint32_t f){_pin=p;ledcAttach(p,f,12);Serial.printf(\"[duty] OK pin=%d freq=%lu\\n\",p,(unsigned long)f);}\nvoid duty_set(float pct){_duty=constrain(pct,0,100);ledcWrite(_pin,(uint16_t)(_duty/100.0*4095));}\nvoid duty_set_raw(uint16_t v){ledcWrite(_pin,v);_duty=v/4095.0*100;}\nfloat duty_get(){return _duty;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

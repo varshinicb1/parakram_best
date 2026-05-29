@@ -1,0 +1,21 @@
+{
+  "id": "solenoid",
+  "name": "Solenoid Valve/Lock",
+  "category": "actuator",
+  "description": "Solenoid Valve/Lock firmware block",
+  "libraries": [],
+  "pins": {
+    "signal": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef SOLENOID_H\n#define SOLENOID_H\nvoid solenoid_setup();\nvoid solenoid_on();\nvoid solenoid_off();\nvoid solenoid_pulse(uint16_t ms);\nbool solenoid_state();\n#endif",
+    "source": "#include \"solenoid.h\"\n#include <Arduino.h>\n#define SOL_PIN 25\nstatic bool _on=false;\nvoid solenoid_setup(){pinMode(SOL_PIN,OUTPUT);digitalWrite(SOL_PIN,LOW);Serial.println(\"[solenoid] OK\");}\nvoid solenoid_on(){digitalWrite(SOL_PIN,HIGH);_on=true;}\nvoid solenoid_off(){digitalWrite(SOL_PIN,LOW);_on=false;}\nvoid solenoid_pulse(uint16_t ms){solenoid_on();delay(ms);solenoid_off();}\nbool solenoid_state(){return _on;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

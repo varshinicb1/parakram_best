@@ -1,0 +1,21 @@
+{
+  "id": "pulse_counter",
+  "name": "Pulse Counter",
+  "category": "control_blocks",
+  "description": "Pulse Counter firmware block",
+  "libraries": [],
+  "pins": {
+    "signal": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef PULSE_CNT_H\n#define PULSE_CNT_H\nvoid pulse_setup(uint8_t pin);\nvoid pulse_loop();\nuint32_t pulse_get_count();\nfloat pulse_get_frequency();\nvoid pulse_reset();\n#endif",
+    "source": "#include \"pulse_counter.h\"\n#include <Arduino.h>\nstatic uint8_t _pin=25;static volatile uint32_t _cnt=0;static float _freq=0;static uint32_t _lastCnt=0;static unsigned long _l=0;\nvoid IRAM_ATTR _pulse_isr(){_cnt++;}\nvoid pulse_setup(uint8_t p){_pin=p;pinMode(p,INPUT_PULLUP);attachInterrupt(p,_pulse_isr,RISING);Serial.printf(\"[pulse] OK pin=%d\\n\",p);}\nvoid pulse_loop(){if(millis()-_l<1000)return;unsigned long dt=millis()-_l;_l=millis();_freq=(float)(_cnt-_lastCnt)*1000.0/dt;_lastCnt=_cnt;}\nuint32_t pulse_get_count(){return _cnt;}\nfloat pulse_get_frequency(){return _freq;}\nvoid pulse_reset(){_cnt=0;_lastCnt=0;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

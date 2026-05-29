@@ -1,0 +1,23 @@
+{
+  "id": "rgb_led",
+  "name": "RGB LED (Common Cathode)",
+  "category": "actuator",
+  "description": "RGB LED (Common Cathode) firmware block",
+  "libraries": [],
+  "pins": {
+    "r": 25,
+    "g": 26,
+    "b": 27
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef RGB_LED_H\n#define RGB_LED_H\nvoid rgb_setup();\nvoid rgb_set(uint8_t r,uint8_t g,uint8_t b);\nvoid rgb_off();\n#endif",
+    "source": "#include \"rgb_led.h\"\n#include <Arduino.h>\n#define R_PIN 25\n#define G_PIN 26\n#define B_PIN 27\nvoid rgb_setup(){ledcAttach(R_PIN,5000,8);ledcAttach(G_PIN,5000,8);ledcAttach(B_PIN,5000,8);Serial.println(\"[rgb] OK\");}\nvoid rgb_set(uint8_t r,uint8_t g,uint8_t b){ledcWrite(R_PIN,r);ledcWrite(G_PIN,g);ledcWrite(B_PIN,b);}\nvoid rgb_off(){rgb_set(0,0,0);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

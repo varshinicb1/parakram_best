@@ -1,0 +1,21 @@
+{
+  "id": "ec_sensor",
+  "name": "EC Conductivity Sensor",
+  "category": "sensor",
+  "description": "EC Conductivity Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef EC_SENSOR_H\n#define EC_SENSOR_H\nvoid ec_setup();\nvoid ec_loop();\nfloat ec_get_value();\nfloat ec_get_voltage();\n#endif",
+    "source": "#include \"ec_sensor.h\"\n#include <Arduino.h>\n#define EC_PIN 34\nstatic float _ec=0,_v=0;static unsigned long _l=0;\nvoid ec_setup(){Serial.println(\"[ec] OK\");}\nvoid ec_loop(){if(millis()-_l<1000)return;_l=millis();int r=0;for(int i=0;i<10;i++)r+=analogRead(EC_PIN);_v=r/10.0*3.3/4095.0;_ec=_v*1000.0;}\nfloat ec_get_value(){return _ec;}\nfloat ec_get_voltage(){return _v;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

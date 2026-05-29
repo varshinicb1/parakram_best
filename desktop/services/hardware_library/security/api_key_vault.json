@@ -1,0 +1,38 @@
+{
+    "id": "api_key_vault",
+    "name": "API Key Vault",
+    "category": "security",
+    "description": "Secure storage and retrieval of API keys using NVS encrypted partitions.",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "ready",
+            "data_type": "bool"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "namespace",
+            "label": "NVS Namespace",
+            "value_type": "string",
+            "default": "secrets"
+        },
+        {
+            "key": "keys",
+            "label": "Key Names (comma-sep)",
+            "value_type": "string",
+            "default": "api_key,auth_token"
+        }
+    ],
+    "libraries": [],
+    "firmware_template": {
+        "header": "#ifndef API_KEY_VAULT_H\n#define API_KEY_VAULT_H\n#include <Arduino.h>\n\nvoid vault_setup();\nbool vault_store(const char* key, const char* value);\nString vault_retrieve(const char* key);\nbool vault_delete(const char* key);\n\n#endif",
+        "source": "#include \"api_key_vault.h\"\n#include <Preferences.h>\n\nPreferences _vault;\n\nvoid vault_setup() {\n    _vault.begin(\"secrets\", false);\n    Serial.println(\"[vault] Secure key storage ready\");\n}\n\nbool vault_store(const char* key, const char* value) {\n    size_t written = _vault.putString(key, value);\n    if (written > 0) {\n        Serial.printf(\"[vault] Stored key '%s' (%d bytes)\\n\", key, written);\n        return true;\n    }\n    return false;\n}\n\nString vault_retrieve(const char* key) {\n    String val = _vault.getString(key, \"\");\n    if (val.length() == 0) Serial.printf(\"[vault] Key '%s' not found\\n\", key);\n    return val;\n}\n\nbool vault_delete(const char* key) {\n    return _vault.remove(key);\n}"
+    },
+    "icon": "🔑",
+    "color": "#f59e0b",
+    "memory_estimate": {
+        "flash": 4000,
+        "sram": 1000
+    }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "influxdb",
+  "name": "InfluxDB Client",
+  "category": "communication",
+  "description": "InfluxDB Client firmware block",
+  "libraries": [
+    "WiFi.h",
+    "InfluxDbClient.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "tobiasschuerg/ESP8266 Influxdb@^3.13.2"
+  ],
+  "firmware_template": {
+    "header": "#ifndef INFLUXDB_H\n#define INFLUXDB_H\nvoid influx_setup(const char*url,const char*org,const char*bucket,const char*token);\nvoid influx_add_field(const char*measurement,const char*field,float value);\nbool influx_write();\n#endif",
+    "source": "#include \"influxdb.h\"\n#include <WiFi.h>\n#include <InfluxDbClient.h>\nstatic InfluxDBClient*_client=nullptr;\nstatic Point*_point=nullptr;\nvoid influx_setup(const char*url,const char*org,const char*bkt,const char*tok){_client=new InfluxDBClient(url,org,bkt,tok);if(_client->validateConnection())Serial.println(\"[influx] OK\");else Serial.println(\"[influx] Fail!\");}\nvoid influx_add_field(const char*m,const char*f,float v){if(_point)delete _point;_point=new Point(m);_point->addField(f,v);}\nbool influx_write(){if(!_client||!_point)return false;bool ok=_client->writePoint(*_point);delete _point;_point=nullptr;return ok;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

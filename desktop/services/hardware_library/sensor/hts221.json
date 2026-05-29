@@ -1,0 +1,27 @@
+{
+  "id": "hts221",
+  "name": "HTS221 Temp/Humidity",
+  "category": "sensor",
+  "description": "HTS221 Temp/Humidity firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_HTS221.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x5F",
+  "platformio_deps": [
+    "adafruit/Adafruit HTS221@^1.0.2"
+  ],
+  "firmware_template": {
+    "header": "#ifndef HTS221_H\n#define HTS221_H\nvoid hts221_setup();\nvoid hts221_loop();\nfloat hts221_get_temperature();\nfloat hts221_get_humidity();\n#endif",
+    "source": "#include \"hts221.h\"\n#include <Wire.h>\n#include <Adafruit_HTS221.h>\nstatic Adafruit_HTS221 hts;\nstatic float _t=0,_h=0;static unsigned long _l=0;\nvoid hts221_setup(){Wire.begin();if(!hts.begin_I2C()){Serial.println(\"[hts221] Fail!\");return;}hts.setDataRate(HTS221_RATE_1_HZ);Serial.println(\"[hts221] OK\");}\nvoid hts221_loop(){if(millis()-_l<2000)return;_l=millis();sensors_event_t h,t;hts.getEvent(&h,&t);_t=t.temperature;_h=h.relative_humidity;}\nfloat hts221_get_temperature(){return _t;}\nfloat hts221_get_humidity(){return _h;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

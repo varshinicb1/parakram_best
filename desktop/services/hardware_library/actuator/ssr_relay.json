@@ -1,0 +1,21 @@
+{
+  "id": "ssr_relay",
+  "name": "Solid State Relay",
+  "category": "actuator",
+  "description": "Solid State Relay firmware block",
+  "libraries": [],
+  "pins": {
+    "signal": 25
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef SSR_H\n#define SSR_H\nvoid ssr_setup();\nvoid ssr_on();\nvoid ssr_off();\nvoid ssr_set_duty(uint8_t pct, uint16_t period_ms);\nbool ssr_state();\n#endif",
+    "source": "#include \"ssr_relay.h\"\n#include <Arduino.h>\n#define SSR_PIN 25\nstatic bool _on=false;\nvoid ssr_setup(){pinMode(SSR_PIN,OUTPUT);Serial.println(\"[ssr] OK\");}\nvoid ssr_on(){digitalWrite(SSR_PIN,HIGH);_on=true;}\nvoid ssr_off(){digitalWrite(SSR_PIN,LOW);_on=false;}\nvoid ssr_set_duty(uint8_t pct,uint16_t period){uint16_t on_t=period*pct/100;ssr_on();delay(on_t);ssr_off();delay(period-on_t);}\nbool ssr_state(){return _on;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

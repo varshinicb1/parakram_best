@@ -1,0 +1,25 @@
+{
+  "id": "web_server",
+  "name": "Async Web Server",
+  "category": "communication",
+  "description": "Async Web Server firmware block",
+  "libraries": [
+    "WiFi.h",
+    "ESPAsyncWebServer.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "me-no-dev/ESP Async WebServer@^1.2.4",
+    "me-no-dev/AsyncTCP@^1.1.4"
+  ],
+  "firmware_template": {
+    "header": "#ifndef WEB_SERVER_H\n#define WEB_SERVER_H\nvoid webserver_setup(uint16_t port);\nvoid webserver_on(const char* path, const char* response);\nvoid webserver_on_post(const char* path, void(*handler)(const char*body));\n#endif",
+    "source": "#include \"web_server.h\"\n#include <WiFi.h>\n#include <ESPAsyncWebServer.h>\nstatic AsyncWebServer* _srv=nullptr;\nvoid webserver_setup(uint16_t port){_srv=new AsyncWebServer(port);_srv->begin();Serial.printf(\"[web] OK port=%d\\n\",port);}\nvoid webserver_on(const char*p,const char*r){if(!_srv)return;String resp=String(r);_srv->on(p,HTTP_GET,[resp](AsyncWebServerRequest*req){req->send(200,\"text/html\",resp);});}\nvoid webserver_on_post(const char*p,void(*h)(const char*)){if(!_srv)return;_srv->on(p,HTTP_POST,[h](AsyncWebServerRequest*req){if(req->hasParam(\"body\",true))h(req->getParam(\"body\",true)->value().c_str());req->send(200);});}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

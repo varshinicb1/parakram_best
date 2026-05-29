@@ -1,0 +1,28 @@
+{
+  "id": "apds9960",
+  "name": "APDS9960 Gesture/Proximity",
+  "category": "sensor",
+  "description": "APDS9960 Gesture/Proximity firmware block",
+  "libraries": [
+    "Wire.h",
+    "SparkFun_APDS9960.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22,
+    "int": 2
+  },
+  "bus": "I2C",
+  "i2c_address": "0x39",
+  "platformio_deps": [
+    "sparkfun/SparkFun APDS9960 RGB and Gesture Sensor@^1.4.3"
+  ],
+  "firmware_template": {
+    "header": "#ifndef APDS9960_H\n#define APDS9960_H\nvoid apds9960_setup();\nvoid apds9960_loop();\nint apds9960_get_gesture();\nuint8_t apds9960_get_proximity();\nuint16_t apds9960_get_red();\nuint16_t apds9960_get_green();\nuint16_t apds9960_get_blue();\n#endif",
+    "source": "#include \"apds9960.h\"\n#include <Wire.h>\n#include <SparkFun_APDS9960.h>\nstatic SparkFun_APDS9960 apds;\nstatic int _gesture = 0;\nstatic uint8_t _prox = 0;\nstatic uint16_t _r=0,_g=0,_b=0;\nstatic unsigned long _last = 0;\nvoid apds9960_setup() {\n  Wire.begin();\n  if (!apds.init()) { Serial.println(\"[apds9960] Init failed!\"); return; }\n  apds.enableGestureSensor(true);\n  apds.enableProximitySensor(false);\n  apds.enableLightSensor(false);\n  Serial.println(\"[apds9960] OK\");\n}\nvoid apds9960_loop() {\n  if (millis()-_last < 100) return;\n  _last = millis();\n  if (apds.isGestureAvailable()) { _gesture = apds.readGesture(); }\n  apds.readProximity(_prox);\n  apds.readRedLight(_r); apds.readGreenLight(_g); apds.readBlueLight(_b);\n}\nint apds9960_get_gesture(){return _gesture;}\nuint8_t apds9960_get_proximity(){return _prox;}\nuint16_t apds9960_get_red(){return _r;}\nuint16_t apds9960_get_green(){return _g;}\nuint16_t apds9960_get_blue(){return _b;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

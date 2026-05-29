@@ -1,0 +1,21 @@
+{
+  "id": "vibration_sw420",
+  "name": "Vibration Sensor (SW-420)",
+  "category": "sensor",
+  "description": "Vibration Sensor (SW-420) firmware block",
+  "libraries": [],
+  "pins": {
+    "signal": 13
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef VIBRATION_H\n#define VIBRATION_H\nvoid vibration_setup();\nvoid vibration_loop();\nbool vibration_detected();\nuint32_t vibration_count();\nvoid vibration_reset();\n#endif",
+    "source": "#include \"vibration_sw420.h\"\n#include <Arduino.h>\n#define VIB_PIN 13\nstatic volatile uint32_t _cnt=0;static bool _det=false;static unsigned long _l=0;\nvoid IRAM_ATTR _vib_isr(){_cnt++;}\nvoid vibration_setup(){pinMode(VIB_PIN,INPUT);attachInterrupt(VIB_PIN,_vib_isr,RISING);Serial.println(\"[vib] OK\");}\nvoid vibration_loop(){if(millis()-_l<100)return;_l=millis();_det=!digitalRead(VIB_PIN);}\nbool vibration_detected(){return _det;}\nuint32_t vibration_count(){return _cnt;}\nvoid vibration_reset(){_cnt=0;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

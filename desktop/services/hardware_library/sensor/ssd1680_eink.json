@@ -1,0 +1,29 @@
+{
+  "id": "ssd1680_eink",
+  "name": "SSD1680 E-Ink 2.13\" ",
+  "category": "sensor",
+  "description": "SSD1680 E-Ink 2.13\"  firmware block",
+  "libraries": [
+    "SPI.h",
+    "GxEPD2_BW.h"
+  ],
+  "pins": {
+    "cs": 5,
+    "dc": 17,
+    "rst": 16,
+    "busy": 4
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "zinggjm/GxEPD2@^1.5.3"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SSD1680_H\n#define SSD1680_H\nvoid eink_setup();\nvoid eink_clear();\nvoid eink_text(int x,int y,const char*text,int size);\nvoid eink_update();\n#endif",
+    "source": "#include \"ssd1680_eink.h\"\n#include <GxEPD2_BW.h>\n#include <Fonts/FreeMonoBold9pt7b.h>\nstatic GxEPD2_BW<GxEPD2_213_BN,GxEPD2_213_BN::HEIGHT> disp(GxEPD2_213_BN(5,17,16,4));\nvoid eink_setup(){disp.init(115200);disp.setRotation(1);disp.setTextColor(GxEPD_BLACK);disp.setFont(&FreeMonoBold9pt7b);Serial.println(\"[eink] OK\");}\nvoid eink_clear(){disp.setFullWindow();disp.firstPage();do{disp.fillScreen(GxEPD_WHITE);}while(disp.nextPage());}\nvoid eink_text(int x,int y,const char*t,int s){disp.setTextSize(s);disp.setCursor(x,y);disp.print(t);}\nvoid eink_update(){disp.display();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

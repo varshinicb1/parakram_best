@@ -1,0 +1,22 @@
+{
+  "id": "udp_comm",
+  "name": "UDP Communication",
+  "category": "communication",
+  "description": "UDP Communication firmware block",
+  "libraries": [
+    "WiFi.h",
+    "WiFiUdp.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef UDP_COMM_H\n#define UDP_COMM_H\nvoid udp_setup(uint16_t port);\nvoid udp_loop();\nbool udp_send(const char*host,uint16_t port,const char*msg);\nString udp_receive();\n#endif",
+    "source": "#include \"udp_comm.h\"\n#include <WiFi.h>\n#include <WiFiUdp.h>\nstatic WiFiUDP udp;\nstatic uint16_t _port=0;\nvoid udp_setup(uint16_t p){_port=p;udp.begin(p);Serial.printf(\"[udp] OK port=%d\\n\",p);}\nvoid udp_loop(){}\nbool udp_send(const char*h,uint16_t p,const char*m){udp.beginPacket(h,p);udp.print(m);return udp.endPacket();}\nString udp_receive(){int sz=udp.parsePacket();if(!sz)return\"\";char buf[256];int n=udp.read(buf,255);buf[n]=0;return String(buf);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

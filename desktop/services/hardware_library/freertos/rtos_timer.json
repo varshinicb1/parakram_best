@@ -1,0 +1,54 @@
+{
+    "id": "rtos_timer",
+    "name": "FreeRTOS Timer",
+    "category": "freertos",
+    "description": "Software timer with callback — replaces millis() polling with event-driven timing.",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "expired",
+            "data_type": "bool"
+        },
+        {
+            "name": "tick_count",
+            "data_type": "int"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "timer_name",
+            "label": "Timer Name",
+            "value_type": "string",
+            "default": "periodic_timer"
+        },
+        {
+            "key": "period_ms",
+            "label": "Period (ms)",
+            "value_type": "int",
+            "default": "1000"
+        },
+        {
+            "key": "auto_reload",
+            "label": "Auto Reload",
+            "value_type": "bool",
+            "default": "true"
+        },
+        {
+            "key": "start_immediate",
+            "label": "Start Immediately",
+            "value_type": "bool",
+            "default": "true"
+        }
+    ],
+    "libraries": [],
+    "firmware_template": {
+        "header": "#ifndef RTOS_TIMER_H\n#define RTOS_TIMER_H\n#include <Arduino.h>\n#include <freertos/FreeRTOS.h>\n#include <freertos/timers.h>\n\ntypedef void (*TimerCallback)(void);\n\nTimerHandle_t rtos_timer_create(const char* name, uint32_t periodMs, bool autoReload, TimerCallback cb);\nbool rtos_timer_start(TimerHandle_t timer);\nbool rtos_timer_stop(TimerHandle_t timer);\nbool rtos_timer_change_period(TimerHandle_t timer, uint32_t newPeriodMs);\nbool rtos_timer_reset(TimerHandle_t timer);\n\n#endif",
+        "source": "#include \"rtos_timer.h\"\n\nstatic TimerCallback _userCallbacks[8] = {nullptr};\nstatic int _cbIndex = 0;\n\nstatic void _timerDispatch(TimerHandle_t xTimer) {\n    int idx = (int)(uintptr_t)pvTimerGetTimerID(xTimer);\n    if (idx >= 0 && idx < 8 && _userCallbacks[idx]) {\n        _userCallbacks[idx]();\n    }\n}\n\nTimerHandle_t rtos_timer_create(const char* name, uint32_t periodMs, bool autoReload, TimerCallback cb) {\n    int idx = _cbIndex++;\n    if (idx >= 8) {\n        Serial.println(\"[rtos-timer] Max 8 timers\");\n        return nullptr;\n    }\n    _userCallbacks[idx] = cb;\n    \n    TimerHandle_t timer = xTimerCreate(\n        name, pdMS_TO_TICKS(periodMs), \n        autoReload ? pdTRUE : pdFALSE,\n        (void*)(uintptr_t)idx,\n        _timerDispatch\n    );\n    \n    if (timer) {\n        Serial.printf(\"[rtos-timer] '%s' created (%lums, %s)\\n\", name, periodMs, autoReload ? \"periodic\" : \"one-shot\");\n    }\n    return timer;\n}\n\nbool rtos_timer_start(TimerHandle_t timer) {\n    return timer ? (xTimerStart(timer, 0) == pdPASS) : false;\n}\n\nbool rtos_timer_stop(TimerHandle_t timer) {\n    return timer ? (xTimerStop(timer, 0) == pdPASS) : false;\n}\n\nbool rtos_timer_change_period(TimerHandle_t timer, uint32_t newPeriodMs) {\n    return timer ? (xTimerChangePeriod(timer, pdMS_TO_TICKS(newPeriodMs), 0) == pdPASS) : false;\n}\n\nbool rtos_timer_reset(TimerHandle_t timer) {\n    return timer ? (xTimerReset(timer, 0) == pdPASS) : false;\n}"
+    },
+    "icon": "⏱️",
+    "color": "#0d9488",
+    "memory_estimate": {
+        "flash": 1500,
+        "sram": 300
+    }
+}

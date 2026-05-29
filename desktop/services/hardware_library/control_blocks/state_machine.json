@@ -1,0 +1,19 @@
+{
+  "id": "state_machine",
+  "name": "Finite State Machine",
+  "category": "control_blocks",
+  "description": "Finite State Machine firmware block",
+  "libraries": [],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef FSM_H\n#define FSM_H\n#include <Arduino.h>\ntypedef void(*state_fn)();\nvoid fsm_setup(uint8_t num_states);\nvoid fsm_set_state(uint8_t id, state_fn enter, state_fn run, state_fn exit_fn);\nvoid fsm_transition(uint8_t id);\nvoid fsm_loop();\nuint8_t fsm_current_state();\n#endif",
+    "source": "#include \"state_machine.h\"\n#define MAX_STATES 16\nstatic struct{state_fn enter;state_fn run;state_fn exit_fn;}_states[MAX_STATES];\nstatic uint8_t _current=0,_numStates=0;\nvoid fsm_setup(uint8_t n){_numStates=min(n,(uint8_t)MAX_STATES);_current=0;Serial.printf(\"[fsm] OK %d states\\n\",_numStates);}\nvoid fsm_set_state(uint8_t id,state_fn e,state_fn r,state_fn x){if(id<MAX_STATES){_states[id]={e,r,x};}}\nvoid fsm_transition(uint8_t id){if(id>=_numStates)return;if(_states[_current].exit_fn)_states[_current].exit_fn();_current=id;if(_states[_current].enter)_states[_current].enter();}\nvoid fsm_loop(){if(_states[_current].run)_states[_current].run();}\nuint8_t fsm_current_state(){return _current;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

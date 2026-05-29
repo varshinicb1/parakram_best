@@ -1,0 +1,62 @@
+{
+    "id": "rtos_queue",
+    "name": "FreeRTOS Queue",
+    "category": "freertos",
+    "description": "Thread-safe message queue for inter-task data passing.",
+    "inputs": [
+        {
+            "name": "data_in",
+            "data_type": "any",
+            "description": "Data to enqueue"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "data_out",
+            "data_type": "any",
+            "description": "Dequeued data"
+        },
+        {
+            "name": "count",
+            "data_type": "int",
+            "description": "Messages in queue"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "queue_name",
+            "label": "Queue Name",
+            "value_type": "string",
+            "default": "data_queue"
+        },
+        {
+            "key": "queue_length",
+            "label": "Max Items",
+            "value_type": "int",
+            "default": "10"
+        },
+        {
+            "key": "item_size",
+            "label": "Item Size (bytes)",
+            "value_type": "int",
+            "default": "64"
+        },
+        {
+            "key": "timeout_ms",
+            "label": "Timeout (ms)",
+            "value_type": "int",
+            "default": "100"
+        }
+    ],
+    "libraries": [],
+    "firmware_template": {
+        "header": "#ifndef RTOS_QUEUE_H\n#define RTOS_QUEUE_H\n#include <Arduino.h>\n#include <freertos/FreeRTOS.h>\n#include <freertos/queue.h>\n\nQueueHandle_t rtos_queue_create(UBaseType_t length, UBaseType_t itemSize);\nbool rtos_queue_send(QueueHandle_t queue, const void* item, TickType_t timeout);\nbool rtos_queue_receive(QueueHandle_t queue, void* item, TickType_t timeout);\nUBaseType_t rtos_queue_count(QueueHandle_t queue);\nbool rtos_queue_is_full(QueueHandle_t queue);\n\n#endif",
+        "source": "#include \"rtos_queue.h\"\n\nQueueHandle_t rtos_queue_create(UBaseType_t length, UBaseType_t itemSize) {\n    QueueHandle_t q = xQueueCreate(length, itemSize);\n    if (q) {\n        Serial.printf(\"[rtos-queue] Created (len=%lu, size=%lu)\\n\", length, itemSize);\n    } else {\n        Serial.println(\"[rtos-queue] FAILED to create\");\n    }\n    return q;\n}\n\nbool rtos_queue_send(QueueHandle_t queue, const void* item, TickType_t timeout) {\n    if (!queue) return false;\n    return xQueueSend(queue, item, timeout) == pdPASS;\n}\n\nbool rtos_queue_receive(QueueHandle_t queue, void* item, TickType_t timeout) {\n    if (!queue) return false;\n    return xQueueReceive(queue, item, timeout) == pdPASS;\n}\n\nUBaseType_t rtos_queue_count(QueueHandle_t queue) {\n    return queue ? uxQueueMessagesWaiting(queue) : 0;\n}\n\nbool rtos_queue_is_full(QueueHandle_t queue) {\n    return queue ? (uxQueueSpacesAvailable(queue) == 0) : true;\n}"
+    },
+    "icon": "📨",
+    "color": "#8b5cf6",
+    "memory_estimate": {
+        "flash": 1500,
+        "sram": 640
+    }
+}

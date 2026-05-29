@@ -1,0 +1,21 @@
+{
+  "id": "battery_monitor",
+  "name": "Battery Voltage Monitor",
+  "category": "power",
+  "description": "Battery Voltage Monitor firmware block",
+  "libraries": [],
+  "pins": {
+    "adc": 35
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef BATTERY_MON_H\n#define BATTERY_MON_H\nvoid battery_setup();\nvoid battery_loop();\nfloat battery_get_voltage();\nint battery_get_percent();\nbool battery_is_low();\n#endif",
+    "source": "#include \"battery_mon.h\"\n#include <Arduino.h>\n#define BATT_PIN 35\n#define DIVIDER_RATIO 2.0\nstatic float _v=0;static int _pct=0;\nstatic unsigned long _last=0;\nvoid battery_setup(){analogReadResolution(12);analogSetAttenuation(ADC_11db);Serial.println(\"[batt] OK\");}\nvoid battery_loop(){\n  if(millis()-_last<5000)return;_last=millis();\n  int raw=0;for(int i=0;i<10;i++)raw+=analogRead(BATT_PIN);raw/=10;\n  _v=(raw/4095.0)*3.3*DIVIDER_RATIO;\n  _pct=constrain(map((int)(_v*100),320,420,0,100),0,100);\n  Serial.printf(\"[batt] %.2fV %d%%\\n\",_v,_pct);\n}\nfloat battery_get_voltage(){return _v;}\nint battery_get_percent(){return _pct;}\nbool battery_is_low(){return _pct<20;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

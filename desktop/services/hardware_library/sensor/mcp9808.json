@@ -1,0 +1,27 @@
+{
+  "id": "mcp9808",
+  "name": "MCP9808 Precision Temp",
+  "category": "sensor",
+  "description": "MCP9808 Precision Temp firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_MCP9808.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x18",
+  "platformio_deps": [
+    "adafruit/Adafruit MCP9808 Library@^2.0.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MCP9808_H\n#define MCP9808_H\nvoid mcp9808_setup();\nvoid mcp9808_loop();\nfloat mcp9808_get_temp();\n#endif",
+    "source": "#include \"mcp9808.h\"\n#include <Wire.h>\n#include <Adafruit_MCP9808.h>\nstatic Adafruit_MCP9808 t;\nstatic float _t=0;static unsigned long _l=0;\nvoid mcp9808_setup(){Wire.begin();if(!t.begin(0x18)){Serial.println(\"[mcp9808] Fail!\");return;}t.setResolution(3);Serial.println(\"[mcp9808] OK\");}\nvoid mcp9808_loop(){if(millis()-_l<1000)return;_l=millis();_t=t.readTempC();}\nfloat mcp9808_get_temp(){return _t;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

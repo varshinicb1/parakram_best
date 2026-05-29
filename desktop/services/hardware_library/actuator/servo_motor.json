@@ -1,0 +1,25 @@
+{
+  "id": "servo_motor",
+  "name": "Servo Motor (SG90/MG996R)",
+  "category": "actuator",
+  "description": "Servo Motor (SG90/MG996R) firmware block",
+  "libraries": [
+    "ESP32Servo.h"
+  ],
+  "pins": {
+    "signal": 13
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "madhephaestus/ESP32Servo@^3.0.5"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SERVO_MOTOR_H\n#define SERVO_MOTOR_H\n#include <ESP32Servo.h>\nvoid servo_setup();\nvoid servo_loop();\nvoid servo_set_angle(int angle);\nint servo_get_angle();\nvoid servo_sweep(int from, int to, int step_delay);\n#endif",
+    "source": "#include \"servo_motor.h\"\n#define SERVO_PIN 13\nstatic Servo _servo;\nstatic int _angle = 90;\nvoid servo_setup() {\n  _servo.attach(SERVO_PIN, 500, 2400);\n  _servo.write(90);\n  Serial.println(\"[servo] OK pin=13\");\n}\nvoid servo_loop() {}\nvoid servo_set_angle(int a) {\n  _angle = constrain(a, 0, 180);\n  _servo.write(_angle);\n  Serial.printf(\"[servo] %d deg\\n\", _angle);\n}\nint servo_get_angle() { return _angle; }\nvoid servo_sweep(int from, int to, int d) {\n  int step = (to > from) ? 1 : -1;\n  for (int i = from; i != to; i += step) {\n    _servo.write(i);\n    delay(d);\n  }\n}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

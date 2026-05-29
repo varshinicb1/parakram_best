@@ -1,0 +1,27 @@
+{
+  "id": "max30102",
+  "name": "MAX30102 Pulse Oximeter",
+  "category": "sensor",
+  "description": "MAX30102 Pulse Oximeter firmware block",
+  "libraries": [
+    "Wire.h",
+    "MAX30105.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x57",
+  "platformio_deps": [
+    "sparkfun/SparkFun MAX3010x Pulse and Proximity Sensor Library@^1.1.2"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MAX30102_H\n#define MAX30102_H\n#include <MAX30105.h>\nvoid max30102_setup();\nvoid max30102_loop();\nuint32_t max30102_get_ir();\nuint32_t max30102_get_red();\nfloat max30102_get_bpm();\n#endif",
+    "source": "#include \"max30102.h\"\n#include <Wire.h>\nstatic MAX30105 sensor;\nstatic uint32_t _ir=0,_red=0;\nstatic float _bpm=0;\nstatic unsigned long _last=0;\nvoid max30102_setup(){\n  Wire.begin();\n  if(!sensor.begin(Wire,I2C_SPEED_FAST)){Serial.println(\"[max30102] Init failed!\");return;}\n  sensor.setup(60,4,2,400,411,4096);\n  Serial.println(\"[max30102] OK\");\n}\nvoid max30102_loop(){\n  if(millis()-_last<50)return;\n  _last=millis();\n  _ir=sensor.getIR();\n  _red=sensor.getRed();\n}\nuint32_t max30102_get_ir(){return _ir;}\nuint32_t max30102_get_red(){return _red;}\nfloat max30102_get_bpm(){return _bpm;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

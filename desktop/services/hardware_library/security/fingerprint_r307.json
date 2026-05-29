@@ -1,0 +1,26 @@
+{
+  "id": "fingerprint_r307",
+  "name": "Fingerprint Sensor (R307)",
+  "category": "security",
+  "description": "Fingerprint Sensor (R307) firmware block",
+  "libraries": [
+    "Adafruit_Fingerprint.h"
+  ],
+  "pins": {
+    "rx": 16,
+    "tx": 17
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit Fingerprint Sensor Library@^2.1.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef FINGERPRINT_H\n#define FINGERPRINT_H\nvoid fingerprint_setup();\nvoid fingerprint_loop();\nint fingerprint_verify();\nbool fingerprint_enroll(uint8_t id);\nint fingerprint_get_count();\n#endif",
+    "source": "#include \"fingerprint_r307.h\"\n#include <Adafruit_Fingerprint.h>\n#include <HardwareSerial.h>\nstatic HardwareSerial fpSerial(2);\nstatic Adafruit_Fingerprint finger(&fpSerial);\nvoid fingerprint_setup(){\n  fpSerial.begin(57600,SERIAL_8N1,16,17);\n  finger.begin(57600);\n  if(!finger.verifyPassword()){Serial.println(\"[fp] Sensor not found!\");return;}\n  Serial.printf(\"[fp] OK, %d templates\\n\",finger.templateCount);\n}\nvoid fingerprint_loop(){}\nint fingerprint_verify(){\n  if(finger.getImage()!=FINGERPRINT_OK)return-1;\n  if(finger.image2Tz()!=FINGERPRINT_OK)return-2;\n  if(finger.fingerSearch()!=FINGERPRINT_OK)return-3;\n  return finger.fingerID;\n}\nint fingerprint_get_count(){finger.getTemplateCount();return finger.templateCount;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,27 @@
+{
+  "id": "lis3dh",
+  "name": "LIS3DH 3-Axis Accelerometer",
+  "category": "sensor",
+  "description": "LIS3DH 3-Axis Accelerometer firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_LIS3DH.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x18",
+  "platformio_deps": [
+    "adafruit/Adafruit LIS3DH@^1.3.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef LIS3DH_H\n#define LIS3DH_H\nvoid lis3dh_setup();\nvoid lis3dh_loop();\nfloat lis3dh_get_x();\nfloat lis3dh_get_y();\nfloat lis3dh_get_z();\nbool lis3dh_tap_detected();\n#endif",
+    "source": "#include \"lis3dh.h\"\n#include <Wire.h>\n#include <Adafruit_LIS3DH.h>\n#include <Adafruit_Sensor.h>\nstatic Adafruit_LIS3DH lis;\nstatic float _x=0,_y=0,_z=0;\nstatic bool _tap=false;\nstatic unsigned long _last=0;\nvoid lis3dh_setup(){Wire.begin();if(!lis.begin(0x18)){Serial.println(\"[lis3dh] Fail!\");return;}lis.setRange(LIS3DH_RANGE_4_G);lis.setClick(2,80);Serial.println(\"[lis3dh] OK\");}\nvoid lis3dh_loop(){if(millis()-_last<50)return;_last=millis();lis.read();sensors_event_t e;lis.getEvent(&e);_x=e.acceleration.x;_y=e.acceleration.y;_z=e.acceleration.z;_tap=(lis.getClick()>0);}\nfloat lis3dh_get_x(){return _x;}\nfloat lis3dh_get_y(){return _y;}\nfloat lis3dh_get_z(){return _z;}\nbool lis3dh_tap_detected(){return _tap;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

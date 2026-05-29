@@ -1,0 +1,106 @@
+name: Build & Deploy Parakram
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  # ── Backend CI ─────────────────────────────────────────────
+  backend:
+    name: Backend Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "backend -> target"
+
+      - name: Compile Check
+        run: cd backend && cargo check
+
+  # ── Firmware CI ────────────────────────────────────────────
+  firmware:
+    name: Firmware Build (ESP32-S3)
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'firmware') || contains(github.event.head_commit.modified, 'firmware/')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build Firmware
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.1
+          target: esp32s3
+          path: 'firmware'
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: parakram-firmware-esp32s3
+          path: |
+            firmware/build/*.bin
+
+  # ── Deploy Web App to GitHub Pages ─────────────────────────
+  deploy:
+    name: Deploy Web App to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build site directory
+        run: |
+          mkdir -p site
+
+          # Playground is the primary web app (landing page)
+          cp playground/index.html site/index.html
+          cp playground/app.js site/app.js
+          cp playground/lvgl.html site/lvgl.html
+          cp playground/flasher.html site/flasher.html
+
+          # Admin panel
+          mkdir -p site/admin
+          cp -R admin/* site/admin/ 2>/dev/null || true
+
+          # Documentation (nested under /docs/)
+          if [ -f mkdocs.yml ]; then
+            pip install mkdocs-material
+            mkdocs build -d site/docs
+          fi
+
+          # Android APK download page
+          mkdir -p site/android
+          cat > site/android/index.html << 'ANDROID'
+          <!DOCTYPE html>
+          <html><head><meta charset="UTF-8"><title>Parakram Android</title>
+          <meta http-equiv="refresh" content="0;url=https://github.com/varshinicb1/Parakram_new/releases/latest">
+          </head><body><p>Redirecting to latest release...</p></body></html>
+          ANDROID
+
+          # CNAME (optional — set if you have a custom domain)
+          # echo "parakram.vidyuthlabs.co.in" > site/CNAME
+
+          # Prevent Jekyll processing
+          touch site/.nojekyll
+
+          echo "✅ Site built: $(find site -type f | wc -l) files"
+          ls -la site/
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site

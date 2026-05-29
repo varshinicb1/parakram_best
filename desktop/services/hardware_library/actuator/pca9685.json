@@ -1,0 +1,27 @@
+{
+  "id": "pca9685",
+  "name": "PCA9685 16-Ch PWM/Servo",
+  "category": "actuator",
+  "description": "PCA9685 16-Ch PWM/Servo firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_PWMServoDriver.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x40",
+  "platformio_deps": [
+    "adafruit/Adafruit PWM Servo Driver Library@^3.0.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef PCA9685_H\n#define PCA9685_H\nvoid pca9685_setup();\nvoid pca9685_set_pwm(uint8_t ch, uint16_t on, uint16_t off);\nvoid pca9685_set_servo(uint8_t ch, int angle);\nvoid pca9685_set_duty(uint8_t ch, float duty);\n#endif",
+    "source": "#include \"pca9685.h\"\n#include <Wire.h>\n#include <Adafruit_PWMServoDriver.h>\nstatic Adafruit_PWMServoDriver pwm;\nvoid pca9685_setup(){Wire.begin();pwm.begin();pwm.setOscillatorFrequency(27000000);pwm.setPWMFreq(50);Serial.println(\"[pca9685] OK 16ch\");}\nvoid pca9685_set_pwm(uint8_t ch,uint16_t on,uint16_t off){pwm.setPWM(ch,on,off);}\nvoid pca9685_set_servo(uint8_t ch,int a){uint16_t p=map(constrain(a,0,180),0,180,150,600);pwm.setPWM(ch,0,p);}\nvoid pca9685_set_duty(uint8_t ch,float d){pwm.setPWM(ch,0,(uint16_t)(d*4095));}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

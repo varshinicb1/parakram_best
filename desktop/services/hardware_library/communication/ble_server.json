@@ -1,0 +1,21 @@
+{
+  "id": "ble_server",
+  "name": "BLE Peripheral (GATT)",
+  "category": "communication",
+  "description": "BLE Peripheral (GATT) firmware block",
+  "libraries": [
+    "BLEDevice.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef BLE_SERVER_H\n#define BLE_SERVER_H\nvoid ble_setup(const char* name);\nvoid ble_loop();\nvoid ble_notify(const char* value);\nbool ble_is_connected();\n#endif",
+    "source": "#include \"ble_server.h\"\n#include <BLEDevice.h>\n#include <BLEServer.h>\n#include <BLEUtils.h>\n#include <BLE2902.h>\n#define SERVICE_UUID \"4fafc201-1fb5-459e-8fcc-c5c9c331914b\"\n#define CHAR_UUID    \"beb5483e-36e1-4688-b7f5-ea07361b26a8\"\nstatic BLECharacteristic* pChar = nullptr;\nstatic bool _connected = false;\nclass MyCB : public BLEServerCallbacks {\n  void onConnect(BLEServer*) { _connected = true; Serial.println(\"[ble] Connected\"); }\n  void onDisconnect(BLEServer* s) { _connected = false; s->startAdvertising(); Serial.println(\"[ble] Disconnected\"); }\n};\nvoid ble_setup(const char* name) {\n  BLEDevice::init(name);\n  BLEServer* s = BLEDevice::createServer();\n  s->setCallbacks(new MyCB());\n  BLEService* svc = s->createService(SERVICE_UUID);\n  pChar = svc->createCharacteristic(CHAR_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);\n  pChar->addDescriptor(new BLE2902());\n  svc->start();\n  s->getAdvertising()->start();\n  Serial.printf(\"[ble] OK: %s\\n\", name);\n}\nvoid ble_loop() {}\nvoid ble_notify(const char* v) { if (pChar && _connected) { pChar->setValue(v); pChar->notify(); } }\nbool ble_is_connected() { return _connected; }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

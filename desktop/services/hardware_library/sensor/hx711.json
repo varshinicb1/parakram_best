@@ -1,0 +1,26 @@
+{
+  "id": "hx711",
+  "name": "HX711 Load Cell",
+  "category": "sensor",
+  "description": "HX711 Load Cell firmware block",
+  "libraries": [
+    "HX711.h"
+  ],
+  "pins": {
+    "dout": 4,
+    "sck": 5
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "bogde/HX711@^0.7.5"
+  ],
+  "firmware_template": {
+    "header": "#ifndef HX711_BLOCK_H\n#define HX711_BLOCK_H\n#include <HX711.h>\nvoid hx711_setup();\nvoid hx711_loop();\nfloat hx711_get_weight();\nvoid hx711_tare();\n#endif",
+    "source": "#include \"hx711_block.h\"\nstatic HX711 scale;\nstatic float _weight=0;\nstatic unsigned long _last=0;\nvoid hx711_setup(){\n  scale.begin(4,5);\n  scale.set_scale(2280.0);\n  scale.tare();\n  Serial.println(\"[hx711] OK, tared\");\n}\nvoid hx711_loop(){\n  if(millis()-_last<500)return;\n  _last=millis();\n  if(scale.is_ready()){_weight=scale.get_units(5);Serial.printf(\"[hx711] %.1fg\\n\",_weight);}\n}\nfloat hx711_get_weight(){return _weight;}\nvoid hx711_tare(){scale.tare();}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

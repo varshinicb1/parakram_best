@@ -1,0 +1,21 @@
+{
+  "id": "ph_sensor",
+  "name": "pH Sensor (Analog)",
+  "category": "sensor",
+  "description": "pH Sensor (Analog) firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef PH_SENSOR_H\n#define PH_SENSOR_H\nvoid ph_setup();\nvoid ph_loop();\nfloat ph_get_value();\nfloat ph_get_voltage();\n#endif",
+    "source": "#include \"ph_sensor.h\"\n#include <Arduino.h>\n#define PH_PIN 34\n#define PH_OFFSET 0.0\nstatic float _ph=7.0,_v=0;static unsigned long _l=0;\nvoid ph_setup(){Serial.println(\"[ph] OK\");}\nvoid ph_loop(){if(millis()-_l<1000)return;_l=millis();int r=0;for(int i=0;i<10;i++)r+=analogRead(PH_PIN);_v=r/10.0*3.3/4095.0;_ph=3.5*_v+PH_OFFSET;}\nfloat ph_get_value(){return _ph;}\nfloat ph_get_voltage(){return _v;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

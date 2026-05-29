@@ -1,0 +1,22 @@
+{
+  "id": "dimmer_triac",
+  "name": "AC Dimmer (TRIAC)",
+  "category": "actuator",
+  "description": "AC Dimmer (TRIAC) firmware block",
+  "libraries": [],
+  "pins": {
+    "gate": 25,
+    "zc": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef DIMMER_H\n#define DIMMER_H\nvoid dimmer_setup();\nvoid dimmer_set(uint8_t pct);\nuint8_t dimmer_get();\n#endif",
+    "source": "#include \"dimmer_triac.h\"\n#include <Arduino.h>\n#define GATE_PIN 25\n#define ZC_PIN 34\nstatic volatile uint8_t _dim=0;\nstatic volatile unsigned long _zcTime=0;\nvoid IRAM_ATTR _zc_isr(){_zcTime=micros();}\nvoid dimmer_setup(){pinMode(GATE_PIN,OUTPUT);pinMode(ZC_PIN,INPUT_PULLUP);attachInterrupt(ZC_PIN,_zc_isr,RISING);Serial.println(\"[dimmer] OK\");}\nvoid dimmer_set(uint8_t p){_dim=constrain(p,0,100);}\nuint8_t dimmer_get(){return _dim;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

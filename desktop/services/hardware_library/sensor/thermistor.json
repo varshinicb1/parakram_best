@@ -1,0 +1,21 @@
+{
+  "id": "thermistor",
+  "name": "NTC Thermistor",
+  "category": "sensor",
+  "description": "NTC Thermistor firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef THERMISTOR_H\n#define THERMISTOR_H\nvoid thermistor_setup();\nvoid thermistor_loop();\nfloat thermistor_get_temperature();\nint thermistor_get_raw();\n#endif",
+    "source": "#include \"thermistor.h\"\n#include <Arduino.h>\n#include <math.h>\n#define THERM_PIN 34\n#define SERIES_R 10000\n#define NOMINAL_R 10000\n#define NOMINAL_T 25\n#define B_COEFF 3950\nstatic float _t=0;static int _raw=0;static unsigned long _l=0;\nvoid thermistor_setup(){Serial.println(\"[therm] OK\");}\nvoid thermistor_loop(){if(millis()-_l<1000)return;_l=millis();_raw=analogRead(THERM_PIN);float r=SERIES_R/(4095.0/_raw-1.0);float s=r/NOMINAL_R;s=log(s);s/=B_COEFF;s+=1.0/(NOMINAL_T+273.15);_t=1.0/s-273.15;}\nfloat thermistor_get_temperature(){return _t;}\nint thermistor_get_raw(){return _raw;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

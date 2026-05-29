@@ -1,0 +1,27 @@
+{
+  "id": "sgp30",
+  "name": "SGP30 Air Quality",
+  "category": "sensor",
+  "description": "SGP30 Air Quality firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_SGP30.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x58",
+  "platformio_deps": [
+    "adafruit/Adafruit SGP30 Sensor@^2.0.3"
+  ],
+  "firmware_template": {
+    "header": "#ifndef SGP30_H\n#define SGP30_H\nvoid sgp30_setup();\nvoid sgp30_loop();\nuint16_t sgp30_get_tvoc();\nuint16_t sgp30_get_eco2();\n#endif",
+    "source": "#include \"sgp30.h\"\n#include <Wire.h>\n#include <Adafruit_SGP30.h>\nstatic Adafruit_SGP30 sgp;\nstatic uint16_t _tvoc=0,_eco2=0;\nstatic unsigned long _last=0;\nvoid sgp30_setup(){Wire.begin();if(!sgp.begin()){Serial.println(\"[sgp30] Fail!\");return;}Serial.println(\"[sgp30] OK\");}\nvoid sgp30_loop(){if(millis()-_last<1000)return;_last=millis();if(sgp.IAQmeasure()){_tvoc=sgp.TVOC;_eco2=sgp.eCO2;}}\nuint16_t sgp30_get_tvoc(){return _tvoc;}\nuint16_t sgp30_get_eco2(){return _eco2;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

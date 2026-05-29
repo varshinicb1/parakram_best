@@ -1,0 +1,73 @@
+{
+    "id": "lvgl_app",
+    "name": "LVGL Application",
+    "category": "display",
+    "description": "Full LVGL display application with tick handler, flush callback, and UI lifecycle.",
+    "inputs": [
+        {
+            "name": "data",
+            "data_type": "any",
+            "description": "Data to display on UI"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "touch_x",
+            "data_type": "int"
+        },
+        {
+            "name": "touch_y",
+            "data_type": "int"
+        },
+        {
+            "name": "touch_pressed",
+            "data_type": "bool"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "screen_width",
+            "label": "Width",
+            "value_type": "int",
+            "default": "320"
+        },
+        {
+            "key": "screen_height",
+            "label": "Height",
+            "value_type": "int",
+            "default": "240"
+        },
+        {
+            "key": "rotation",
+            "label": "Rotation (0-3)",
+            "value_type": "int",
+            "default": "1"
+        },
+        {
+            "key": "color_depth",
+            "label": "Color Depth",
+            "value_type": "int",
+            "default": "16"
+        },
+        {
+            "key": "buf_lines",
+            "label": "Buffer Lines",
+            "value_type": "int",
+            "default": "40"
+        }
+    ],
+    "libraries": [
+        "lvgl/lvgl@^8.3.0",
+        "bodmer/TFT_eSPI@^2.5.0"
+    ],
+    "firmware_template": {
+        "header": "#ifndef LVGL_APP_H\n#define LVGL_APP_H\n#include <Arduino.h>\n#include <lvgl.h>\n\nvoid lvgl_app_setup();\nvoid lvgl_app_loop();\nlv_obj_t* lvgl_get_screen();\nvoid lvgl_create_label(const char* text, int x, int y);\nvoid lvgl_update_label(lv_obj_t* label, const char* text);\nlv_obj_t* lvgl_create_gauge(int x, int y, int w, int h, float min, float max);\nvoid lvgl_update_gauge(lv_obj_t* bar, float value);\n\n#endif",
+        "source": "#include \"lvgl_app.h\"\n#include <TFT_eSPI.h>\n#include \"config.h\"\n\n#define SCREEN_W 320\n#define SCREEN_H 240\n#define BUF_LINES 40\n\nstatic TFT_eSPI _tft(SCREEN_H, SCREEN_W);\nstatic lv_disp_draw_buf_t _drawBuf;\nstatic lv_color_t _buf1[SCREEN_W * BUF_LINES];\nstatic lv_disp_drv_t _dispDrv;\n\nstatic void _flush_cb(lv_disp_drv_t* drv, const lv_area_t* area, lv_color_t* color_p) {\n    uint32_t w = area->x2 - area->x1 + 1;\n    uint32_t h = area->y2 - area->y1 + 1;\n    _tft.startWrite();\n    _tft.setAddrWindow(area->x1, area->y1, w, h);\n    _tft.pushColors((uint16_t*)&color_p->full, w * h, true);\n    _tft.endWrite();\n    lv_disp_flush_ready(drv);\n}\n\nvoid lvgl_app_setup() {\n    _tft.begin();\n    _tft.setRotation(1);\n    lv_init();\n    lv_disp_draw_buf_init(&_drawBuf, _buf1, NULL, SCREEN_W * BUF_LINES);\n    lv_disp_drv_init(&_dispDrv);\n    _dispDrv.hor_res = SCREEN_W;\n    _dispDrv.ver_res = SCREEN_H;\n    _dispDrv.flush_cb = _flush_cb;\n    _dispDrv.draw_buf = &_drawBuf;\n    lv_disp_drv_register(&_dispDrv);\n    Serial.println(\"[lvgl] Display initialized\");\n}\n\nvoid lvgl_app_loop() {\n    lv_timer_handler();\n}\n\nlv_obj_t* lvgl_get_screen() { return lv_scr_act(); }\n\nvoid lvgl_create_label(const char* text, int x, int y) {\n    lv_obj_t* label = lv_label_create(lv_scr_act());\n    lv_label_set_text(label, text);\n    lv_obj_set_pos(label, x, y);\n    lv_obj_set_style_text_color(label, lv_color_white(), 0);\n}\n\nvoid lvgl_update_label(lv_obj_t* label, const char* text) {\n    lv_label_set_text(label, text);\n}\n\nlv_obj_t* lvgl_create_gauge(int x, int y, int w, int h, float min, float max) {\n    lv_obj_t* bar = lv_bar_create(lv_scr_act());\n    lv_obj_set_pos(bar, x, y);\n    lv_obj_set_size(bar, w, h);\n    lv_bar_set_range(bar, (int)min, (int)max);\n    return bar;\n}\n\nvoid lvgl_update_gauge(lv_obj_t* bar, float value) {\n    lv_bar_set_value(bar, (int)value, LV_ANIM_ON);\n}"
+    },
+    "icon": "🖥️",
+    "color": "#0ea5e9",
+    "memory_estimate": {
+        "flash": 120000,
+        "sram": 48000
+    }
+}

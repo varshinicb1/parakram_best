@@ -1,0 +1,27 @@
+{
+  "id": "can_bus",
+  "name": "CAN Bus (MCP2515)",
+  "category": "communication",
+  "description": "CAN Bus (MCP2515) firmware block",
+  "libraries": [
+    "SPI.h",
+    "mcp_can.h"
+  ],
+  "pins": {
+    "cs": 5,
+    "int": 4
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "coryjfowler/mcp_can@^1.5.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef CAN_BUS_H\n#define CAN_BUS_H\n#include <mcp_can.h>\nvoid can_setup();\nvoid can_loop();\nbool can_send(uint32_t id, uint8_t* data, uint8_t len);\ntypedef void (*can_rx_cb)(uint32_t id, uint8_t* data, uint8_t len);\nvoid can_on_receive(can_rx_cb cb);\n#endif",
+    "source": "#include \"can_bus.h\"\n#include <SPI.h>\nstatic MCP_CAN can(5);\nstatic can_rx_cb _rx=nullptr;\nvoid can_setup(){\n  if(can.begin(MCP_ANY,CAN_500KBPS,MCP_8MHZ)!=CAN_OK){Serial.println(\"[can] Init failed!\");return;}\n  can.setMode(MCP_NORMAL);pinMode(4,INPUT);Serial.println(\"[can] OK 500kbps\");\n}\nvoid can_loop(){\n  if(!digitalRead(4)){uint32_t id;uint8_t len;uint8_t buf[8];\n    can.readMsgBuf(&id,&len,buf);if(_rx)_rx(id,buf,len);}\n}\nbool can_send(uint32_t id,uint8_t*d,uint8_t l){return can.sendMsgBuf(id,0,l,d)==CAN_OK;}\nvoid can_on_receive(can_rx_cb cb){_rx=cb;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

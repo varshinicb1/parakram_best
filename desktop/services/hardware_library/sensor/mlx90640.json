@@ -1,0 +1,27 @@
+{
+  "id": "mlx90640",
+  "name": "MLX90640 Thermal Camera",
+  "category": "sensor",
+  "description": "MLX90640 Thermal Camera firmware block",
+  "libraries": [
+    "Wire.h",
+    "MLX90640_API.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x33",
+  "platformio_deps": [
+    "sparkfun/SparkFun MLX90640 Arduino Example Library@^1.0.4"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MLX90640_H\n#define MLX90640_H\nvoid mlx90640_setup();\nvoid mlx90640_loop();\nfloat mlx90640_get_pixel(int idx);\nfloat mlx90640_get_max_temp();\n#endif",
+    "source": "#include \"mlx90640.h\"\n#include <Wire.h>\n#include <MLX90640_API.h>\n#include <MLX90640_I2C_Driver.h>\nstatic float _frame[768];\nstatic float _maxT=0;\nstatic unsigned long _last=0;\nstatic paramsMLX90640 _params;\nstatic uint16_t _eeData[832];\nvoid mlx90640_setup(){\n  Wire.begin();Wire.setClock(400000);\n  int st=MLX90640_DumpEE(0x33,_eeData);\n  if(st!=0){Serial.println(\"[mlx90640] EE dump failed\");return;}\n  MLX90640_ExtractParameters(_eeData,&_params);\n  Serial.println(\"[mlx90640] OK 32x24\");\n}\nvoid mlx90640_loop(){\n  if(millis()-_last<500)return;\n  _last=millis();\n  uint16_t sub[834];\n  MLX90640_GetFrameData(0x33,sub);\n  float ta=MLX90640_GetTa(sub,&_params);\n  MLX90640_CalculateTo(sub,&_params,0.95,ta-8,_frame);\n  _maxT=_frame[0];for(int i=1;i<768;i++)if(_frame[i]>_maxT)_maxT=_frame[i];\n}\nfloat mlx90640_get_pixel(int i){return(i>=0&&i<768)?_frame[i]:0;}\nfloat mlx90640_get_max_temp(){return _maxT;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

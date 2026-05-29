@@ -1,0 +1,27 @@
+{
+  "id": "ens160",
+  "name": "ENS160 Air Quality (AQI)",
+  "category": "sensor",
+  "description": "ENS160 Air Quality (AQI) firmware block",
+  "libraries": [
+    "Wire.h",
+    "ScioSense_ENS160.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x53",
+  "platformio_deps": [
+    "sciosense/ScioSense_ENS160@^1.0.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef ENS160_H\n#define ENS160_H\nvoid ens160_setup();\nvoid ens160_loop();\nuint8_t ens160_get_aqi();\nuint16_t ens160_get_tvoc();\nuint16_t ens160_get_eco2();\n#endif",
+    "source": "#include \"ens160.h\"\n#include <Wire.h>\n#include <ScioSense_ENS160.h>\nstatic ScioSense_ENS160 ens(ENS160_I2CADDR_1);\nstatic uint8_t _aqi=0;static uint16_t _tvoc=0,_eco2=0;static unsigned long _l=0;\nvoid ens160_setup(){Wire.begin();ens.begin();ens.setMode(ENS160_OPMODE_STD);Serial.println(\"[ens160] OK\");}\nvoid ens160_loop(){if(millis()-_l<1000)return;_l=millis();if(ens.available()){ens.measure(true);_aqi=ens.getAQI();_tvoc=ens.getTVOC();_eco2=ens.geteCO2();}}\nuint8_t ens160_get_aqi(){return _aqi;}\nuint16_t ens160_get_tvoc(){return _tvoc;}\nuint16_t ens160_get_eco2(){return _eco2;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

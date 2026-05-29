@@ -1,0 +1,6 @@
+{
+  "board": "esp32",
+  "framework": "arduino",
+  "pins_used": {},
+  "libraries": []
+}

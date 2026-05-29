@@ -1,0 +1,21 @@
+{
+  "id": "soil_moisture",
+  "name": "Soil Moisture (Capacitive)",
+  "category": "sensor",
+  "description": "Soil Moisture (Capacitive) firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef SOIL_MOISTURE_H\n#define SOIL_MOISTURE_H\nvoid soil_moisture_setup();\nvoid soil_moisture_loop();\nint soil_moisture_get_raw();\nfloat soil_moisture_get_percent();\n#endif",
+    "source": "#include \"soil_moisture.h\"\n#include <Arduino.h>\nstatic int _raw=0;static float _pct=0;\nstatic unsigned long _last=0;\n#define SOIL_PIN 34\n#define DRY_VAL 3500\n#define WET_VAL 1500\nvoid soil_moisture_setup(){pinMode(SOIL_PIN,INPUT);Serial.println(\"[soil] OK\");}\nvoid soil_moisture_loop(){\n  if(millis()-_last<1000)return;\n  _last=millis();\n  _raw=analogRead(SOIL_PIN);\n  _pct=constrain(map(_raw,DRY_VAL,WET_VAL,0,100),0,100);\n  Serial.printf(\"[soil] %d raw, %.0f%%\\n\",_raw,_pct);\n}\nint soil_moisture_get_raw(){return _raw;}\nfloat soil_moisture_get_percent(){return _pct;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

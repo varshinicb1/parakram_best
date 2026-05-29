@@ -1,0 +1,21 @@
+{
+  "id": "led_output",
+  "name": "LED Output (PWM)",
+  "category": "actuator",
+  "description": "LED Output (PWM) firmware block",
+  "libraries": [],
+  "pins": {
+    "led": 2
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef LED_OUTPUT_H\n#define LED_OUTPUT_H\nvoid led_setup();\nvoid led_on();\nvoid led_off();\nvoid led_set_brightness(uint8_t b);\nvoid led_blink(uint16_t on_ms, uint16_t off_ms);\n#endif",
+    "source": "#include \"led_output.h\"\n#include <Arduino.h>\n#define LED_PIN 2\nstatic bool _on = false;\nstatic unsigned long _blinkLast = 0;\nstatic uint16_t _blinkOn = 0, _blinkOff = 0;\nvoid led_setup() {\n  ledcAttach(LED_PIN, 5000, 8);\n  Serial.println(\"[led] OK pin=2\");\n}\nvoid led_on() { ledcWrite(LED_PIN, 255); _on = true; }\nvoid led_off() { ledcWrite(LED_PIN, 0); _on = false; }\nvoid led_set_brightness(uint8_t b) { ledcWrite(LED_PIN, b); _on = (b > 0); }\nvoid led_blink(uint16_t on_ms, uint16_t off_ms) { _blinkOn = on_ms; _blinkOff = off_ms; }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

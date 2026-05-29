@@ -1,0 +1,27 @@
+{
+  "id": "tsl2591",
+  "name": "TSL2591 Light Sensor",
+  "category": "sensor",
+  "description": "TSL2591 Light Sensor firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_TSL2591.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x29",
+  "platformio_deps": [
+    "adafruit/Adafruit TSL2591 Library@^1.4.5"
+  ],
+  "firmware_template": {
+    "header": "#ifndef TSL2591_H\n#define TSL2591_H\nvoid tsl2591_setup();\nvoid tsl2591_loop();\nfloat tsl2591_get_lux();\nuint16_t tsl2591_get_ir();\nuint16_t tsl2591_get_full();\n#endif",
+    "source": "#include \"tsl2591.h\"\n#include <Wire.h>\n#include <Adafruit_TSL2591.h>\nstatic Adafruit_TSL2591 tsl(2591);\nstatic float _lux=0;static uint16_t _ir=0,_full=0;static unsigned long _l=0;\nvoid tsl2591_setup(){Wire.begin();if(!tsl.begin()){Serial.println(\"[tsl2591] Fail!\");return;}tsl.setGain(TSL2591_GAIN_MED);tsl.setTiming(TSL2591_INTEGRATIONTIME_300MS);Serial.println(\"[tsl2591] OK\");}\nvoid tsl2591_loop(){if(millis()-_l<500)return;_l=millis();uint32_t lum=tsl.getFullLuminosity();_ir=lum>>16;_full=lum&0xFFFF;_lux=tsl.calculateLux(_full,_ir);}\nfloat tsl2591_get_lux(){return _lux;}\nuint16_t tsl2591_get_ir(){return _ir;}\nuint16_t tsl2591_get_full(){return _full;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

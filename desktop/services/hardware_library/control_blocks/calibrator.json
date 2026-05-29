@@ -1,0 +1,21 @@
+{
+  "id": "calibrator",
+  "name": "Universal Calibrator (NVS)",
+  "category": "control_blocks",
+  "description": "Universal Calibrator (NVS) firmware block",
+  "libraries": [
+    "Preferences.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef CALIBRATOR_H\n#define CALIBRATOR_H\n#include <Arduino.h>\nvoid calibrator_setup();\nvoid calibrator_set_polynomial(const char*sensor_id, const float*coeffs, uint8_t degree);\nfloat calibrator_apply(const char*sensor_id, float raw);\nvoid calibrator_tare(const char*sensor_id, float current_raw);\nvoid calibrator_two_point(const char*sensor_id, float raw1, float ref1, float raw2, float ref2);\nvoid calibrator_save(const char*sensor_id);\nvoid calibrator_load(const char*sensor_id);\n#endif",
+    "source": "#include \"calibrator.h\"\n#include <Preferences.h>\n#include <math.h>\n#define MAX_SENSORS 16\n#define MAX_DEGREE 4\ntypedef struct {\n  char id[24];\n  float coeffs[MAX_DEGREE+1];\n  uint8_t degree;\n  float tare_offset;\n  bool valid;\n} cal_entry_t;\nstatic cal_entry_t _cals[MAX_SENSORS];\nstatic uint8_t _cnt = 0;\nstatic Preferences _prefs;\nstatic int _find(const char*id) {\n  for (int i = 0; i < _cnt; i++) if (strcmp(_cals[i].id, id) == 0) return i;\n  return -1;\n}\nstatic int _findOrCreate(const char*id) {\n  int idx = _find(id);\n  if (idx >= 0) return idx;\n  if (_cnt >= MAX_SENSORS) return -1;\n  idx = _cnt++;\n  strncpy(_cals[idx].id, id, 23);\n  _cals[idx].degree = 1;\n  _cals[idx].coeffs[0] = 0; _cals[idx].coeffs[1] = 1;\n  _cals[idx].tare_offset = 0;\n  _cals[idx].valid = true;\n  return idx;\n}\nvoid calibrator_setup() {\n  _prefs.begin(\"cal\", false);\n  Serial.println(\"[cal] OK\");\n}\nvoid calibrator_set_polynomial(const char*id, const float*c, uint8_t d) {\n  int idx = _findOrCreate(id);\n  if (idx < 0) return;\n  _cals[idx].degree = min(d, (uint8_t)MAX_DEGREE);\n  for (int i = 0; i <= d; i++) _cals[idx].coeffs[i] = c[i];\n  _cals[idx].valid = true;\n  Serial.printf(\"[cal] %s: deg=%d\\n\", id, d);\n}\nfloat calibrator_apply(const char*id, float raw) {\n  int idx = _find(id);\n  if (idx < 0) return raw;\n  float result = 0, power = 1;\n  raw -= _cals[idx].tare_offset;\n  for (int i = 0; i <= _cals[idx].degree; i++) {\n    result += _cals[idx].coeffs[i] * power;\n    power *= raw;\n  }\n  return result;\n}\nvoid calibrator_tare(const char*id, float raw) {\n  int idx = _findOrCreate(id);\n  if (idx >= 0) { _cals[idx].tare_offset = raw; Serial.printf(\"[cal] %s tared at %.2f\\n\", id, raw); }\n}\nvoid calibrator_two_point(const char*id, float r1, float v1, float r2, float v2) {\n  int idx = _findOrCreate(id);\n  if (idx < 0) return;\n  float slope = (v2 - v1) / (r2 - r1);\n  float intercept = v1 - slope * r1;\n  _cals[idx].degree = 1;\n  _cals[idx].coeffs[0] = intercept;\n  _cals[idx].coeffs[1] = slope;\n  _cals[idx].valid = true;\n  Serial.printf(\"[cal] %s: y=%.4fx+%.4f\\n\", id, slope, intercept);\n}\nvoid calibrator_save(const char*id) {\n  int idx = _find(id);\n  if (idx < 0) return;\n  _prefs.putBytes(id, &_cals[idx], sizeof(cal_entry_t));\n  Serial.printf(\"[cal] %s saved to NVS\\n\", id);\n}\nvoid calibrator_load(const char*id) {\n  int idx = _findOrCreate(id);\n  if (idx < 0) return;\n  size_t len = _prefs.getBytes(id, &_cals[idx], sizeof(cal_entry_t));\n  if (len > 0) Serial.printf(\"[cal] %s loaded from NVS\\n\", id);\n}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,25 @@
+{
+  "id": "nixie_display",
+  "name": "Nixie Tube Display (HV5522)",
+  "category": "display",
+  "description": "Nixie Tube Display (HV5522) firmware block",
+  "libraries": [
+    "SPI.h"
+  ],
+  "pins": {
+    "latch": 5,
+    "clk": 18,
+    "data": 23
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef NIXIE_H\n#define NIXIE_H\nvoid nixie_setup();\nvoid nixie_show_number(uint32_t num, uint8_t digits);\nvoid nixie_show_time(uint8_t h,uint8_t m,uint8_t s);\nvoid nixie_blank();\n#endif",
+    "source": "#include \"nixie_display.h\"\n#include <SPI.h>\n#define LATCH 5\nvoid nixie_setup(){SPI.begin();pinMode(LATCH,OUTPUT);Serial.println(\"[nixie] OK\");}\nvoid nixie_show_number(uint32_t n,uint8_t d){digitalWrite(LATCH,LOW);for(int i=d-1;i>=0;i--){SPI.transfer((n/(uint32_t)pow(10,i))%10);}digitalWrite(LATCH,HIGH);}\nvoid nixie_show_time(uint8_t h,uint8_t m,uint8_t s){nixie_show_number(h*10000+m*100+s,6);}\nvoid nixie_blank(){digitalWrite(LATCH,LOW);for(int i=0;i<8;i++)SPI.transfer(0xFF);digitalWrite(LATCH,HIGH);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

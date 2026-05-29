@@ -1,0 +1,45 @@
+{
+    "id": "weighted_average",
+    "name": "Weighted Average",
+    "category": "control",
+    "description": "Combines multiple float inputs using configurable weights.",
+    "inputs": [
+        {
+            "name": "input_1",
+            "data_type": "float",
+            "description": "First value"
+        },
+        {
+            "name": "input_2",
+            "data_type": "float",
+            "description": "Second value"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "result",
+            "data_type": "float",
+            "description": "Weighted average output"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "input_count",
+            "label": "Input Count",
+            "value_type": "int",
+            "default": "2"
+        },
+        {
+            "key": "weights",
+            "label": "Weights (comma-sep)",
+            "value_type": "string",
+            "default": "0.5,0.5"
+        }
+    ],
+    "firmware_template": {
+        "header": "#ifndef WEIGHTED_AVERAGE_H\n#define WEIGHTED_AVERAGE_H\n#include <Arduino.h>\n\nclass WeightedAverage {\npublic:\n    WeightedAverage(int inputCount, float* weights);\n    void setInput(int index, float value);\n    float compute();\n    float getResult() const;\nprivate:\n    float* _inputs;\n    float* _weights;\n    int _count;\n    float _result;\n};\n\n#endif",
+        "source": "#include \"weighted_average.h\"\n\nWeightedAverage::WeightedAverage(int inputCount, float* weights)\n    : _count(inputCount), _result(0.0f) {\n    _inputs = new float[inputCount];\n    _weights = new float[inputCount];\n    for (int i = 0; i < inputCount; i++) {\n        _inputs[i] = 0.0f;\n        _weights[i] = weights ? weights[i] : 1.0f / inputCount;\n    }\n}\n\nvoid WeightedAverage::setInput(int index, float value) {\n    if (index >= 0 && index < _count) _inputs[index] = value;\n}\n\nfloat WeightedAverage::compute() {\n    _result = 0.0f;\n    float totalWeight = 0.0f;\n    for (int i = 0; i < _count; i++) {\n        _result += _inputs[i] * _weights[i];\n        totalWeight += _weights[i];\n    }\n    if (totalWeight > 0) _result /= totalWeight;\n    return _result;\n}\n\nfloat WeightedAverage::getResult() const { return _result; }"
+    },
+    "icon": "scale",
+    "color": "#14b8a6"
+}

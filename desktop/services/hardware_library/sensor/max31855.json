@@ -1,0 +1,28 @@
+{
+  "id": "max31855",
+  "name": "MAX31855 Thermocouple",
+  "category": "sensor",
+  "description": "MAX31855 Thermocouple firmware block",
+  "libraries": [
+    "SPI.h",
+    "Adafruit_MAX31855.h"
+  ],
+  "pins": {
+    "cs": 5,
+    "clk": 18,
+    "do": 19
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "adafruit/Adafruit MAX31855 library@^1.3.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef MAX31855_H\n#define MAX31855_H\nvoid max31855_setup();\nvoid max31855_loop();\nfloat max31855_get_temperature();\nfloat max31855_get_internal();\n#endif",
+    "source": "#include \"max31855.h\"\n#include <SPI.h>\n#include <Adafruit_MAX31855.h>\nstatic Adafruit_MAX31855 tc(5);\nstatic float _t=0,_i=0;\nstatic unsigned long _last=0;\nvoid max31855_setup(){if(!tc.begin()){Serial.println(\"[max31855] Fail!\");return;}Serial.println(\"[max31855] OK\");}\nvoid max31855_loop(){if(millis()-_last<1000)return;_last=millis();_t=tc.readCelsius();_i=tc.readInternal();}\nfloat max31855_get_temperature(){return _t;}\nfloat max31855_get_internal(){return _i;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

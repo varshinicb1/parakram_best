@@ -1,0 +1,49 @@
+{
+  "id": "dht22_temperature_humidity",
+  "name": "DHT22 Temperature & Humidity",
+  "category": "sensor",
+  "description": "Digital temperature and humidity sensor. Reads temperature (-40 to 80°C) and humidity (0-100%RH).",
+  "inputs": [],
+  "outputs": [
+    {
+      "name": "temperature",
+      "data_type": "float",
+      "description": "Temperature in Celsius"
+    },
+    {
+      "name": "humidity",
+      "data_type": "float",
+      "description": "Relative humidity percentage"
+    }
+  ],
+  "configuration": [
+    {
+      "key": "pin",
+      "label": "Data Pin",
+      "value_type": "int",
+      "default": "4",
+      "description": "GPIO pin connected to DHT22 data"
+    },
+    {
+      "key": "read_interval",
+      "label": "Read Interval (ms)",
+      "value_type": "int",
+      "default": "2000",
+      "description": "Milliseconds between readings"
+    }
+  ],
+  "code_template": "dht22_template",
+  "icon": "thermometer",
+  "color": "#ef4444",
+  "libraries": [
+    "adafruit/DHT sensor library@^1.4.4",
+    "adafruit/Adafruit Unified Sensor@^1.1.9"
+  ],
+  "pins_required": {
+    "digital": 1
+  },
+  "firmware_template": {
+    "header": "#ifndef DHT22_TEMPERATURE_HUMIDITY_H\n#define DHT22_TEMPERATURE_HUMIDITY_H\n\n#include <DHT.h>\n\nclass DHT22TemperatureHumidity {\npublic:\n    void setup(uint8_t pin, uint32_t read_interval);\n    float getTemperature();\n    float getHumidity();\n\nprivate:\n    DHT dht;\n    uint8_t _pin;\n    uint32_t _read_interval;\n    unsigned long _last_read_time = 0;\n    float _temperature = NAN;\n    float _humidity = NAN;\n\n    void readSensor();\n};\n\n#endif // DHT22_TEMPERATURE_HUMIDITY_H",
+    "source": "#include \"dht22_temperature_humidity.h\"\n\nvoid DHT22TemperatureHumidity::setup(uint8_t pin, uint32_t read_interval) {\n    _pin = pin;\n    _read_interval = read_interval;\n\n    dht.begin(_pin, DHT22);\n\n    // Retry logic for sensor initialization\n    unsigned long start_time = millis();\n    while (millis() - start_time < 5000 && !dht.readHumidity()) {\n        delay(100);\n        Serial.println(\"[dht22_temperature_humidity] Initialization failed, retrying...\");\n    }\n\n    if (!isnan(dht.readHumidity())) {\n        Serial.println(\"[dht22_temperature_humidity] Initialization successful\");\n    } else {\n        Serial.println(\"[dht22_temperature_humidity] Initialization failed after retries\");\n    }\n}\n\nfloat DHT22TemperatureHumidity::getTemperature() {\n    return _temperature;\n}\n\nfloat DHT22TemperatureHumidity::getHumidity() {\n    return _humidity;\n}\n\nvoid DHT22TemperatureHumidity::readSensor() {\n    unsigned long current_time = millis();\n    if (current_time - _last_read_time >= _read_interval) {\n        _last_read_time = current_time;\n\n        float humidity = dht.readHumidity();\n        float temperature = dht.readTemperature();\n\n        if (isnan(humidity) || isnan(temperature)) {\n            Serial.println(\"[dht22_temperature_humidity] Failed to read from sensor\");\n        } else {\n            _temperature = temperature;\n            _humidity = humidity;\n            Serial.print(\"[dht22_temperature_humidity] Temperature: \");\n            Serial.print(_temperature);\n            Serial.print(\"°C, Humidity: \");\n            Serial.print(_humidity);\n            Serial.println(\"%RH\");\n        }\n    }\n}"
+  }
+}

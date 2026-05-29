@@ -1,0 +1,21 @@
+{
+  "id": "water_level",
+  "name": "Water Level Sensor",
+  "category": "sensor",
+  "description": "Water Level Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 36
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef WATER_LEVEL_H\n#define WATER_LEVEL_H\nvoid water_level_setup();\nvoid water_level_loop();\nint water_level_get_raw();\nfloat water_level_get_percent();\nbool water_level_alert();\n#endif",
+    "source": "#include \"water_level.h\"\n#include <Arduino.h>\n#define WL_PIN 36\n#define WL_THRESHOLD 2000\nstatic int _raw=0;static float _pct=0;static bool _alert=false;\nstatic unsigned long _last=0;\nvoid water_level_setup(){pinMode(WL_PIN,INPUT);Serial.println(\"[water] OK\");}\nvoid water_level_loop(){if(millis()-_last<500)return;_last=millis();_raw=analogRead(WL_PIN);_pct=_raw/4095.0*100.0;_alert=_raw>WL_THRESHOLD;}\nint water_level_get_raw(){return _raw;}\nfloat water_level_get_percent(){return _pct;}\nbool water_level_alert(){return _alert;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

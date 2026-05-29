@@ -1,0 +1,27 @@
+{
+  "id": "vl53l0x",
+  "name": "VL53L0X ToF Distance",
+  "category": "sensor",
+  "description": "VL53L0X ToF Distance firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_VL53L0X.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x29",
+  "platformio_deps": [
+    "adafruit/Adafruit_VL53L0X@^1.2.4"
+  ],
+  "firmware_template": {
+    "header": "#ifndef VL53L0X_H\n#define VL53L0X_H\n#include <Adafruit_VL53L0X.h>\nvoid vl53l0x_setup();\nvoid vl53l0x_loop();\nuint16_t vl53l0x_get_distance_mm();\nbool vl53l0x_in_range();\n#endif",
+    "source": "#include \"vl53l0x.h\"\n#include <Wire.h>\nstatic Adafruit_VL53L0X lox;\nstatic uint16_t _mm = 0;\nstatic bool _valid = false;\nstatic unsigned long _last = 0;\nvoid vl53l0x_setup() {\n  Wire.begin();\n  if (!lox.begin()) { Serial.println(\"[vl53l0x] Init failed!\"); return; }\n  Serial.println(\"[vl53l0x] OK\");\n}\nvoid vl53l0x_loop() {\n  if (millis()-_last < 100) return;\n  _last = millis();\n  VL53L0X_RangingMeasurementData_t m;\n  lox.rangingTest(&m, false);\n  if (m.RangeStatus != 4) { _mm = m.RangeMilliMeter; _valid = true; }\n  else { _valid = false; }\n}\nuint16_t vl53l0x_get_distance_mm() { return _mm; }\nbool vl53l0x_in_range() { return _valid; }"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

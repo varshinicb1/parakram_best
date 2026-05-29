@@ -1,0 +1,27 @@
+{
+  "id": "bme680",
+  "name": "BME680 Gas/Env Sensor",
+  "category": "sensor",
+  "description": "BME680 Gas/Env Sensor firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_BME680.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x77",
+  "platformio_deps": [
+    "adafruit/Adafruit BME680 Library@^2.0.4"
+  ],
+  "firmware_template": {
+    "header": "#ifndef BME680_H\n#define BME680_H\n#include <Adafruit_BME680.h>\nvoid bme680_setup();\nvoid bme680_loop();\nfloat bme680_get_temperature();\nfloat bme680_get_humidity();\nfloat bme680_get_pressure();\nfloat bme680_get_gas();\n#endif",
+    "source": "#include \"bme680.h\"\n#include <Wire.h>\nstatic Adafruit_BME680 bme;\nstatic float _temp=0,_hum=0,_pres=0,_gas=0;\nstatic unsigned long _last=0;\nvoid bme680_setup() {\n  Wire.begin();\n  if (!bme.begin(0x77)) { Serial.println(\"[bme680] Init failed!\"); return; }\n  bme.setTemperatureOversampling(BME680_OS_8X);\n  bme.setHumidityOversampling(BME680_OS_2X);\n  bme.setPressureOversampling(BME680_OS_4X);\n  bme.setIIRFilterSize(BME680_FILTER_SIZE_3);\n  bme.setGasHeater(320, 150);\n  Serial.println(\"[bme680] OK\");\n}\nvoid bme680_loop() {\n  if (millis()-_last < 3000) return;\n  _last = millis();\n  if (bme.performReading()) {\n    _temp = bme.temperature;\n    _hum = bme.humidity;\n    _pres = bme.pressure / 100.0F;\n    _gas = bme.gas_resistance / 1000.0F;\n    Serial.printf(\"[bme680] T=%.1fC H=%.0f%% P=%.0fhPa G=%.1fkOhm\\n\",_temp,_hum,_pres,_gas);\n  }\n}\nfloat bme680_get_temperature(){return _temp;}\nfloat bme680_get_humidity(){return _hum;}\nfloat bme680_get_pressure(){return _pres;}\nfloat bme680_get_gas(){return _gas;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

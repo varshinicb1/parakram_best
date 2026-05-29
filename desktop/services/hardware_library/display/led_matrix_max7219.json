@@ -1,0 +1,29 @@
+{
+  "id": "led_matrix_max7219",
+  "name": "LED Matrix (MAX7219)",
+  "category": "display",
+  "description": "LED Matrix (MAX7219) firmware block",
+  "libraries": [
+    "MD_MAX72xx.h",
+    "MD_Parola.h"
+  ],
+  "pins": {
+    "cs": 5,
+    "din": 23,
+    "clk": 18
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "majicdesigns/MD_Parola@^3.7.1",
+    "majicdesigns/MD_MAX72XX@^3.5.1"
+  ],
+  "firmware_template": {
+    "header": "#ifndef LED_MATRIX_H\n#define LED_MATRIX_H\nvoid matrix_setup();\nvoid matrix_loop();\nvoid matrix_scroll_text(const char* text);\nvoid matrix_show(const char* text);\nvoid matrix_set_brightness(uint8_t b);\n#endif",
+    "source": "#include \"led_matrix.h\"\n#include <MD_Parola.h>\n#include <MD_MAX72xx.h>\n#include <SPI.h>\n#define MAX_DEVICES 4\nstatic MD_Parola mx=MD_Parola(MD_MAX72XX::FC16_HW,5,MAX_DEVICES);\nvoid matrix_setup(){mx.begin();mx.setIntensity(5);mx.displayClear();Serial.println(\"[matrix] OK\");}\nvoid matrix_loop(){mx.displayAnimate();}\nvoid matrix_scroll_text(const char*t){mx.displayScroll(t,PA_CENTER,PA_SCROLL_LEFT,75);}\nvoid matrix_show(const char*t){mx.displayClear();mx.print(t);}\nvoid matrix_set_brightness(uint8_t b){mx.setIntensity(b);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,23 @@
+{
+  "id": "dc_motor_l298n",
+  "name": "DC Motor (L298N)",
+  "category": "actuator",
+  "description": "DC Motor (L298N) firmware block",
+  "libraries": [],
+  "pins": {
+    "in1": 25,
+    "in2": 26,
+    "ena": 27
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef DC_MOTOR_H\n#define DC_MOTOR_H\nvoid motor_setup();\nvoid motor_set_speed(int speed);\nvoid motor_forward();\nvoid motor_reverse();\nvoid motor_stop();\n#endif",
+    "source": "#include \"dc_motor.h\"\n#include <Arduino.h>\n#define IN1 25\n#define IN2 26\n#define ENA 27\nstatic int _speed=0;\nvoid motor_setup(){pinMode(IN1,OUTPUT);pinMode(IN2,OUTPUT);ledcAttach(ENA,5000,8);Serial.println(\"[motor] OK\");}\nvoid motor_set_speed(int s){_speed=constrain(abs(s),0,255);ledcWrite(ENA,_speed);}\nvoid motor_forward(){digitalWrite(IN1,HIGH);digitalWrite(IN2,LOW);}\nvoid motor_reverse(){digitalWrite(IN1,LOW);digitalWrite(IN2,HIGH);}\nvoid motor_stop(){digitalWrite(IN1,LOW);digitalWrite(IN2,LOW);ledcWrite(ENA,0);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

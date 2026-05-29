@@ -1,0 +1,27 @@
+{
+  "id": "veml7700",
+  "name": "VEML7700 Ambient Light",
+  "category": "sensor",
+  "description": "VEML7700 Ambient Light firmware block",
+  "libraries": [
+    "Wire.h",
+    "Adafruit_VEML7700.h"
+  ],
+  "pins": {
+    "sda": 21,
+    "scl": 22
+  },
+  "bus": "I2C",
+  "i2c_address": "0x10",
+  "platformio_deps": [
+    "adafruit/Adafruit VEML7700 Library@^2.1.6"
+  ],
+  "firmware_template": {
+    "header": "#ifndef VEML7700_H\n#define VEML7700_H\nvoid veml7700_setup();\nvoid veml7700_loop();\nfloat veml7700_get_lux();\nfloat veml7700_get_white();\nfloat veml7700_get_als();\n#endif",
+    "source": "#include \"veml7700.h\"\n#include <Wire.h>\n#include <Adafruit_VEML7700.h>\nstatic Adafruit_VEML7700 veml;\nstatic float _lux=0,_w=0,_als=0;\nstatic unsigned long _last=0;\nvoid veml7700_setup(){Wire.begin();if(!veml.begin()){Serial.println(\"[veml7700] Fail!\");return;}veml.setGain(VEML7700_GAIN_1);veml.setIntegrationTime(VEML7700_IT_800MS);Serial.println(\"[veml7700] OK\");}\nvoid veml7700_loop(){if(millis()-_last<1000)return;_last=millis();_lux=veml.readLux();_w=veml.readWhite();_als=veml.readALS();}\nfloat veml7700_get_lux(){return _lux;}\nfloat veml7700_get_white(){return _w;}\nfloat veml7700_get_als(){return _als;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

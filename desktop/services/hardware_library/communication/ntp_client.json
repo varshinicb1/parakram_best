@@ -1,0 +1,55 @@
+{
+    "id": "ntp_client",
+    "name": "NTP Time Sync",
+    "category": "communication",
+    "description": "Network time synchronization with timezone support.",
+    "inputs": [
+        {
+            "name": "wifi_connected",
+            "data_type": "bool"
+        }
+    ],
+    "outputs": [
+        {
+            "name": "epoch",
+            "data_type": "int",
+            "description": "Unix timestamp"
+        },
+        {
+            "name": "time_string",
+            "data_type": "string",
+            "description": "Formatted time"
+        },
+        {
+            "name": "synced",
+            "data_type": "bool"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "ntp_server",
+            "label": "NTP Server",
+            "value_type": "string",
+            "default": "pool.ntp.org"
+        },
+        {
+            "key": "gmt_offset",
+            "label": "GMT Offset (sec)",
+            "value_type": "int",
+            "default": "19800"
+        },
+        {
+            "key": "dst_offset",
+            "label": "DST Offset (sec)",
+            "value_type": "int",
+            "default": "0"
+        }
+    ],
+    "libraries": [],
+    "firmware_template": {
+        "header": "#ifndef NTP_CLIENT_H\n#define NTP_CLIENT_H\n#include <Arduino.h>\n\nvoid ntp_setup();\nvoid ntp_loop();\ntime_t ntp_get_epoch();\nString ntp_get_time_string();\nbool ntp_is_synced();\n\n#endif",
+        "source": "#include \"ntp_client.h\"\n#include <time.h>\n#include \"config.h\"\n\nbool _ntp_synced = false;\n\nvoid ntp_setup() {\n    configTime(19800, 0, \"pool.ntp.org\", \"time.nist.gov\");\n    Serial.println(\"[ntp] Waiting for time sync...\");\n    struct tm timeinfo;\n    int retries = 0;\n    while (!getLocalTime(&timeinfo) && retries < 10) {\n        delay(500);\n        retries++;\n    }\n    if (retries < 10) {\n        _ntp_synced = true;\n        Serial.println(\"[ntp] Time synchronized\");\n    } else {\n        Serial.println(\"[ntp] Sync failed\");\n    }\n}\n\nvoid ntp_loop() {}\n\ntime_t ntp_get_epoch() {\n    time_t now;\n    time(&now);\n    return now;\n}\n\nString ntp_get_time_string() {\n    struct tm timeinfo;\n    if (!getLocalTime(&timeinfo)) return \"N/A\";\n    char buf[64];\n    strftime(buf, sizeof(buf), \"%Y-%m-%d %H:%M:%S\", &timeinfo);\n    return String(buf);\n}\n\nbool ntp_is_synced() { return _ntp_synced; }"
+    },
+    "icon": "🕐",
+    "color": "#6366f1"
+}

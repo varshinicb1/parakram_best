@@ -1,0 +1,29 @@
+{
+  "id": "stepper_tmc2209",
+  "name": "TMC2209 Silent Stepper",
+  "category": "actuator",
+  "description": "TMC2209 Silent Stepper firmware block",
+  "libraries": [
+    "TMCStepper.h"
+  ],
+  "pins": {
+    "step": 25,
+    "dir": 26,
+    "en": 27,
+    "rx": 16,
+    "tx": 17
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "teemuatlut/TMCStepper@^0.7.3"
+  ],
+  "firmware_template": {
+    "header": "#ifndef TMC2209_H\n#define TMC2209_H\nvoid tmc2209_setup();\nvoid tmc2209_move(int32_t steps,bool cw);\nvoid tmc2209_set_current(uint16_t mA);\nvoid tmc2209_set_microsteps(uint16_t ms);\nvoid tmc2209_enable(bool en);\n#endif",
+    "source": "#include \"stepper_tmc2209.h\"\n#include <TMCStepper.h>\n#include <HardwareSerial.h>\n#define STEP_P 25\n#define DIR_P 26\n#define EN_P 27\nstatic HardwareSerial tmcSerial(1);\nstatic TMC2209Stepper driver(&tmcSerial,0.11f,0);\nvoid tmc2209_setup(){tmcSerial.begin(115200,SERIAL_8N1,16,17);driver.begin();driver.toff(4);driver.rms_current(800);driver.microsteps(16);driver.pwm_autoscale(true);pinMode(STEP_P,OUTPUT);pinMode(DIR_P,OUTPUT);pinMode(EN_P,OUTPUT);digitalWrite(EN_P,LOW);Serial.println(\"[tmc2209] OK\");}\nvoid tmc2209_move(int32_t s,bool cw){digitalWrite(DIR_P,cw);for(int32_t i=0;i<abs(s);i++){digitalWrite(STEP_P,HIGH);delayMicroseconds(100);digitalWrite(STEP_P,LOW);delayMicroseconds(100);}}\nvoid tmc2209_set_current(uint16_t mA){driver.rms_current(mA);}\nvoid tmc2209_set_microsteps(uint16_t ms){driver.microsteps(ms);}\nvoid tmc2209_enable(bool e){digitalWrite(EN_P,e?LOW:HIGH);}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

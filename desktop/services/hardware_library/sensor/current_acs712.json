@@ -1,0 +1,21 @@
+{
+  "id": "current_acs712",
+  "name": "ACS712 Current Sensor",
+  "category": "sensor",
+  "description": "ACS712 Current Sensor firmware block",
+  "libraries": [],
+  "pins": {
+    "analog": 34
+  },
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef ACS712_H\n#define ACS712_H\nvoid acs712_setup();\nvoid acs712_loop();\nfloat acs712_get_current();\nfloat acs712_get_peak();\n#endif",
+    "source": "#include \"current_acs712.h\"\n#include <Arduino.h>\n#define ACS_PIN 34\n#define SENSITIVITY 0.185\nstatic float _current=0,_peak=0;static unsigned long _l=0;\nvoid acs712_setup(){analogReadResolution(12);Serial.println(\"[acs712] OK\");}\nvoid acs712_loop(){if(millis()-_l<100)return;_l=millis();int raw=0;for(int i=0;i<10;i++)raw+=analogRead(ACS_PIN);raw/=10;float v=raw*3.3/4095.0;_current=(v-1.65)/SENSITIVITY;if(abs(_current)>abs(_peak))_peak=_current;}\nfloat acs712_get_current(){return _current;}\nfloat acs712_get_peak(){return _peak;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}

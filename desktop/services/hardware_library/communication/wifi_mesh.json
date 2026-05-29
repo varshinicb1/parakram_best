@@ -1,0 +1,23 @@
+{
+  "id": "wifi_mesh",
+  "name": "ESP-MESH Network",
+  "category": "communication",
+  "description": "ESP-MESH Network firmware block",
+  "libraries": [
+    "painlessMesh.h"
+  ],
+  "pins": {},
+  "bus": "",
+  "i2c_address": "",
+  "platformio_deps": [
+    "painlessMesh/painlessMesh@^1.5.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef WIFI_MESH_H\n#define WIFI_MESH_H\nvoid mesh_setup(const char*prefix,const char*password);\nvoid mesh_loop();\nvoid mesh_broadcast(const char*msg);\nuint32_t mesh_get_node_id();\nint mesh_node_count();\ntypedef void(*mesh_cb)(uint32_t from,const char*msg);\nvoid mesh_on_receive(mesh_cb cb);\n#endif",
+    "source": "#include \"wifi_mesh.h\"\n#include <painlessMesh.h>\nstatic painlessMesh mesh;\nstatic mesh_cb _cb=nullptr;\nvoid _meshRecv(uint32_t from,String&msg){if(_cb)_cb(from,msg.c_str());}\nvoid mesh_setup(const char*p,const char*pw){mesh.init(p,pw,5555);mesh.onReceive(_meshRecv);Serial.printf(\"[mesh] OK node=%u\\n\",mesh.getNodeId());}\nvoid mesh_loop(){mesh.update();}\nvoid mesh_broadcast(const char*m){mesh.sendBroadcast(m);}\nuint32_t mesh_get_node_id(){return mesh.getNodeId();}\nint mesh_node_count(){return mesh.getNodeList().size();}\nvoid mesh_on_receive(mesh_cb cb){_cb=cb;}"
+  },
+  "configurable_params": {},
+  "outputs": {},
+  "verified": true,
+  "anti_hallucination": true
+}
