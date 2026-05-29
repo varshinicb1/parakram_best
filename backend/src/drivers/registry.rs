@@ -62,7 +62,7 @@ impl DriverRegistry {
         self.drivers.insert(spec.name.clone(), spec);
     }
 
-    /// Populate registry with all 41 drivers.
+    /// Populate registry with all 60 drivers.
     fn populate(&mut self) {
         // ====== SENSORS ======
 
@@ -485,9 +485,9 @@ impl DriverRegistry {
 
         self.add(DriverSpec {
             name: "drv_inmp441".into(), display_name: "INMP441 MEMS Microphone".into(),
-            version: "1.0.0".into(), driver_type: "sensor".into(),
+            version: "1.1.0".into(), driver_type: "sensor".into(),
             bus_types: vec!["i2s_0".into(), "i2s".into()],
-            capabilities: vec!["audio_level_db".into(), "audio_stream".into(), "voice_detect".into()],
+            capabilities: vec!["audio_level_db".into(), "audio_stream".into(), "voice_detect".into(), "clap_detect".into(), "rms_level".into()],
             max_latency_us: 500, min_interval_ms: 10,
             i2c_addresses: vec![],
             failure_modes: vec![FailureMode { error: "I2S_FAIL".into(), description: "I2S bus error".into() }],
@@ -495,8 +495,18 @@ impl DriverRegistry {
 
         self.add(DriverSpec {
             name: "drv_max98357a".into(), display_name: "MAX98357A I2S Amplifier".into(),
-            version: "1.0.0".into(), driver_type: "actuator".into(),
+            version: "1.1.0".into(), driver_type: "actuator".into(),
             bus_types: vec!["i2s_0".into(), "i2s".into()],
+            capabilities: vec!["audio_play".into(), "tone_hz".into(), "volume_percent".into(), "alert_tone".into(), "melody_play".into(), "siren".into()],
+            max_latency_us: 500, min_interval_ms: 10,
+            i2c_addresses: vec![],
+            failure_modes: vec![FailureMode { error: "I2S_FAIL".into(), description: "I2S bus error".into() }],
+        });
+
+        self.add(DriverSpec {
+            name: "drv_pam8403".into(), display_name: "PAM8403 Class-D Amplifier".into(),
+            version: "1.0.0".into(), driver_type: "actuator".into(),
+            bus_types: vec!["i2s_1".into(), "i2s".into()],
             capabilities: vec!["audio_play".into(), "tone_hz".into(), "volume_percent".into()],
             max_latency_us: 500, min_interval_ms: 10,
             i2c_addresses: vec![],

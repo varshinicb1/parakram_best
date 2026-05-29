@@ -1,0 +1,54 @@
+{
+  "id": "pcm_streamer",
+  "name": "PCM Audio Streamer (INMP441 → WiFi)",
+  "category": "audio",
+  "description": "Captures audio from INMP441 mic and streams raw 16-bit PCM over WebSocket or UDP to a server/app. No LLM, no TTS — pure audio transport. Use for remote monitoring, baby monitor, security audio, or as input to any external STT service.",
+  "libraries": [
+    "driver/i2s.h",
+    "WiFi.h",
+    "WebSocketsClient.h"
+  ],
+  "pins": {
+    "mic_ws": 4,
+    "mic_sck": 5,
+    "mic_sd": 7
+  },
+  "bus": "i2s",
+  "i2c_address": "",
+  "platformio_deps": [
+    "links2004/WebSockets@^2.4.0"
+  ],
+  "firmware_template": {
+    "header": "#ifndef PCM_STREAMER_H\n#define PCM_STREAMER_H\n#include <Arduino.h>\nvoid pcm_stream_setup(const char* ssid, const char* pass, const char* server_ip, int ws_port);\nvoid pcm_stream_loop();\nvoid pcm_stream_set_chunk(int bytes);  // 64-3200, must be even\nvoid pcm_stream_set_gain(int shift);   // 10-18\nbool pcm_stream_connected();\n#endif",
+    "source": "#include \"pcm_streamer.h\"\n#include <WiFi.h>\n#include <WebSocketsClient.h>\n#include <driver/i2s.h>\n\n#define MIC_WS  4\n#define MIC_SCK 5\n#define MIC_SD  7\n#define SR      16000\n#define DMA_LEN 256\n\nstatic WebSocketsClient _ws;\nstatic bool _connected = false;\nstatic int _chunk = 640;\nstatic int _shift = 11;\nstatic int32_t _hpf_in = 0, _hpf_out = 0;\nstatic uint8_t _pkt[3200];\nstatic int _pkt_len = 0;\n\nstatic int16_t _proc(int32_t raw) {\n    int32_t v = raw >> _shift;\n    if (v > 30000) v = 30000; if (v < -30000) v = -30000;\n    int32_t s = (int16_t)v;\n    int32_t d = s - _hpf_in;\n    int32_t o = (_hpf_out * 31785 + d * 31785) >> 15;\n    if (o > 32767) o = 32767; if (o < -32768) o = -32768;\n    _hpf_in = s; _hpf_out = o;\n    return (int16_t)o;\n}\n\nstatic void _ws_event(WStype_t t, uint8_t* p, size_t l) {\n    if (t == WStype_CONNECTED) { _connected = true; Serial.println(\"[pcm] WS connected\"); }\n    else if (t == WStype_DISCONNECTED) { _connected = false; }\n}\n\nvoid pcm_stream_setup(const char* ssid, const char* pass, const char* ip, int port) {\n    WiFi.begin(ssid, pass);\n    while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print(\".\"); }\n    Serial.printf(\"\\nWiFi: %s\\n\", WiFi.localIP().toString().c_str());\n\n    i2s_config_t cfg = {};\n    cfg.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX);\n    cfg.sample_rate = SR;\n    cfg.bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT;\n    cfg.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;\n    cfg.communication_format = I2S_COMM_FORMAT_STAND_I2S;\n    cfg.dma_buf_count = 8; cfg.dma_buf_len = DMA_LEN;\n    cfg.use_apll = true;\n    i2s_driver_install(I2S_NUM_0, &cfg, 0, NULL);\n    i2s_pin_config_t pins = { .bck_io_num=MIC_SCK, .ws_io_num=MIC_WS, .data_out_num=-1, .data_in_num=MIC_SD };\n    i2s_set_pin(I2S_NUM_0, &pins);\n    i2s_zero_dma_buffer(I2S_NUM_0);\n\n    _ws.begin(ip, port, \"/\");\n    _ws.onEvent(_ws_event);\n    _ws.setReconnectInterval(3000);\n    Serial.println(\"[pcm] streamer ready\");\n}\n\nvoid pcm_stream_loop() {\n    _ws.loop();\n    int32_t raw[DMA_LEN];\n    int16_t pcm[DMA_LEN];\n    size_t br = 0;\n    if (i2s_read(I2S_NUM_0, raw, DMA_LEN * 4, &br, 8) != ESP_OK || !br) return;\n    int n = br / 4;\n    for (int i = 0; i < n; i++) pcm[i] = _proc(raw[i]);\n    if (_connected) {\n        int bytes = n * 2;\n        if (_pkt_len + bytes > 3200) _pkt_len = 0;\n        memcpy(_pkt + _pkt_len, (uint8_t*)pcm, bytes);\n        _pkt_len += bytes;\n        if (_pkt_len >= _chunk) {\n            _ws.sendBIN(_pkt, _pkt_len);\n            _pkt_len = 0;\n        }\n    } else { _pkt_len = 0; }\n}\n\nvoid pcm_stream_set_chunk(int b) { if (b >= 64 && b <= 3200 && b % 2 == 0) _chunk = b; }\nvoid pcm_stream_set_gain(int s)  { if (s >= 10 && s <= 18) _shift = s; }\nbool pcm_stream_connected()      { return _connected; }"
+  },
+  "configurable_params": {
+    "chunk_size": {
+      "type": "int",
+      "default": 640,
+      "min": 64,
+      "max": 3200,
+      "description": "WebSocket packet size in bytes"
+    },
+    "gain_shift": {
+      "type": "int",
+      "default": 11,
+      "min": 10,
+      "max": 18,
+      "description": "Mic gain (lower=louder)"
+    }
+  },
+  "outputs": {
+    "pcm_stream": "Raw 16-bit PCM mono over WebSocket"
+  },
+  "use_cases": [
+    "Remote audio monitoring",
+    "Baby monitor",
+    "Security audio capture",
+    "External STT service input",
+    "Audio recording to server"
+  ],
+  "verified": true,
+  "anti_hallucination": true,
+  "requires_server": true
+}

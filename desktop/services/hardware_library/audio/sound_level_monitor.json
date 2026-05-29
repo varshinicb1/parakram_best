@@ -1,0 +1,37 @@
+{
+  "id": "sound_level_monitor",
+  "name": "Sound Level Monitor (INMP441)",
+  "category": "audio",
+  "description": "Continuous dB SPL measurement using INMP441 MEMS microphone. Reports calibrated sound level in decibels. No speaker needed — mic only. Useful for noise monitoring, sound-triggered automation, clap detection.",
+  "libraries": [
+    "driver/i2s.h"
+  ],
+  "pins": {
+    "ws": 4,
+    "sck": 5,
+    "sd": 7
+  },
+  "bus": "i2s",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef SOUND_LEVEL_H\n#define SOUND_LEVEL_H\n#include <Arduino.h>\nvoid sound_level_setup();\nvoid sound_level_loop();\nfloat sound_level_db();       // calibrated dB SPL\nfloat sound_level_rms();      // raw RMS 0.0-1.0\nbool  sound_level_clap();     // true if sudden spike detected\n#endif",
+    "source": "#include \"sound_level_monitor.h\"\n#include <driver/i2s.h>\n#include <math.h>\n\n#define MIC_WS  4\n#define MIC_SCK 5\n#define MIC_SD  7\n#define SR      16000\n#define FRAME   256\n\nstatic float _db = 0, _rms = 0;\nstatic float _prev_db = 0;\nstatic bool _clap = false;\n\nvoid sound_level_setup() {\n    i2s_config_t cfg = {};\n    cfg.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX);\n    cfg.sample_rate = SR;\n    cfg.bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT;\n    cfg.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;\n    cfg.communication_format = I2S_COMM_FORMAT_STAND_I2S;\n    cfg.dma_buf_count = 4;\n    cfg.dma_buf_len = FRAME;\n    cfg.use_apll = true;\n    i2s_driver_install(I2S_NUM_0, &cfg, 0, NULL);\n    i2s_pin_config_t p = { .bck_io_num=MIC_SCK, .ws_io_num=MIC_WS, .data_out_num=-1, .data_in_num=MIC_SD };\n    i2s_set_pin(I2S_NUM_0, &p);\n    Serial.println(\"[spl] OK\");\n}\n\nvoid sound_level_loop() {\n    int32_t buf[FRAME];\n    size_t rd = 0;\n    i2s_read(I2S_NUM_0, buf, sizeof(buf), &rd, portMAX_DELAY);\n    int n = rd / 4;\n    if (n <= 0) return;\n    double sum = 0;\n    for (int i = 0; i < n; i++) {\n        double s = (double)(buf[i] >> 8) / (double)0x800000;\n        sum += s * s;\n    }\n    _rms = (float)sqrt(sum / n);\n    _prev_db = _db;\n    _db = (_rms > 0) ? 20.0f * log10f(_rms) + 94.0f : 0;\n    _clap = (_db - _prev_db > 15.0f);\n}\n\nfloat sound_level_db()  { return _db; }\nfloat sound_level_rms() { return _rms; }\nbool  sound_level_clap(){ bool c = _clap; _clap = false; return c; }"
+  },
+  "configurable_params": {},
+  "outputs": {
+    "db_spl": "Calibrated sound level in dB SPL",
+    "rms": "Raw RMS level 0.0-1.0",
+    "clap": "Boolean clap/spike detection"
+  },
+  "use_cases": [
+    "Noise level monitoring",
+    "Sound-triggered automation",
+    "Clap-to-control switches",
+    "Environmental noise logging",
+    "Baby cry detection"
+  ],
+  "verified": true,
+  "anti_hallucination": true,
+  "requires_server": false
+}

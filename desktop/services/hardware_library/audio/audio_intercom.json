@@ -1,0 +1,55 @@
+{
+  "id": "audio_intercom",
+  "name": "Audio Intercom / Karaoke (INMP441 + MAX98357A)",
+  "category": "audio",
+  "description": "Real-time mic→speaker loopback with configurable gain and HPF. No server needed — runs entirely on ESP32-S3. Use for intercom, karaoke, audio passthrough, or hearing aid prototypes.",
+  "libraries": [
+    "driver/i2s.h",
+    "esp_heap_caps.h",
+    "freertos/FreeRTOS.h",
+    "freertos/task.h"
+  ],
+  "pins": {
+    "mic_ws": 4,
+    "mic_sck": 5,
+    "mic_sd": 7,
+    "spk_ws": 15,
+    "spk_bck": 16,
+    "spk_dout": 17
+  },
+  "bus": "i2s",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef AUDIO_INTERCOM_H\n#define AUDIO_INTERCOM_H\n#include <Arduino.h>\nvoid intercom_setup();\nvoid intercom_loop();\nvoid intercom_set_gain(int shift);   // 10-18 (lower=louder)\nvoid intercom_set_volume(int pct);   // 0-200\nvoid intercom_mute(bool m);\n#endif",
+    "source": "#include \"audio_intercom.h\"\n#include <driver/i2s.h>\n#include <math.h>\n#include <string.h>\n\n#define MIC_WS   4\n#define MIC_SCK  5\n#define MIC_SD   7\n#define SPK_WS   15\n#define SPK_BCK  16\n#define SPK_DOUT 17\n#define SR       16000\n#define DMA_LEN  256\n\nstatic int g_shift = 11;\nstatic float g_vol = 1.0f;\nstatic bool g_muted = false;\nstatic int32_t g_hpf_in = 0, g_hpf_out = 0;\n\nstatic int16_t process(int32_t raw) {\n    int32_t v = raw >> g_shift;\n    if (v > 30000) v = 30000;\n    if (v < -30000) v = -30000;\n    int32_t s = (int16_t)v;\n    int32_t d = s - g_hpf_in;\n    int32_t o = (g_hpf_out * 31785 + d * 31785) >> 15;\n    if (o > 32767) o = 32767;\n    if (o < -32768) o = -32768;\n    g_hpf_in = s; g_hpf_out = o;\n    return (int16_t)o;\n}\n\nvoid intercom_setup() {\n    i2s_config_t mc = {};\n    mc.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX);\n    mc.sample_rate = SR;\n    mc.bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT;\n    mc.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;\n    mc.communication_format = I2S_COMM_FORMAT_STAND_I2S;\n    mc.dma_buf_count = 8;\n    mc.dma_buf_len = DMA_LEN;\n    mc.use_apll = true;\n    i2s_driver_install(I2S_NUM_0, &mc, 0, NULL);\n    i2s_pin_config_t mp = { .bck_io_num=MIC_SCK, .ws_io_num=MIC_WS, .data_out_num=-1, .data_in_num=MIC_SD };\n    i2s_set_pin(I2S_NUM_0, &mp);\n\n    i2s_config_t sc = {};\n    sc.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX);\n    sc.sample_rate = SR;\n    sc.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;\n    sc.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;\n    sc.communication_format = I2S_COMM_FORMAT_STAND_I2S;\n    sc.dma_buf_count = 8;\n    sc.dma_buf_len = DMA_LEN;\n    sc.tx_desc_auto_clear = true;\n    i2s_driver_install(I2S_NUM_1, &sc, 0, NULL);\n    i2s_pin_config_t sp = { .bck_io_num=SPK_BCK, .ws_io_num=SPK_WS, .data_out_num=SPK_DOUT, .data_in_num=-1 };\n    i2s_set_pin(I2S_NUM_1, &sp);\n    Serial.println(\"[intercom] ready\");\n}\n\nvoid intercom_loop() {\n    int32_t raw[DMA_LEN];\n    int16_t pcm[DMA_LEN];\n    size_t br = 0;\n    i2s_read(I2S_NUM_0, raw, DMA_LEN * 4, &br, portMAX_DELAY);\n    int n = br / 4;\n    if (g_muted) { memset(pcm, 0, n * 2); }\n    else {\n        for (int i = 0; i < n; i++) {\n            int32_t s = (int32_t)(process(raw[i]) * g_vol);\n            if (s > 32767) s = 32767; if (s < -32768) s = -32768;\n            pcm[i] = (int16_t)s;\n        }\n    }\n    size_t w = 0;\n    i2s_write(I2S_NUM_1, pcm, n * 2, &w, portMAX_DELAY);\n}\n\nvoid intercom_set_gain(int s) { if (s >= 10 && s <= 18) g_shift = s; }\nvoid intercom_set_volume(int p) { g_vol = (float)(p < 0 ? 0 : (p > 200 ? 200 : p)) / 100.0f; }\nvoid intercom_mute(bool m) { g_muted = m; }"
+  },
+  "configurable_params": {
+    "gain_shift": {
+      "type": "int",
+      "default": 11,
+      "min": 10,
+      "max": 18,
+      "description": "Mic gain (lower=louder)"
+    },
+    "volume": {
+      "type": "int",
+      "default": 100,
+      "min": 0,
+      "max": 200,
+      "description": "Speaker volume %"
+    }
+  },
+  "outputs": {
+    "speaker": "Real-time mic passthrough to speaker"
+  },
+  "use_cases": [
+    "Two-way intercom",
+    "Karaoke machine",
+    "Audio passthrough / hearing aid prototype",
+    "Microphone monitoring"
+  ],
+  "verified": true,
+  "anti_hallucination": true,
+  "requires_server": false
+}

@@ -1,25 +1,41 @@
 {
   "id": "i2s_speaker",
-  "name": "I2S Speaker (MAX98357)",
+  "name": "I2S Speaker (MAX98357A)",
   "category": "audio",
-  "description": "I2S Speaker (MAX98357) firmware block",
+  "description": "MAX98357A I2S Class-D amplifier — plays 16-bit PCM audio at 44.1kHz. Supports tone generation, volume control, and raw PCM write. Pin-configurable, auto-clear on silence.",
   "libraries": [
     "driver/i2s.h"
   ],
   "pins": {
-    "bclk": 26,
-    "lrc": 25,
-    "din": 22
+    "bclk": 16,
+    "lrc": 15,
+    "din": 17
   },
-  "bus": "",
+  "bus": "i2s",
   "i2c_address": "",
   "platformio_deps": [],
   "firmware_template": {
-    "header": "#ifndef I2S_SPEAKER_H\n#define I2S_SPEAKER_H\n#include <Arduino.h>\nvoid i2s_spk_setup();\nvoid i2s_spk_write(const int16_t* samples, size_t count);\nvoid i2s_spk_tone(uint16_t freq, uint16_t duration_ms);\nvoid i2s_spk_stop();\n#endif",
-    "source": "#include \"i2s_speaker.h\"\n#include <driver/i2s.h>\n#include <math.h>\n#define SPK_BCLK 26\n#define SPK_LRC 25\n#define SPK_DIN 22\n#define SPK_RATE 44100\nvoid i2s_spk_setup() {\n  i2s_config_t cfg = {};\n  cfg.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX);\n  cfg.sample_rate = SPK_RATE;\n  cfg.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;\n  cfg.channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT;\n  cfg.communication_format = I2S_COMM_FORMAT_STAND_I2S;\n  cfg.dma_buf_count = 8;\n  cfg.dma_buf_len = 1024;\n  i2s_driver_install(I2S_NUM_1, &cfg, 0, NULL);\n  i2s_pin_config_t pins = { .bck_io_num = SPK_BCLK, .ws_io_num = SPK_LRC, .data_out_num = SPK_DIN, .data_in_num = -1 };\n  i2s_set_pin(I2S_NUM_1, &pins);\n  Serial.println(\"[i2s_spk] OK 44.1kHz\");\n}\nvoid i2s_spk_write(const int16_t* s, size_t n) {\n  size_t written = 0;\n  i2s_write(I2S_NUM_1, s, n * 2, &written, portMAX_DELAY);\n}\nvoid i2s_spk_tone(uint16_t freq, uint16_t dur) {\n  int samples = SPK_RATE * dur / 1000;\n  int16_t buf[256];\n  for (int i = 0; i < samples; i += 256) {\n    int chunk = (samples - i < 256) ? samples - i : 256;\n    for (int j = 0; j < chunk; j++) {\n      buf[j] = (int16_t)(sinf(2.0f * 3.14159f * freq * (i+j) / SPK_RATE) * 16000);\n    }\n    i2s_spk_write(buf, chunk);\n  }\n}\nvoid i2s_spk_stop() {\n  int16_t silence[64] = {0};\n  i2s_spk_write(silence, 64);\n}"
+    "header": "#ifndef I2S_SPEAKER_H\n#define I2S_SPEAKER_H\n#include <Arduino.h>\nvoid i2s_spk_setup();\nvoid i2s_spk_write(const int16_t* samples, size_t count);\nvoid i2s_spk_tone(uint16_t freq, uint16_t duration_ms);\nvoid i2s_spk_stop();\nvoid i2s_spk_set_volume(int percent);\n#endif",
+    "source": "#include \"i2s_speaker.h\"\n#include <driver/i2s.h>\n#include <math.h>\n#include <string.h>\n\n// S3-PRO default pins — override via Parakram app\n#define SPK_BCLK 16\n#define SPK_LRC  15\n#define SPK_DIN  17\n#define SPK_RATE 44100\n\nstatic float _vol = 1.0f;\n\nvoid i2s_spk_setup() {\n    i2s_config_t cfg = {};\n    cfg.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX);\n    cfg.sample_rate = SPK_RATE;\n    cfg.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;\n    cfg.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;\n    cfg.communication_format = I2S_COMM_FORMAT_STAND_I2S;\n    cfg.dma_buf_count = 8;\n    cfg.dma_buf_len = 512;\n    cfg.tx_desc_auto_clear = true;\n    i2s_driver_install(I2S_NUM_1, &cfg, 0, NULL);\n    i2s_pin_config_t pins = { .bck_io_num = SPK_BCLK, .ws_io_num = SPK_LRC, .data_out_num = SPK_DIN, .data_in_num = -1 };\n    i2s_set_pin(I2S_NUM_1, &pins);\n    i2s_zero_dma_buffer(I2S_NUM_1);\n    Serial.println(\"[i2s_spk] MAX98357A OK 44.1kHz\");\n}\n\nvoid i2s_spk_write(const int16_t* s, size_t n) {\n    if (_vol != 1.0f) {\n        int16_t buf[256];\n        for (size_t i = 0; i < n; i += 256) {\n            size_t chunk = (n - i < 256) ? n - i : 256;\n            for (size_t j = 0; j < chunk; j++) {\n                int32_t v = (int32_t)(s[i+j] * _vol);\n                if (v > 32767) v = 32767; if (v < -32768) v = -32768;\n                buf[j] = (int16_t)v;\n            }\n            size_t w = 0;\n            i2s_write(I2S_NUM_1, buf, chunk * 2, &w, portMAX_DELAY);\n        }\n    } else {\n        size_t written = 0;\n        i2s_write(I2S_NUM_1, s, n * 2, &written, portMAX_DELAY);\n    }\n}\n\nvoid i2s_spk_tone(uint16_t freq, uint16_t dur) {\n    int N = SPK_RATE * dur / 1000;\n    int16_t buf[256];\n    int fade = SPK_RATE / 100;\n    for (int i = 0; i < N; i += 256) {\n        int chunk = (N - i < 256) ? N - i : 256;\n        for (int j = 0; j < chunk; j++) {\n            float a = _vol * 0.7f;\n            int idx = i + j;\n            if (idx < fade) a *= (float)idx / fade;\n            if (idx > N - fade) a *= (float)(N - idx) / fade;\n            buf[j] = (int16_t)(sinf(2.0f * 3.14159f * freq * idx / SPK_RATE) * a * 32767.0f);\n        }\n        i2s_spk_write(buf, chunk);\n    }\n}\n\nvoid i2s_spk_stop() {\n    int16_t silence[64] = {0};\n    i2s_spk_write(silence, 64);\n}\n\nvoid i2s_spk_set_volume(int p) { _vol = (float)(p < 0 ? 0 : (p > 200 ? 200 : p)) / 100.0f; }"
   },
-  "configurable_params": {},
-  "outputs": {},
+  "configurable_params": {
+    "sample_rate": {
+      "type": "int",
+      "default": 44100,
+      "options": [16000, 22050, 44100],
+      "description": "Audio sample rate in Hz"
+    },
+    "volume": {
+      "type": "int",
+      "default": 100,
+      "min": 0,
+      "max": 200,
+      "description": "Speaker volume %"
+    }
+  },
+  "outputs": {
+    "speaker": "I2S audio output to MAX98357A amplifier"
+  },
   "verified": true,
   "anti_hallucination": true
 }
