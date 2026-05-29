@@ -1,4 +1,4 @@
-//! LLM system prompt — the exact prompt sent to OpenRouter.
+//! LLM system prompt — sent to the active provider (NVIDIA NIM, OpenRouter, Anthropic, or self-hosted).
 //!
 //! This embeds the complete system prompt from Artifact 7.
 

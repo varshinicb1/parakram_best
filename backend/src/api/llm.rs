@@ -102,7 +102,7 @@ async fn process_intent(
         None => return Err((StatusCode::PAYMENT_REQUIRED, Json(ErrorBody {
             error: ErrorDetail {
                 code: "NO_LLM_KEY".into(),
-                message: "Add your OpenRouter API key in Settings to use AI features.".into(),
+                message: "Add your LLM API key in Settings to use AI features (NVIDIA NIM, OpenRouter, or Anthropic).".into(),
             },
         }))),
     };
