@@ -1,0 +1,43 @@
+{
+  "id": "audio_alert_system",
+  "name": "Audio Alert System (MAX98357A)",
+  "category": "audio",
+  "description": "Programmable audio alert/notification system using MAX98357A I2S amplifier. Plays configurable tones, melodies, and alert patterns. No mic needed — speaker only. Useful for alarms, notifications, doorbell, timer buzzer.",
+  "libraries": [
+    "driver/i2s.h"
+  ],
+  "pins": {
+    "ws": 15,
+    "bck": 16,
+    "dout": 17
+  },
+  "bus": "i2s",
+  "i2c_address": "",
+  "platformio_deps": [],
+  "firmware_template": {
+    "header": "#ifndef AUDIO_ALERT_H\n#define AUDIO_ALERT_H\n#include <Arduino.h>\nvoid alert_setup();\nvoid alert_tone(float hz, int ms);           // single tone\nvoid alert_beep(int count, int on_ms, int off_ms); // repeated beep\nvoid alert_siren(float lo_hz, float hi_hz, int cycles, int ms_per_cycle);\nvoid alert_melody(const float* notes, const int* durations, int count);\nvoid alert_doorbell();\nvoid alert_alarm();\nvoid alert_success();\nvoid alert_error();\nvoid alert_set_volume(int percent);           // 0-200\nvoid alert_stop();\n#endif",
+    "source": "#include \"audio_alert_system.h\"\n#include <driver/i2s.h>\n#include <math.h>\n#include <string.h>\n\n#define SPK_WS   15\n#define SPK_BCK  16\n#define SPK_DOUT 17\n#define SR       44100\n\nstatic float g_vol = 1.0f;\n\nvoid alert_setup() {\n    i2s_config_t c = {};\n    c.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX);\n    c.sample_rate = SR;\n    c.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;\n    c.channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT;\n    c.communication_format = I2S_COMM_FORMAT_STAND_I2S;\n    c.dma_buf_count = 8;\n    c.dma_buf_len = 512;\n    c.tx_desc_auto_clear = true;\n    i2s_driver_install(I2S_NUM_1, &c, 0, NULL);\n    i2s_pin_config_t p = { .bck_io_num=SPK_BCK, .ws_io_num=SPK_WS, .data_out_num=SPK_DOUT, .data_in_num=-1 };\n    i2s_set_pin(I2S_NUM_1, &p);\n    Serial.println(\"[alert] ready\");\n}\n\nvoid alert_tone(float hz, int ms) {\n    int N = SR * ms / 1000;\n    int16_t buf[256];\n    int fade = SR / 100;\n    for (int i = 0; i < N; i += 256) {\n        int chunk = (N - i < 256) ? N - i : 256;\n        for (int j = 0; j < chunk; j++) {\n            float a = g_vol * 0.7f;\n            int idx = i + j;\n            if (idx < fade) a *= (float)idx / fade;\n            if (idx > N - fade) a *= (float)(N - idx) / fade;\n            buf[j] = (int16_t)(sinf(2.0f * 3.14159f * hz * idx / SR) * a * 32767.0f);\n        }\n        size_t w = 0;\n        i2s_write(I2S_NUM_1, buf, chunk * 2, &w, portMAX_DELAY);\n    }\n}\n\nvoid alert_beep(int count, int on_ms, int off_ms) {\n    for (int i = 0; i < count; i++) {\n        alert_tone(1000, on_ms);\n        if (i < count - 1) delay(off_ms);\n    }\n}\n\nvoid alert_siren(float lo, float hi, int cycles, int ms) {\n    int N = SR * ms / 1000;\n    int16_t buf[256];\n    for (int c = 0; c < cycles; c++) {\n        for (int i = 0; i < N; i += 256) {\n            int chunk = (N - i < 256) ? N - i : 256;\n            float t = (float)(i) / N;\n            float hz = lo + (hi - lo) * t;\n            for (int j = 0; j < chunk; j++) {\n                buf[j] = (int16_t)(sinf(2.0f * 3.14159f * hz * (i+j) / SR) * g_vol * 0.6f * 32767.0f);\n            }\n            size_t w = 0;\n            i2s_write(I2S_NUM_1, buf, chunk * 2, &w, portMAX_DELAY);\n        }\n    }\n}\n\nvoid alert_melody(const float* notes, const int* durs, int count) {\n    for (int i = 0; i < count; i++) {\n        if (notes[i] > 0) alert_tone(notes[i], durs[i]);\n        else delay(durs[i]);\n    }\n}\n\nvoid alert_doorbell() {\n    float n[] = {659.25f, 523.25f};\n    int d[] = {200, 400};\n    alert_melody(n, d, 2);\n}\n\nvoid alert_alarm() { alert_siren(800, 1600, 3, 500); }\nvoid alert_success() {\n    float n[] = {523.25f, 659.25f, 783.99f};\n    int d[] = {100, 100, 200};\n    alert_melody(n, d, 3);\n}\nvoid alert_error() {\n    float n[] = {200, 0, 200};\n    int d[] = {200, 100, 300};\n    alert_melody(n, d, 3);\n}\n\nvoid alert_set_volume(int p) { g_vol = (float)(p < 0 ? 0 : (p > 200 ? 200 : p)) / 100.0f; }\nvoid alert_stop() { int16_t s[64] = {0}; size_t w; i2s_write(I2S_NUM_1, s, 128, &w, 10); }"
+  },
+  "configurable_params": {
+    "volume": {
+      "type": "int",
+      "default": 100,
+      "min": 0,
+      "max": 200,
+      "description": "Speaker volume %"
+    }
+  },
+  "outputs": {
+    "speaker": "Tone/melody/siren via I2S DAC"
+  },
+  "use_cases": [
+    "Alarm system",
+    "Doorbell",
+    "Timer/notification buzzer",
+    "Success/error audio feedback",
+    "Siren for security systems"
+  ],
+  "verified": true,
+  "anti_hallucination": true,
+  "requires_server": false
+}

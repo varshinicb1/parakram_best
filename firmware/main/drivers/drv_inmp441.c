@@ -71,7 +71,7 @@ static esp_err_t inmp441_read(driver_handle_t h, capability_t field, sensor_valu
     inmp441_state_t *st = &s_state[h.driver_index];
     if (!st->initialized) return ESP_ERR_INVALID_STATE;
 
-    if (field != CAP_GAS_PPM) { /* reusing this field for sound level */
+    if (field != CAP_AUDIO_LEVEL_DB) {
         out->error = DRV_ERR_NOT_SUPPORTED;
         return ESP_ERR_NOT_SUPPORTED;
     }
@@ -108,8 +108,8 @@ static esp_err_t inmp441_deinit(driver_handle_t h) {
 
 static const driver_meta_t inmp441_meta = {
     .name = "drv_inmp441", .display_name = "INMP441 I2S Microphone",
-    .version = "1.0.0", .type = DRIVER_TYPE_SENSOR, .bus_type = BUS_TYPE_I2C, /* I2S */
-    .capabilities = {CAP_GAS_PPM}, .num_capabilities = 1,
+    .version = "1.1.0", .type = DRIVER_TYPE_SENSOR, .bus_type = BUS_TYPE_I2C, /* I2S */
+    .capabilities = {CAP_AUDIO_LEVEL_DB}, .num_capabilities = 1,
     .max_latency_us = 20000, .min_interval_ms = 16,
     .failure_modes = {{DRV_ERR_BUS_FAIL, "I2S failure", {.type=VAL_TYPE_FLOAT,.f=0}}},
     .num_failure_modes = 1, .internal_state_size = sizeof(inmp441_state_t),
