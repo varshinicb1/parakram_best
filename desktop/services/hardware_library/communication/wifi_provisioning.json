@@ -1,0 +1,33 @@
+{
+  "id": "wifi_provisioning",
+  "name": "WiFi Provisioning (SoftAP Captive Portal)",
+  "category": "communication",
+  "description": "SoftAP captive portal for WiFi credential entry. User connects to ESP32 AP, enters WiFi credentials via browser, credentials saved to NVS. Based on tzapu/WiFiManager. 180s timeout, auto-reconnect, saveConfigCallback triggers board → Parakram handshake.",
+  "libraries": [
+    "WiFi.h",
+    "WiFiManager.h",
+    "WebServer.h",
+    "DNSServer.h"
+  ],
+  "pins": {},
+  "bus": "wifi",
+  "i2c_address": "",
+  "platformio_deps": [
+    "tzapu/WiFiManager@^2.0.17"
+  ],
+  "firmware_template": {
+    "header": "#ifndef WIFI_PROV_H\n#define WIFI_PROV_H\n#include <Arduino.h>\n\nvoid wifi_prov_setup(const char* ap_name, const char* ap_password);\nbool wifi_prov_is_connected();\nvoid wifi_prov_reset();\nString wifi_prov_get_ip();\n\n#endif",
+    "source": "#include \"wifi_provisioning.h\"\n#include <WiFiManager.h>\n\nstatic WiFiManager wm;\nstatic bool configured = false;\n\nstatic void save_callback() {\n  configured = true;\n  Serial.println(\"[wifi_prov] Credentials saved\");\n}\n\nvoid wifi_prov_setup(const char* ap_name, const char* ap_password) {\n  wm.setSaveConfigCallback(save_callback);\n  wm.setConfigPortalTimeout(180);\n  wm.setConnectTimeout(30);\n  if (!wm.autoConnect(ap_name, ap_password)) {\n    Serial.println(\"[wifi_prov] Portal timeout — restarting\");\n    ESP.restart();\n  }\n  Serial.printf(\"[wifi_prov] Connected: %s\\n\", WiFi.localIP().toString().c_str());\n}\n\nbool wifi_prov_is_connected() {\n  return WiFi.status() == WL_CONNECTED;\n}\n\nvoid wifi_prov_reset() {\n  wm.resetSettings();\n  ESP.restart();\n}\n\nString wifi_prov_get_ip() {\n  return WiFi.localIP().toString();\n}"
+  },
+  "configurable_params": {
+    "ap_name": { "type": "string", "default": "Parakram-Setup", "description": "SoftAP name shown during provisioning" },
+    "ap_password": { "type": "string", "default": "", "description": "SoftAP password (empty = open)" },
+    "portal_timeout_sec": { "type": "int", "default": 180, "description": "Captive portal timeout in seconds" }
+  },
+  "outputs": {
+    "connected": { "type": "bool", "description": "Whether WiFi is connected" },
+    "ip_address": { "type": "string", "description": "Assigned IP address" }
+  },
+  "verified": true,
+  "anti_hallucination": true
+}

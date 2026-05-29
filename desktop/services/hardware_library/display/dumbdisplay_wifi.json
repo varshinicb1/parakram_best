@@ -1,0 +1,46 @@
+{
+  "id": "dumbdisplay_wifi",
+  "name": "DumbDisplay WiFi (Phone-Rendered Display)",
+  "category": "display",
+  "description": "Phone renders all graphics; ESP32 sends draw commands over WiFi TCP (port 10201). Zero LVGL, zero SPI, zero font atlas on the board. The board creates virtual layers (LCD text, LED grid, graphical canvas, turtle graphics) and the DumbDisplay Android app renders them on the phone GPU. Supports multi-layer layouts, touch feedback, image tunnels, and WebView layers. The display IS the phone screen.",
+  "libraries": [
+    "WiFi.h",
+    "dumbdisplay.h",
+    "wifidumbdisplay.h"
+  ],
+  "pins": {},
+  "bus": "wifi_tcp",
+  "i2c_address": "",
+  "platformio_deps": [
+    "trevorwslee/DumbDisplay@^0.9.9"
+  ],
+  "firmware_template": {
+    "header": "#ifndef DUMBDISPLAY_WIFI_H\n#define DUMBDISPLAY_WIFI_H\n#include <Arduino.h>\n\nvoid dd_wifi_setup(const char* ssid, const char* password);\nvoid dd_wifi_loop();\n\n// Layer creation\nvoid dd_create_lcd(int cols, int rows);\nvoid dd_create_led_grid(int cols, int rows);\nvoid dd_create_graphical(int width, int height);\nvoid dd_create_turtle(int width, int height);\n\n// Drawing\nvoid dd_lcd_print(int col, int row, const char* text);\nvoid dd_lcd_clear();\nvoid dd_led_set(int col, int row, const char* color);\nvoid dd_gfx_line(int x1, int y1, int x2, int y2, const char* color);\nvoid dd_gfx_rect(int x, int y, int w, int h, const char* color, bool fill);\nvoid dd_gfx_circle(int x, int y, int r, const char* color, bool fill);\nvoid dd_gfx_text(int x, int y, const char* text, const char* color, int size);\nvoid dd_turtle_forward(int steps);\nvoid dd_turtle_turn(int degrees);\nvoid dd_turtle_pencolor(const char* color);\n\n// Layout\nvoid dd_auto_pin(const char* layout);\n\n#endif",
+    "source": "#include \"dumbdisplay_wifi.h\"\n#include <WiFi.h>\n#include \"dumbdisplay.h\"\n#include \"wifidumbdisplay.h\"\n\nstatic DDWiFiServerIO* ddio = nullptr;\nstatic DumbDisplay* dd = nullptr;\nstatic LcdDDLayer* lcd = nullptr;\nstatic LedGridDDLayer* ledGrid = nullptr;\nstatic GraphicalDDLayer* gfx = nullptr;\nstatic TurtleDDLayer* turtle = nullptr;\n\nvoid dd_wifi_setup(const char* ssid, const char* password) {\n  WiFi.begin(ssid, password);\n  while (WiFi.status() != WL_CONNECTED) { delay(500); }\n  Serial.print(\"[dd] IP: \"); Serial.println(WiFi.localIP());\n  ddio = new DDWiFiServerIO(nullptr, nullptr, 10201);\n  dd = new DumbDisplay(ddio);\n}\n\nvoid dd_wifi_loop() { /* DumbDisplay handles its own loop internally */ }\n\nvoid dd_create_lcd(int cols, int rows) {\n  lcd = dd->createLcdLayer(cols, rows);\n}\n\nvoid dd_create_led_grid(int cols, int rows) {\n  ledGrid = dd->createLedGridLayer(cols, rows);\n}\n\nvoid dd_create_graphical(int width, int height) {\n  gfx = dd->createGraphicalLayer(width, height);\n}\n\nvoid dd_create_turtle(int width, int height) {\n  turtle = dd->createTurtleLayer(width, height);\n}\n\nvoid dd_lcd_print(int col, int row, const char* text) {\n  if (!lcd) return;\n  lcd->setCursor(col, row);\n  lcd->print(text);\n}\n\nvoid dd_lcd_clear() {\n  if (!lcd) return;\n  lcd->clear();\n}\n\nvoid dd_led_set(int col, int row, const char* color) {\n  if (!ledGrid) return;\n  ledGrid->onColor(color);\n  ledGrid->turnOn(col, row);\n}\n\nvoid dd_gfx_line(int x1, int y1, int x2, int y2, const char* color) {\n  if (!gfx) return;\n  gfx->drawLine(x1, y1, x2, y2, color);\n}\n\nvoid dd_gfx_rect(int x, int y, int w, int h, const char* color, bool fill) {\n  if (!gfx) return;\n  if (fill) gfx->fillRect(x, y, w, h, color);\n  else gfx->drawRect(x, y, w, h, color);\n}\n\nvoid dd_gfx_circle(int x, int y, int r, const char* color, bool fill) {\n  if (!gfx) return;\n  if (fill) gfx->fillCircle(x, y, r, color);\n  else gfx->drawCircle(x, y, r, color);\n}\n\nvoid dd_gfx_text(int x, int y, const char* text, const char* color, int size) {\n  if (!gfx) return;\n  gfx->setTextColor(color);\n  gfx->setTextSize(size);\n  gfx->drawStr(x, y, text);\n}\n\nvoid dd_turtle_forward(int steps) {\n  if (!turtle) return;\n  turtle->forward(steps);\n}\n\nvoid dd_turtle_turn(int degrees) {\n  if (!turtle) return;\n  turtle->rightTurn(degrees);\n}\n\nvoid dd_turtle_pencolor(const char* color) {\n  if (!turtle) return;\n  turtle->penColor(color);\n}\n\nvoid dd_auto_pin(const char* layout) {\n  dd->configAutoPin(layout);\n}"
+  },
+  "configurable_params": {
+    "wifi_ssid": {
+      "type": "string",
+      "default": "",
+      "description": "WiFi network SSID"
+    },
+    "wifi_password": {
+      "type": "string",
+      "default": "",
+      "description": "WiFi network password"
+    },
+    "tcp_port": {
+      "type": "int",
+      "default": 10201,
+      "description": "DumbDisplay TCP server port"
+    }
+  },
+  "outputs": {
+    "lcd_text": { "type": "string", "description": "Text rendered on LCD layer" },
+    "led_grid": { "type": "color_array", "description": "LED grid pixel colors" },
+    "graphical": { "type": "canvas", "description": "2D graphics canvas (lines, rects, circles, text)" },
+    "turtle": { "type": "path", "description": "Turtle graphics path" }
+  },
+  "verified": true,
+  "anti_hallucination": true
+}

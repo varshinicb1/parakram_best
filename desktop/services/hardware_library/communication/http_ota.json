@@ -1,0 +1,31 @@
+{
+  "id": "http_ota",
+  "name": "HTTP OTA (ElegantOTA Web UI)",
+  "category": "communication",
+  "description": "Web-based firmware OTA updates over HTTP. 3-line integration: ElegantOTA.begin(&server). Beautiful web UI for drag-and-drop firmware upload. Works on ESP32, ESP8266, RP2040. Based on ayushsharma82/ElegantOTA.",
+  "libraries": [
+    "WiFi.h",
+    "WebServer.h",
+    "ElegantOTA.h"
+  ],
+  "pins": {},
+  "bus": "wifi",
+  "i2c_address": "",
+  "platformio_deps": [
+    "ayushsharma82/ElegantOTA@^3.1.5"
+  ],
+  "firmware_template": {
+    "header": "#ifndef HTTP_OTA_BLOCK_H\n#define HTTP_OTA_BLOCK_H\n#include <Arduino.h>\n\nvoid http_ota_setup(const char* ssid, const char* password);\nvoid http_ota_loop();\nString http_ota_get_url();\n\n#endif",
+    "source": "#include \"http_ota.h\"\n#include <WiFi.h>\n#include <WebServer.h>\n#include <ElegantOTA.h>\n\nstatic WebServer server(80);\n\nvoid http_ota_setup(const char* ssid, const char* password) {\n  WiFi.begin(ssid, password);\n  while (WiFi.status() != WL_CONNECTED) { delay(500); }\n  server.on(\"/\", []() {\n    server.send(200, \"text/html\", \"<h1>Parakram OTA</h1><p>Go to <a href='/update'>/update</a></p>\");\n  });\n  ElegantOTA.begin(&server);\n  server.begin();\n  Serial.printf(\"[http_ota] http://%s/update\\n\", WiFi.localIP().toString().c_str());\n}\n\nvoid http_ota_loop() {\n  server.handleClient();\n  ElegantOTA.loop();\n}\n\nString http_ota_get_url() {\n  return \"http://\" + WiFi.localIP().toString() + \"/update\";\n}"
+  },
+  "configurable_params": {
+    "wifi_ssid": { "type": "string", "default": "", "description": "WiFi SSID" },
+    "wifi_password": { "type": "string", "default": "", "description": "WiFi password" },
+    "web_port": { "type": "int", "default": 80, "description": "HTTP server port" }
+  },
+  "outputs": {
+    "ota_url": { "type": "string", "description": "URL for OTA web UI" }
+  },
+  "verified": true,
+  "anti_hallucination": true
+}

@@ -1,0 +1,34 @@
+{
+  "id": "dumbdisplay_bt",
+  "name": "DumbDisplay Bluetooth (Phone-Rendered Display)",
+  "category": "display",
+  "description": "Phone renders all graphics; ESP32 sends draw commands over Bluetooth Serial. No WiFi required — pairs directly with phone via Bluetooth Classic. Same DumbDisplay protocol as WiFi variant but over BluetoothSerial. Zero LVGL on the board. Ideal for portable/battery projects without WiFi access.",
+  "libraries": [
+    "BluetoothSerial.h",
+    "dumbdisplay.h",
+    "esp32dumbdisplay.h"
+  ],
+  "pins": {},
+  "bus": "bluetooth_serial",
+  "i2c_address": "",
+  "platformio_deps": [
+    "trevorwslee/DumbDisplay@^0.9.9"
+  ],
+  "firmware_template": {
+    "header": "#ifndef DUMBDISPLAY_BT_H\n#define DUMBDISPLAY_BT_H\n#include <Arduino.h>\n\nvoid dd_bt_setup(const char* bt_name);\nvoid dd_bt_loop();\n\nvoid dd_bt_create_lcd(int cols, int rows);\nvoid dd_bt_create_graphical(int width, int height);\nvoid dd_bt_lcd_print(int col, int row, const char* text);\nvoid dd_bt_lcd_clear();\nvoid dd_bt_gfx_line(int x1, int y1, int x2, int y2, const char* color);\nvoid dd_bt_gfx_rect(int x, int y, int w, int h, const char* color, bool fill);\nvoid dd_bt_gfx_circle(int x, int y, int r, const char* color, bool fill);\nvoid dd_bt_gfx_text(int x, int y, const char* text, const char* color, int size);\nvoid dd_bt_auto_pin(const char* layout);\n\n#endif",
+    "source": "#include \"dumbdisplay_bt.h\"\n#include \"dumbdisplay.h\"\n#include \"esp32dumbdisplay.h\"\n\nstatic DDBluetoothSerialIO* ddio = nullptr;\nstatic DumbDisplay* dd = nullptr;\nstatic LcdDDLayer* lcd = nullptr;\nstatic GraphicalDDLayer* gfx = nullptr;\n\nvoid dd_bt_setup(const char* bt_name) {\n  ddio = new DDBluetoothSerialIO(bt_name, true);\n  dd = new DumbDisplay(ddio);\n  Serial.println(\"[dd_bt] Bluetooth ready, pair phone\");\n}\n\nvoid dd_bt_loop() { /* DumbDisplay handles loop internally */ }\n\nvoid dd_bt_create_lcd(int cols, int rows) {\n  lcd = dd->createLcdLayer(cols, rows);\n}\n\nvoid dd_bt_create_graphical(int width, int height) {\n  gfx = dd->createGraphicalLayer(width, height);\n}\n\nvoid dd_bt_lcd_print(int col, int row, const char* text) {\n  if (!lcd) return;\n  lcd->setCursor(col, row);\n  lcd->print(text);\n}\n\nvoid dd_bt_lcd_clear() {\n  if (!lcd) return;\n  lcd->clear();\n}\n\nvoid dd_bt_gfx_line(int x1, int y1, int x2, int y2, const char* color) {\n  if (!gfx) return;\n  gfx->drawLine(x1, y1, x2, y2, color);\n}\n\nvoid dd_bt_gfx_rect(int x, int y, int w, int h, const char* color, bool fill) {\n  if (!gfx) return;\n  if (fill) gfx->fillRect(x, y, w, h, color);\n  else gfx->drawRect(x, y, w, h, color);\n}\n\nvoid dd_bt_gfx_circle(int x, int y, int r, const char* color, bool fill) {\n  if (!gfx) return;\n  if (fill) gfx->fillCircle(x, y, r, color);\n  else gfx->drawCircle(x, y, r, color);\n}\n\nvoid dd_bt_gfx_text(int x, int y, const char* text, const char* color, int size) {\n  if (!gfx) return;\n  gfx->setTextColor(color);\n  gfx->setTextSize(size);\n  gfx->drawStr(x, y, text);\n}\n\nvoid dd_bt_auto_pin(const char* layout) {\n  dd->configAutoPin(layout);\n}"
+  },
+  "configurable_params": {
+    "bt_name": {
+      "type": "string",
+      "default": "Parakram-S3",
+      "description": "Bluetooth device name for pairing"
+    }
+  },
+  "outputs": {
+    "lcd_text": { "type": "string", "description": "Text rendered on LCD layer" },
+    "graphical": { "type": "canvas", "description": "2D graphics canvas" }
+  },
+  "verified": true,
+  "anti_hallucination": true
+}

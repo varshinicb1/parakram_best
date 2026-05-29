@@ -1,0 +1,29 @@
+{
+  "id": "ble_ota",
+  "name": "BLE OTA Firmware Updater",
+  "category": "communication",
+  "description": "Firmware updates over Bluetooth Low Energy — no WiFi required. Single BLE GATT service with 0xFF04 (data) + 0xFF05 (control) characteristics. SHA-256 hash verification before activation. Auto-selects NimBLE on ESP32-S3. Based on gb88/BLEOTA.",
+  "libraries": [
+    "BLEOTA.h",
+    "Update.h"
+  ],
+  "pins": {},
+  "bus": "ble",
+  "i2c_address": "",
+  "platformio_deps": [
+    "gb88/BLEOTA@^1.0.4"
+  ],
+  "firmware_template": {
+    "header": "#ifndef BLE_OTA_BLOCK_H\n#define BLE_OTA_BLOCK_H\n#include <Arduino.h>\n\nvoid ble_ota_setup(const char* device_name);\nvoid ble_ota_loop();\nbool ble_ota_in_progress();\nint ble_ota_progress();\n\n#endif",
+    "source": "#include \"ble_ota.h\"\n#include <BLEOTA.h>\n\nstatic bool ota_active = false;\nstatic int ota_percent = 0;\n\nvoid ble_ota_setup(const char* device_name) {\n  BLEOTA.begin(device_name);\n  BLEOTA.setOTAProgressCallback([](uint32_t progress, uint32_t total) {\n    ota_active = true;\n    ota_percent = (progress * 100) / total;\n    Serial.printf(\"[ble_ota] %d%%\\n\", ota_percent);\n  });\n  BLEOTA.setOTACompleteCallback([]() {\n    Serial.println(\"[ble_ota] Complete — rebooting\");\n    ota_active = false;\n    ESP.restart();\n  });\n  Serial.printf(\"[ble_ota] Ready: %s\\n\", device_name);\n}\n\nvoid ble_ota_loop() {\n  BLEOTA.process();\n}\n\nbool ble_ota_in_progress() { return ota_active; }\nint ble_ota_progress() { return ota_percent; }"
+  },
+  "configurable_params": {
+    "device_name": { "type": "string", "default": "Parakram-S3", "description": "BLE device name for OTA" }
+  },
+  "outputs": {
+    "ota_in_progress": { "type": "bool", "description": "Whether OTA is active" },
+    "ota_progress": { "type": "int", "description": "OTA progress percentage (0-100)" }
+  },
+  "verified": true,
+  "anti_hallucination": true
+}
